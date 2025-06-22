@@ -1,13 +1,14 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 api.base.service.ts
 api.module.ts
 api/api.ts
-api/example-resource.service.ts
-api/example-resource.serviceInterface.ts
+api/child-resource.service.ts
+api/child-resource.serviceInterface.ts
 api/family-resource.service.ts
 api/family-resource.serviceInterface.ts
+api/requirement-resource.service.ts
+api/requirement-resource.serviceInterface.ts
 configuration.ts
 encoder.ts
 git_push.sh
@@ -15,5 +16,9 @@ index.ts
 model/child.ts
 model/family.ts
 model/models.ts
+model/requirement.ts
+model/time-slot.ts
+model/week-day.ts
+model/week-type.ts
 param.ts
 variables.ts

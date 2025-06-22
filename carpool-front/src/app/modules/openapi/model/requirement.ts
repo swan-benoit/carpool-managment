@@ -7,12 +7,20 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { WeekDay } from './week-day';
 import { Family } from './family';
+import { TimeSlot } from './time-slot';
+import { WeekType } from './week-type';
 
 
-export interface Child { 
+export interface Requirement { 
     id?: number;
-    name?: string;
+    timeSlot?: TimeSlot;
+    weekDay?: WeekDay;
+    weekType?: WeekType;
     family?: Family;
 }
+export namespace Requirement {
+}
+
 

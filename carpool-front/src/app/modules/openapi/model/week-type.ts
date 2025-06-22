@@ -7,12 +7,11 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { Family } from './family';
 
 
-export interface Child { 
-    id?: number;
-    name?: string;
-    family?: Family;
-}
+export const WeekType = {
+    Even: 'EVEN',
+    Odd: 'ODD'
+} as const;
+export type WeekType = typeof WeekType[keyof typeof WeekType];
 

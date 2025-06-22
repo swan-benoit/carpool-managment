@@ -1,7 +1,10 @@
-export * from './example-resource.service';
-import { ExampleResourceService } from './example-resource.service';
-export * from './example-resource.serviceInterface';
+export * from './child-resource.service';
+import { ChildResourceService } from './child-resource.service';
+export * from './child-resource.serviceInterface';
 export * from './family-resource.service';
 import { FamilyResourceService } from './family-resource.service';
 export * from './family-resource.serviceInterface';
-export const APIS = [ExampleResourceService, FamilyResourceService];
+export * from './requirement-resource.service';
+import { RequirementResourceService } from './requirement-resource.service';
+export * from './requirement-resource.serviceInterface';
+export const APIS = [ChildResourceService, FamilyResourceService, RequirementResourceService];

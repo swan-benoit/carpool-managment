@@ -7,12 +7,13 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { Family } from './family';
 
 
-export interface Child { 
-    id?: number;
-    name?: string;
-    family?: Family;
-}
+export const WeekDay = {
+    Monday: 'MONDAY',
+    Tuesday: 'TUESDAY',
+    Thursday: 'THURSDAY',
+    Friday: 'FRIDAY'
+} as const;
+export type WeekDay = typeof WeekDay[keyof typeof WeekDay];
 
