@@ -25,7 +25,7 @@ export class FamilyForm implements OnInit {
   familyId: number | null = null;
   loading = false;
   error: string | null = null;
-  
+
   // Garder une trace des IDs existants pour la suppression
   existingChildrenIds: number[] = [];
   existingRequirementsIds: number[] = [];
@@ -91,7 +91,7 @@ export class FamilyForm implements OnInit {
     }).subscribe({
       next: ({ family, children, requirements }) => {
         console.log('Données chargées:', { family, children, requirements });
-        
+
         // Charger les données de la famille
         this.familyForm.patchValue({
           name: family.name,
@@ -195,7 +195,7 @@ export class FamilyForm implements OnInit {
 
   createFamily(family: Family, children: any[], requirements: any[]) {
     this.familyService.familyPost(family).pipe(
-      switchMap(createdFamily => 
+      switchMap(createdFamily =>
         this.saveChildrenAndRequirements(createdFamily.id!, children, requirements)
       )
     ).subscribe({
@@ -213,8 +213,8 @@ export class FamilyForm implements OnInit {
 
   updateFamily(family: Family, children: any[], requirements: any[]) {
     this.familyService.familyIdPut(family.id!, family).pipe(
-      switchMap(updatedFamily => 
-        this.saveChildrenAndRequirements(updatedFamily.id!, children, requirements)
+      switchMap(() =>
+        this.saveChildrenAndRequirements(family.id!, children, requirements)
       )
     ).subscribe({
       next: () => {
@@ -250,8 +250,9 @@ export class FamilyForm implements OnInit {
           name: child.name.trim(),
           family: { id: familyId }
         };
-        
-        if (child.id) {
+        console.log(child);
+
+        if (child?.id) {
           return this.childService.childIdPut(child.id, { ...childData, id: child.id });
         } else {
           return this.childService.childPost(childData);
@@ -267,7 +268,7 @@ export class FamilyForm implements OnInit {
           weekType: requirement.weekType,
           family: { id: familyId }
         };
-        
+
         if (requirement.id) {
           return this.requirementService.requirementIdPut(requirement.id, { ...requirementData, id: requirement.id });
         } else {
