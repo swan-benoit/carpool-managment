@@ -94,7 +94,7 @@ export class FamilyForm implements OnInit {
           }
         });
 
-        // Charger les exigences
+        // Charger les indisponibilités
         this.requirementService.requirementGet(this.familyId!).subscribe({
           next: (requirements) => {
             requirements.forEach(requirement => {
@@ -233,7 +233,7 @@ export class FamilyForm implements OnInit {
       })
       .catch((error) => {
         console.error('Erreur lors de la sauvegarde:', error);
-        this.error = 'Erreur lors de la sauvegarde des enfants et exigences';
+        this.error = 'Erreur lors de la sauvegarde des enfants et indisponibilités';
         this.loading = false;
       });
   }
