@@ -85,8 +85,9 @@ export class Planning implements OnInit {
             children: this.childService.childGet(family.id),
             requirements: this.requirementService.requirementGet(family.id)
           }).pipe(
-            map(({ family: [f], children, requirements }) => ({
-              ...f,
+            map(({ family, children, requirements }) => ({
+              name: family.name,
+              id: family.id,
               children: children || [],
               requirements: requirements || []
             } as FamilyWithChildren))
@@ -128,7 +129,7 @@ export class Planning implements OnInit {
       for (const weekDay of this.weekDays) {
         for (const timeSlot of this.timeSlots) {
           const availableFamilies = this.getAvailableFamilies(weekDay.value, timeSlot.value, weekType.value);
-          
+
           this.planningSlots.push({
             weekDay: weekDay.value,
             timeSlot: timeSlot.value,
@@ -162,7 +163,7 @@ export class Planning implements OnInit {
 
     // Logique simple : prendre la famille avec la plus grande capacité
     // Dans un vrai système, on pourrait avoir une logique plus complexe
-    return availableFamilies.reduce((best, current) => 
+    return availableFamilies.reduce((best, current) =>
       (current.carCapacity || 0) > (best.carCapacity || 0) ? current : best
     );
   }

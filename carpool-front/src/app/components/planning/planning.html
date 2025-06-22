@@ -37,113 +37,113 @@
       {{ error }}
     </div>
 
-    <div *ngIf="!loading && !error" class="planning-content">
-      <!-- Statistiques -->
-      <div class="stats-section">
-        <div class="stat-card">
-          <div class="stat-number">{{ families.length }}</div>
-          <div class="stat-label">Familles</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ planningSlots.filter(s => s.assignedFamily).length }}</div>
-          <div class="stat-label">Créneaux assignés</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ planningSlots.filter(s => !s.assignedFamily).length }}</div>
-          <div class="stat-label">Créneaux libres</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ planningSlots.filter(s => s.availableFamilies.length === 0).length }}</div>
-          <div class="stat-label">Créneaux problématiques</div>
-        </div>
-      </div>
+<!--    <div *ngIf="!loading && !error" class="planning-content">-->
+<!--      &lt;!&ndash; Statistiques &ndash;&gt;-->
+<!--      <div class="stats-section">-->
+<!--        <div class="stat-card">-->
+<!--          <div class="stat-number">{{ families.length }}</div>-->
+<!--          <div class="stat-label">Familles</div>-->
+<!--        </div>-->
+<!--        <div class="stat-card">-->
+<!--          <div class="stat-number">{{ planningSlots.filter(s => s.assignedFamily).length }}</div>-->
+<!--          <div class="stat-label">Créneaux assignés</div>-->
+<!--        </div>-->
+<!--        <div class="stat-card">-->
+<!--          <div class="stat-number">{{ planningSlots.filter(s => !s.assignedFamily).length }}</div>-->
+<!--          <div class="stat-label">Créneaux libres</div>-->
+<!--        </div>-->
+<!--        <div class="stat-card">-->
+<!--          <div class="stat-number">{{ planningSlots.filter(s => s.availableFamilies.length === 0).length }}</div>-->
+<!--          <div class="stat-label">Créneaux problématiques</div>-->
+<!--        </div>-->
+<!--      </div>-->
 
-      <!-- Planning par type de semaine -->
-      <div *ngFor="let weekType of weekTypes" class="week-type-section">
-        <h2 class="week-type-title">{{ weekType.label }}</h2>
-        
-        <div class="planning-grid">
-          <div class="grid-header">
-            <div class="time-header"></div>
-            <div *ngFor="let day of weekDays" class="day-header">
-              {{ day.label }}
-            </div>
-          </div>
+<!--      &lt;!&ndash; Planning par type de semaine &ndash;&gt;-->
+<!--      <div *ngFor="let weekType of weekTypes" class="week-type-section">-->
+<!--        <h2 class="week-type-title">{{ weekType.label }}</h2>-->
+<!--        -->
+<!--        <div class="planning-grid">-->
+<!--          <div class="grid-header">-->
+<!--            <div class="time-header"></div>-->
+<!--            <div *ngFor="let day of weekDays" class="day-header">-->
+<!--              {{ day.label }}-->
+<!--            </div>-->
+<!--          </div>-->
 
-          <div *ngFor="let timeSlot of timeSlots" class="time-row">
-            <div class="time-label">{{ timeSlot.label }}</div>
-            
-            <div *ngFor="let day of weekDays" class="slot-cell">
-              <ng-container *ngFor="let slot of planningSlots">
-                <div *ngIf="slot.weekType === weekType.value && slot.weekDay === day.value && slot.timeSlot === timeSlot.value" 
-                     class="planning-slot"
-                     [class.assigned]="slot.assignedFamily"
-                     [class.no-families]="slot.availableFamilies.length === 0"
-                     [class.multiple-families]="slot.availableFamilies.length > 1">
-                  
-                  <!-- Famille assignée -->
-                  <div *ngIf="slot.assignedFamily" class="assigned-family">
-                    <div class="family-name">{{ slot.assignedFamily.name }}</div>
-                    <div class="family-details">
-                      <span class="capacity">{{ slot.assignedFamily.carCapacity }} places</span>
-                      <span class="children-count">{{ slot.assignedFamily.children.length }} enfant(s)</span>
-                    </div>
-                    <button (click)="unassignFamily(slot)" class="btn-unassign">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </button>
-                  </div>
+<!--          <div *ngFor="let timeSlot of timeSlots" class="time-row">-->
+<!--            <div class="time-label">{{ timeSlot.label }}</div>-->
+<!--            -->
+<!--            <div *ngFor="let day of weekDays" class="slot-cell">-->
+<!--              <ng-container *ngFor="let slot of planningSlots">-->
+<!--                <div *ngIf="slot.weekType === weekType.value && slot.weekDay === day.value && slot.timeSlot === timeSlot.value" -->
+<!--                     class="planning-slot"-->
+<!--                     [class.assigned]="slot.assignedFamily"-->
+<!--                     [class.no-families]="slot.availableFamilies.length === 0"-->
+<!--                     [class.multiple-families]="slot.availableFamilies.length > 1">-->
+<!--                  -->
+<!--                  &lt;!&ndash; Famille assignée &ndash;&gt;-->
+<!--                  <div *ngIf="slot.assignedFamily" class="assigned-family">-->
+<!--                    <div class="family-name">{{ slot.assignedFamily.name }}</div>-->
+<!--                    <div class="family-details">-->
+<!--                      <span class="capacity">{{ slot.assignedFamily.carCapacity }} places</span>-->
+<!--                      <span class="children-count">{{ slot.assignedFamily.children.length }} enfant(s)</span>-->
+<!--                    </div>-->
+<!--                    <button (click)="unassignFamily(slot)" class="btn-unassign">-->
+<!--                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">-->
+<!--                        <line x1="18" y1="6" x2="6" y2="18"></line>-->
+<!--                        <line x1="6" y1="6" x2="18" y2="18"></line>-->
+<!--                      </svg>-->
+<!--                    </button>-->
+<!--                  </div>-->
 
-                  <!-- Pas de famille assignée -->
-                  <div *ngIf="!slot.assignedFamily" class="unassigned-slot">
-                    <div *ngIf="slot.availableFamilies.length === 0" class="no-families">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                      </svg>
-                      <span>Aucune famille disponible</span>
-                    </div>
+<!--                  &lt;!&ndash; Pas de famille assignée &ndash;&gt;-->
+<!--                  <div *ngIf="!slot.assignedFamily" class="unassigned-slot">-->
+<!--                    <div *ngIf="slot.availableFamilies.length === 0" class="no-families">-->
+<!--                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">-->
+<!--                        <circle cx="12" cy="12" r="10"></circle>-->
+<!--                        <line x1="15" y1="9" x2="9" y2="15"></line>-->
+<!--                        <line x1="9" y1="9" x2="15" y2="15"></line>-->
+<!--                      </svg>-->
+<!--                      <span>Aucune famille disponible</span>-->
+<!--                    </div>-->
 
-                    <div *ngIf="slot.availableFamilies.length > 0" class="available-families">
-                      <div class="available-count">{{ slot.availableFamilies.length }} famille(s) disponible(s)</div>
-                      <select (change)="assignFamily(slot, slot.availableFamilies[$any($event.target).selectedIndex - 1])" class="family-selector">
-                        <option value="">Sélectionner une famille</option>
-                        <option *ngFor="let family of slot.availableFamilies" [value]="family.id">
-                          {{ family.name }} ({{ family.carCapacity }} places, {{ family.children.length }} enfant(s))
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </ng-container>
-            </div>
-          </div>
-        </div>
-      </div>
+<!--                    <div *ngIf="slot.availableFamilies.length > 0" class="available-families">-->
+<!--                      <div class="available-count">{{ slot.availableFamilies.length }} famille(s) disponible(s)</div>-->
+<!--                      <select (change)="assignFamily(slot, slot.availableFamilies[$any($event.target).selectedIndex - 1])" class="family-selector">-->
+<!--                        <option value="">Sélectionner une famille</option>-->
+<!--                        <option *ngFor="let family of slot.availableFamilies" [value]="family.id">-->
+<!--                          {{ family.name }} ({{ family.carCapacity }} places, {{ family.children.length }} enfant(s))-->
+<!--                        </option>-->
+<!--                      </select>-->
+<!--                    </div>-->
+<!--                  </div>-->
+<!--                </div>-->
+<!--              </ng-container>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
 
-      <!-- Familles sans créneaux assignés -->
-      <div class="unassigned-families-section">
-        <h3>Familles non assignées</h3>
-        <div class="unassigned-families">
-          <div *ngFor="let family of families" class="family-card">
-            <ng-container *ngIf="!planningSlots.some(s => s.assignedFamily?.id === family.id)">
-              <div class="family-info">
-                <h4>{{ family.name }}</h4>
-                <p>{{ family.carCapacity }} places • {{ family.children.length }} enfant(s)</p>
-                <div *ngIf="family.requirements.length > 0" class="family-constraints">
-                  <strong>Indisponibilités :</strong>
-                  <span *ngFor="let req of family.requirements; let last = last" class="constraint">
-                    {{ getWeekDayLabel(req.weekDay!) }} {{ getTimeSlotLabel(req.timeSlot!) }} ({{ getWeekTypeLabel(req.weekType!) }}){{ !last ? ', ' : '' }}
-                  </span>
-                </div>
-              </div>
-            </ng-container>
-          </div>
-        </div>
-      </div>
-    </div>
+<!--      &lt;!&ndash; Familles sans créneaux assignés &ndash;&gt;-->
+<!--      <div class="unassigned-families-section">-->
+<!--        <h3>Familles non assignées</h3>-->
+<!--        <div class="unassigned-families">-->
+<!--          <div *ngFor="let family of families" class="family-card">-->
+<!--            <ng-container *ngIf="!planningSlots.some(s => s.assignedFamily?.id === family.id)">-->
+<!--              <div class="family-info">-->
+<!--                <h4>{{ family.name }}</h4>-->
+<!--                <p>{{ family.carCapacity }} places • {{ family.children.length }} enfant(s)</p>-->
+<!--                <div *ngIf="family.requirements.length > 0" class="family-constraints">-->
+<!--                  <strong>Indisponibilités :</strong>-->
+<!--                  <span *ngFor="let req of family.requirements; let last = last" class="constraint">-->
+<!--                    {{ getWeekDayLabel(req.weekDay!) }} {{ getTimeSlotLabel(req.timeSlot!) }} ({{ getWeekTypeLabel(req.weekType!) }}){{ !last ? ', ' : '' }}-->
+<!--                  </span>-->
+<!--                </div>-->
+<!--              </div>-->
+<!--            </ng-container>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
   </div>
 </div>

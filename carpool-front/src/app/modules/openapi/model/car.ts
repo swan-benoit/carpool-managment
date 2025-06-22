@@ -7,13 +7,13 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { Family } from './family';
 import { Child } from './child';
 
 
-export interface Family { 
+export interface Car { 
     id?: number;
-    name?: string;
-    carCapacity?: number;
     children?: Array<Child>;
+    family?: Family;
 }
 

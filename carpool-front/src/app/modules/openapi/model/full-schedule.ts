@@ -7,13 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { Child } from './child';
+import { Schedule } from './schedule';
 
 
-export interface Family { 
+export interface FullSchedule { 
     id?: number;
-    name?: string;
-    carCapacity?: number;
-    children?: Array<Child>;
+    oddSchedule?: Schedule;
+    evenSchedule?: Schedule;
 }
 
