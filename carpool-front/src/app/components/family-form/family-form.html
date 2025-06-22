@@ -1,0 +1,177 @@
+<div class="family-form-container">
+  <header class="page-header">
+    <h1>{{ isEditMode ? 'Modifier la famille' : 'Ajouter une famille' }}</h1>
+    <button (click)="cancel()" class="btn btn-secondary">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+      Annuler
+    </button>
+  </header>
+
+  <div class="form-content">
+    <div *ngIf="loading" class="loading">
+      <div class="spinner"></div>
+      <p>{{ isEditMode ? 'Chargement...' : 'Sauvegarde...' }}</p>
+    </div>
+
+    <div *ngIf="error" class="error-message">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
+      {{ error }}
+    </div>
+
+    <form [formGroup]="familyForm" (ngSubmit)="onSubmit()" class="family-form">
+      <!-- Informations de base -->
+      <div class="form-section">
+        <h2>Informations de la famille</h2>
+        
+        <div class="form-group">
+          <label for="name">Nom de la famille *</label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            placeholder="Ex: Famille Dupont"
+            [class.error]="getFieldError('name')"
+          >
+          <div *ngIf="getFieldError('name')" class="field-error">
+            {{ getFieldError('name') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="carCapacity">Capacité de la voiture *</label>
+          <input
+            type="number"
+            id="carCapacity"
+            formControlName="carCapacity"
+            min="1"
+            max="20"
+            placeholder="4"
+            [class.error]="getFieldError('carCapacity')"
+          >
+          <div *ngIf="getFieldError('carCapacity')" class="field-error">
+            {{ getFieldError('carCapacity') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Enfants -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Enfants</h2>
+          <button type="button" (click)="addChild()" class="btn btn-secondary btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Ajouter un enfant
+          </button>
+        </div>
+
+        <div formArrayName="children" class="children-list">
+          <div *ngFor="let child of children.controls; let i = index" [formGroupName]="i" class="child-item">
+            <div class="form-group">
+              <label [for]="'child-name-' + i">Nom de l'enfant *</label>
+              <div class="input-with-action">
+                <input
+                  type="text"
+                  [id]="'child-name-' + i"
+                  formControlName="name"
+                  placeholder="Prénom de l'enfant"
+                  [class.error]="getChildFieldError(i, 'name')"
+                >
+                <button
+                  type="button"
+                  (click)="removeChild(i)"
+                  class="btn btn-danger btn-sm"
+                  [disabled]="children.length === 1"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3,6 5,6 21,6"></polyline>
+                    <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                  </svg>
+                </button>
+              </div>
+              <div *ngIf="getChildFieldError(i, 'name')" class="field-error">
+                {{ getChildFieldError(i, 'name') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exigences -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Exigences de transport</h2>
+          <button type="button" (click)="addRequirement()" class="btn btn-secondary btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Ajouter une exigence
+          </button>
+        </div>
+
+        <div formArrayName="requirements" class="requirements-list">
+          <div *ngFor="let requirement of requirements.controls; let i = index" [formGroupName]="i" class="requirement-item">
+            <div class="requirement-fields">
+              <div class="form-group">
+                <label [for]="'weekDay-' + i">Jour de la semaine</label>
+                <select [id]="'weekDay-' + i" formControlName="weekDay">
+                  <option *ngFor="let day of weekDays" [value]="day.value">{{ day.label }}</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label [for]="'timeSlot-' + i">Moment</label>
+                <select [id]="'timeSlot-' + i" formControlName="timeSlot">
+                  <option *ngFor="let slot of timeSlots" [value]="slot.value">{{ slot.label }}</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label [for]="'weekType-' + i">Type de semaine</label>
+                <select [id]="'weekType-' + i" formControlName="weekType">
+                  <option *ngFor="let type of weekTypes" [value]="type.value">{{ type.label }}</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                (click)="removeRequirement(i)"
+                class="btn btn-danger btn-sm remove-btn"
+                [disabled]="requirements.length === 1"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3,6 5,6 21,6"></polyline>
+                  <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" (click)="cancel()" class="btn btn-secondary">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="familyForm.invalid || loading">
+          <svg *ngIf="!loading" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20,6 9,17 4,12"></polyline>
+          </svg>
+          <div *ngIf="loading" class="spinner-sm"></div>
+          {{ isEditMode ? 'Mettre à jour' : 'Créer la famille' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
