@@ -10,5 +10,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.10.0"
+  "packageManager": "pnpm@10.10.0",
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.20.2"
+  }
 }

@@ -2,6 +2,7 @@
   "name": "carpool-front",
   "version": "0.0.0",
   "scripts": {
+    "generate": "openapi-generator-cli generate --skip-validate-spec -i http://localhost:8080/q/openapi?format=json -g typescript-angular -o src/app/modules/openapi --additional-properties fileNaming=kebab-case,withInterfaces=true --generate-alias-as-model",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
