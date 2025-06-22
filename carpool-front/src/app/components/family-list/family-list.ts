@@ -38,8 +38,6 @@ export class FamilyList {
       requirements: this.requirementService.requirementGet(family.id),
     } as FamilyWithDetails))));
 
-  error: string | null = null;
-
   deleteFamily(family: Family) {
     if (confirm(`Êtes-vous sûr de vouloir supprimer la famille "${family.name}" ?`)) {
       this.familyService.familyIdDelete(family.id!).subscribe({
@@ -48,7 +46,6 @@ export class FamilyList {
         },
         error: (error) => {
           console.error('Erreur lors de la suppression:', error);
-          this.error = 'Erreur lors de la suppression de la famille';
         }
       });
     }
