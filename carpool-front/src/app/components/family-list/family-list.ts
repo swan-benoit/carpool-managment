@@ -1,12 +1,21 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { FamilyResourceService, ChildResourceService, RequirementResourceService, Family, Child, Requirement } from '../../modules/openapi';
-import { Observable, forkJoin, map } from 'rxjs';
+import {Component, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {RouterModule} from '@angular/router';
+import {
+  Child,
+  ChildResourceService,
+  Family,
+  FamilyResourceService,
+  Requirement,
+  RequirementResourceService
+} from '../../modules/openapi';
+import {map, Observable} from 'rxjs';
 
 interface FamilyWithDetails extends Family {
-  children?: Child[];
-  requirements?: Requirement[];
+  name: string;
+  carCapacity: number;
+  children?: Observable<Child[]>;
+  requirements?: Observable<Requirement[]>;
 }
 
 @Component({
@@ -16,71 +25,26 @@ interface FamilyWithDetails extends Family {
   templateUrl: './family-list.html',
   styleUrl: './family-list.css'
 })
-export class FamilyList implements OnInit {
+export class FamilyList {
   private familyService = inject(FamilyResourceService);
   private childService = inject(ChildResourceService);
   private requirementService = inject(RequirementResourceService);
 
-  families: FamilyWithDetails[] = [];
-  loading = true;
+  families: Observable<FamilyWithDetails[]> = this.familyService.familyGet().pipe(
+    map(families => families.map(family => ({
+      name: family.name ?? '',
+      carCapacity: family.carCapacity,
+      children: this.childService.childGet(family.id),
+      requirements: this.requirementService.requirementGet(family.id),
+    } as FamilyWithDetails))));
+
   error: string | null = null;
-
-  ngOnInit() {
-    this.loadFamilies();
-  }
-
-  loadFamilies() {
-    this.loading = true;
-    this.error = null;
-
-    this.familyService.familyGet().subscribe({
-      next: (families) => {
-        if (families.length > 0) {
-          // Pour chaque famille, charger ses enfants et exigences
-          const familyDetails$ = families.map(family =>
-            forkJoin({
-              family: [family],
-              children: this.childService.childGet(family.id),
-              requirements: this.requirementService.requirementGet(family.id)
-            }).pipe(
-              map(result => ({
-                ...result.family[0], // Récupérer la famille depuis le tableau
-                children: result.children,
-                requirements: result.requirements
-              }))
-            )
-          );
-
-          forkJoin(familyDetails$).subscribe({
-            next: (familiesWithDetails) => {
-              this.families = familiesWithDetails;
-              this.loading = false;
-            },
-            error: (error) => {
-              console.error('Erreur lors du chargement des détails des familles:', error);
-              // En cas d'erreur, afficher au moins les familles sans les détails
-              this.families = families;
-              this.loading = false;
-            }
-          });
-        } else {
-          this.families = families;
-          this.loading = false;
-        }
-      },
-      error: (error) => {
-        console.error('Erreur lors du chargement des familles:', error);
-        this.error = 'Erreur lors du chargement des familles';
-        this.loading = false;
-      }
-    });
-  }
 
   deleteFamily(family: Family) {
     if (confirm(`Êtes-vous sûr de vouloir supprimer la famille "${family.name}" ?`)) {
       this.familyService.familyIdDelete(family.id!).subscribe({
         next: () => {
-          this.loadFamilies();
+          window.location.reload();
         },
         error: (error) => {
           console.error('Erreur lors de la suppression:', error);
