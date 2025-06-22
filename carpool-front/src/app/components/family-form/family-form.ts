@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FamilyResourceService, ChildResourceService, RequirementResourceService, Family, Child, Requirement, TimeSlot, WeekDay, WeekType } from '../../modules/openapi';
-import { forkJoin } from 'rxjs';
+import { forkJoin, switchMap, tap, EMPTY, of, concat } from 'rxjs';
 
 @Component({
   selector: 'app-family-form',
@@ -194,9 +194,14 @@ export class FamilyForm implements OnInit {
   }
 
   createFamily(family: Family, children: any[], requirements: any[]) {
-    this.familyService.familyPost(family).subscribe({
-      next: (createdFamily) => {
-        this.saveChildrenAndRequirements(createdFamily.id!, children, requirements);
+    this.familyService.familyPost(family).pipe(
+      switchMap(createdFamily => 
+        this.saveChildrenAndRequirements(createdFamily.id!, children, requirements)
+      )
+    ).subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/families']);
       },
       error: (error) => {
         console.error('Erreur lors de la création de la famille:', error);
@@ -207,9 +212,14 @@ export class FamilyForm implements OnInit {
   }
 
   updateFamily(family: Family, children: any[], requirements: any[]) {
-    this.familyService.familyIdPut(family.id!, family).subscribe({
-      next: (updatedFamily) => {
-        this.saveChildrenAndRequirements(updatedFamily.id!, children, requirements);
+    this.familyService.familyIdPut(family.id!, family).pipe(
+      switchMap(updatedFamily => 
+        this.saveChildrenAndRequirements(updatedFamily.id!, children, requirements)
+      )
+    ).subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/families']);
       },
       error: (error) => {
         console.error('Erreur lors de la mise à jour de la famille:', error);
@@ -219,74 +229,66 @@ export class FamilyForm implements OnInit {
     });
   }
 
-  async saveChildrenAndRequirements(familyId: number, children: any[], requirements: any[]) {
-    try {
-      // 1. Gérer les enfants
-      const currentChildrenIds = children
-        .filter(child => child.id)
-        .map(child => child.id);
+  saveChildrenAndRequirements(familyId: number, children: any[], requirements: any[]) {
+    // 1. Préparer les opérations de suppression
+    const currentChildrenIds = children
+      .filter(child => child.id)
+      .map(child => child.id);
 
-      // Supprimer les enfants qui ne sont plus dans le formulaire
-      const childrenToDelete = this.existingChildrenIds.filter(id => !currentChildrenIds.includes(id));
-      for (const childId of childrenToDelete) {
-        await this.childService.childIdDelete(childId).toPromise();
-      }
+    const currentRequirementsIds = requirements
+      .filter(req => req.id)
+      .map(req => req.id);
 
-      // Créer ou mettre à jour les enfants
-      const childrenPromises = children
-        .filter(child => child.name && child.name.trim())
-        .map(child => {
-          const childData: Child = {
-            name: child.name.trim(),
-            family: { id: familyId }
-          };
-          
-          if (child.id) {
-            return this.childService.childIdPut(child.id, { ...childData, id: child.id }).toPromise();
-          } else {
-            return this.childService.childPost(childData).toPromise();
-          }
-        });
+    const childrenToDelete = this.existingChildrenIds.filter(id => !currentChildrenIds.includes(id));
+    const requirementsToDelete = this.existingRequirementsIds.filter(id => !currentRequirementsIds.includes(id));
 
-      // 2. Gérer les indisponibilités
-      const currentRequirementsIds = requirements
-        .filter(req => req.id)
-        .map(req => req.id);
+    // 2. Préparer les opérations de création/mise à jour
+    const childrenOperations = children
+      .filter(child => child.name && child.name.trim())
+      .map(child => {
+        const childData: Child = {
+          name: child.name.trim(),
+          family: { id: familyId }
+        };
+        
+        if (child.id) {
+          return this.childService.childIdPut(child.id, { ...childData, id: child.id });
+        } else {
+          return this.childService.childPost(childData);
+        }
+      });
 
-      // Supprimer les indisponibilités qui ne sont plus dans le formulaire
-      const requirementsToDelete = this.existingRequirementsIds.filter(id => !currentRequirementsIds.includes(id));
-      for (const reqId of requirementsToDelete) {
-        await this.requirementService.requirementIdDelete(reqId).toPromise();
-      }
+    const requirementsOperations = requirements
+      .filter(requirement => requirement.timeSlot && requirement.weekDay && requirement.weekType)
+      .map(requirement => {
+        const requirementData: Requirement = {
+          timeSlot: requirement.timeSlot,
+          weekDay: requirement.weekDay,
+          weekType: requirement.weekType,
+          family: { id: familyId }
+        };
+        
+        if (requirement.id) {
+          return this.requirementService.requirementIdPut(requirement.id, { ...requirementData, id: requirement.id });
+        } else {
+          return this.requirementService.requirementPost(requirementData);
+        }
+      });
 
-      // Créer ou mettre à jour les indisponibilités
-      const requirementsPromises = requirements
-        .filter(requirement => requirement.timeSlot && requirement.weekDay && requirement.weekType)
-        .map(requirement => {
-          const requirementData: Requirement = {
-            timeSlot: requirement.timeSlot,
-            weekDay: requirement.weekDay,
-            weekType: requirement.weekType,
-            family: { id: familyId }
-          };
-          
-          if (requirement.id) {
-            return this.requirementService.requirementIdPut(requirement.id, { ...requirementData, id: requirement.id }).toPromise();
-          } else {
-            return this.requirementService.requirementPost(requirementData).toPromise();
-          }
-        });
+    // 3. Créer les observables de suppression
+    const deletionOperations = [
+      ...childrenToDelete.map(id => this.childService.childIdDelete(id)),
+      ...requirementsToDelete.map(id => this.requirementService.requirementIdDelete(id))
+    ];
 
-      // Attendre que toutes les opérations se terminent
-      await Promise.all([...childrenPromises, ...requirementsPromises]);
+    // 4. Exécuter toutes les opérations en séquence : suppressions d'abord, puis créations/mises à jour
+    const deletions$ = deletionOperations.length > 0 ? forkJoin(deletionOperations) : of([]);
+    const operations$ = [...childrenOperations, ...requirementsOperations];
+    const creationsUpdates$ = operations$.length > 0 ? forkJoin(operations$) : of([]);
 
-      this.loading = false;
-      this.router.navigate(['/families']);
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      this.error = 'Erreur lors de la sauvegarde des enfants et indisponibilités';
-      this.loading = false;
-    }
+    return concat(deletions$, creationsUpdates$).pipe(
+      tap(() => console.log('Opérations terminées'))
+    );
   }
 
   cancel() {
