@@ -14,8 +14,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Import de la police Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Styles globaux pour les boutons */
 button {

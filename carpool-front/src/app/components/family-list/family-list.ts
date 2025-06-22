@@ -36,19 +36,12 @@ export class FamilyList implements OnInit {
     this.familyService.familyGet().subscribe({
       next: (families) => {
         // Pour chaque famille, charger ses enfants et exigences
-        const familyDetails$ = families.map(family => 
+        const familyDetails$ = families.map(family =>
           forkJoin({
             family: [family],
             children: this.childService.childGet(family.id),
             requirements: this.requirementService.requirementGet(family.id)
-          }).pipe(
-            map(({ family: [f], children, requirements }) => ({
-              ...f,
-              children,
-              requirements
-            }))
-          )
-        );
+          })        );
 
         if (familyDetails$.length > 0) {
           forkJoin(familyDetails$).subscribe({
