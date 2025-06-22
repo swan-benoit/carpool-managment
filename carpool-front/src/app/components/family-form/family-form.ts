@@ -80,12 +80,15 @@ export class FamilyForm implements OnInit {
     this.error = null;
 
     // Charger la famille et ses données associées en parallèle
+    // Utiliser les bons paramètres pour les appels API
     forkJoin({
       family: this.familyService.familyIdGet(this.familyId),
-      children: this.childService.childGet(this.familyId),
-      requirements: this.requirementService.requirementGet(this.familyId)
+      children: this.childService.childGet(this.familyId), // familyId comme paramètre familyId
+      requirements: this.requirementService.requirementGet(this.familyId) // familyId comme paramètre familyId
     }).subscribe({
       next: ({ family, children, requirements }) => {
+        console.log('Données chargées:', { family, children, requirements });
+        
         // Charger les données de la famille
         this.familyForm.patchValue({
           name: family.name,
