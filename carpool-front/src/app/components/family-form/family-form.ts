@@ -158,9 +158,7 @@ export class FamilyForm implements OnInit {
   }
 
   removeChild(index: number) {
-    if (this.children.length > 1) {
-      this.children.removeAt(index);
-    }
+    this.children.removeAt(index);
   }
 
   addRequirement() {
