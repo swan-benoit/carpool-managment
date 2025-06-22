@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FamilyResourceService, ChildResourceService, RequirementResourceService, Family, Child, Requirement, TimeSlot, WeekDay, WeekType } from '../../modules/openapi';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-family-form',
@@ -76,35 +77,48 @@ export class FamilyForm implements OnInit {
     if (!this.familyId) return;
 
     this.loading = true;
-    this.familyService.familyIdGet(this.familyId).subscribe({
-      next: (family) => {
+    this.error = null;
+
+    // Charger la famille et ses données associées en parallèle
+    forkJoin({
+      family: this.familyService.familyIdGet(this.familyId),
+      children: this.childService.childGet(this.familyId),
+      requirements: this.requirementService.requirementGet(this.familyId)
+    }).subscribe({
+      next: ({ family, children, requirements }) => {
+        // Charger les données de la famille
         this.familyForm.patchValue({
           name: family.name,
           carCapacity: family.carCapacity
         });
 
+        // Vider les FormArrays existants
+        while (this.children.length !== 0) {
+          this.children.removeAt(0);
+        }
+        while (this.requirements.length !== 0) {
+          this.requirements.removeAt(0);
+        }
+
         // Charger les enfants
-        this.childService.childGet(this.familyId!).subscribe({
-          next: (children) => {
-            children.forEach(child => {
-              this.children.push(this.createChildFormGroup(child));
-            });
-            if (children.length === 0) {
-              this.addChild();
-            }
-          }
-        });
+        if (children && children.length > 0) {
+          children.forEach(child => {
+            this.children.push(this.createChildFormGroup(child));
+          });
+        } else {
+          // Ajouter un enfant par défaut si aucun n'existe
+          this.addChild();
+        }
 
         // Charger les indisponibilités
-        this.requirementService.requirementGet(this.familyId!).subscribe({
-          next: (requirements) => {
-            requirements.forEach(requirement => {
-              this.requirements.push(this.createRequirementFormGroup(requirement));
-            });
-            // Ne pas ajouter d'indisponibilité par défaut en mode édition
-            this.loading = false;
-          }
-        });
+        if (requirements && requirements.length > 0) {
+          requirements.forEach(requirement => {
+            this.requirements.push(this.createRequirementFormGroup(requirement));
+          });
+        }
+        // Ne pas ajouter d'indisponibilité par défaut en mode édition
+
+        this.loading = false;
       },
       error: (error) => {
         console.error('Erreur lors du chargement de la famille:', error);
