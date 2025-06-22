@@ -11,22 +11,8 @@
   </header>
 
   <div class="content">
-    <div *ngIf="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Chargement des familles...</p>
-    </div>
-
-    <div *ngIf="error" class="error-message">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="15" y1="9" x2="9" y2="15"></line>
-        <line x1="9" y1="9" x2="15" y2="15"></line>
-      </svg>
-      {{ error }}
-    </div>
-
-    <div class="families-grid">
-      <div *ngFor="let family of families; trackBy: trackByFamilyId" class="family-card">
+    @for (family of families | async; track family.id) {
+      <div class="family-card">
         <div class="family-header">
           <h3>{{ family.name }}</h3>
           <div class="family-actions">
@@ -57,44 +43,52 @@
           </div>
         </div>
 
-        <div class="section">
-          <h4>Enfants ({{ family.children?.length || 0 }})</h4>
-          <div class="children-list">
-            <span *ngFor="let child of family.children" class="child-tag">
+        @if (family.children | async; as children) {
+          <div class="section">
+            <h4>Enfants ({{ children.length }})</h4>
+            <div class="children-list">
+            <span *ngFor="let child of children" class="child-tag">
               {{ child.name }}
             </span>
-            <div *ngIf="!family.children || family.children.length === 0" class="empty-state">
-              Aucun enfant enregistré
             </div>
           </div>
-        </div>
+        }
 
-        <div class="section">
-          <h4>Indisponibilités ({{ family.requirements?.length || 0 }})</h4>
-          <div class="requirements-list">
-            <div *ngFor="let requirement of family.requirements" class="requirement-item">
-              <span class="requirement-day">{{ getWeekDayLabel(requirement.weekDay!) }}</span>
-              <span class="requirement-time">{{ getTimeSlotLabel(requirement.timeSlot!) }}</span>
-              <span class="requirement-week">{{ getWeekTypeLabel(requirement.weekType!) }}</span>
-            </div>
-            <div *ngIf="!family.requirements || family.requirements.length === 0" class="empty-state">
-              Aucune indisponibilité
+
+        @if (family.requirements | async; as requirements) {
+          <div class="section">
+            <h4>Indisponibilités ({{ requirements.length }})</h4>
+            <div class="requirements-list">
+              @for (requirement of requirements; track requirement.id) {
+                <div class="requirement-item">
+                  <span class="requirement-day">{{ getWeekDayLabel(requirement.weekDay!) }}</span>
+                  <span class="requirement-time">{{ getTimeSlotLabel(requirement.timeSlot!) }}</span>
+                  <span class="requirement-week">{{ getWeekTypeLabel(requirement.weekType!) }}</span>
+                </div>
+              }
+
             </div>
           </div>
-        </div>
+        }
+
+
       </div>
-    </div>
+    }
 
-    <div *ngIf="families.length === 0 && !loading" class="empty-families">
-      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-        <circle cx="9" cy="7" r="4"></circle>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-      </svg>
-      <h3>Aucune famille enregistrée</h3>
-      <p>Commencez par ajouter votre première famille de covoiturage</p>
-      <a routerLink="/families/new" class="btn btn-primary">Ajouter une famille</a>
-    </div>
+
+    @if ((families | async)?.length === 0) {
+      <div class="empty-families">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <h3>Aucune famille enregistrée</h3>
+        <p>Commencez par ajouter votre première famille de covoiturage</p>
+        <a routerLink="/families/new" class="btn btn-primary">Ajouter une famille</a>
+      </div>
+    }
+
   </div>
 </div>
