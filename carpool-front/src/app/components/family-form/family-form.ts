@@ -58,8 +58,9 @@ export class FamilyForm implements OnInit {
       this.familyId = parseInt(id, 10);
       this.loadFamily();
     } else {
+      // Pour une nouvelle famille, on ajoute seulement un enfant par défaut
+      // Les indisponibilités sont optionnelles
       this.addChild();
-      this.addRequirement();
     }
   }
 
@@ -100,9 +101,7 @@ export class FamilyForm implements OnInit {
             requirements.forEach(requirement => {
               this.requirements.push(this.createRequirementFormGroup(requirement));
             });
-            if (requirements.length === 0) {
-              this.addRequirement();
-            }
+            // Ne pas ajouter d'indisponibilité par défaut en mode édition
             this.loading = false;
           }
         });
@@ -136,7 +135,9 @@ export class FamilyForm implements OnInit {
   }
 
   removeChild(index: number) {
-    this.children.removeAt(index);
+    if (this.children.length > 1) {
+      this.children.removeAt(index);
+    }
   }
 
   addRequirement() {
@@ -196,8 +197,9 @@ export class FamilyForm implements OnInit {
   }
 
   saveChildrenAndRequirements(familyId: number, children: any[], requirements: any[]) {
+    // Filtrer les enfants avec un nom valide
     const childrenPromises = children
-      .filter(child => child.name.trim())
+      .filter(child => child.name && child.name.trim())
       .map(child => {
         const childData: Child = {
           name: child.name,
@@ -211,20 +213,23 @@ export class FamilyForm implements OnInit {
         }
       });
 
-    const requirementsPromises = requirements.map(requirement => {
-      const requirementData: Requirement = {
-        timeSlot: requirement.timeSlot,
-        weekDay: requirement.weekDay,
-        weekType: requirement.weekType,
-        family: { id: familyId }
-      };
-      
-      if (requirement.id) {
-        return this.requirementService.requirementIdPut(requirement.id, { ...requirementData, id: requirement.id }).toPromise();
-      } else {
-        return this.requirementService.requirementPost(requirementData).toPromise();
-      }
-    });
+    // Filtrer les indisponibilités valides (peut être vide)
+    const requirementsPromises = requirements
+      .filter(requirement => requirement.timeSlot && requirement.weekDay && requirement.weekType)
+      .map(requirement => {
+        const requirementData: Requirement = {
+          timeSlot: requirement.timeSlot,
+          weekDay: requirement.weekDay,
+          weekType: requirement.weekType,
+          family: { id: familyId }
+        };
+        
+        if (requirement.id) {
+          return this.requirementService.requirementIdPut(requirement.id, { ...requirementData, id: requirement.id }).toPromise();
+        } else {
+          return this.requirementService.requirementPost(requirementData).toPromise();
+        }
+      });
 
     Promise.all([...childrenPromises, ...requirementsPromises])
       .then(() => {
