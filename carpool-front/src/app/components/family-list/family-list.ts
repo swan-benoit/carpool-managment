@@ -35,15 +35,22 @@ export class FamilyList implements OnInit {
 
     this.familyService.familyGet().subscribe({
       next: (families) => {
-        // Pour chaque famille, charger ses enfants et exigences
-        const familyDetails$ = families.map(family =>
-          forkJoin({
-            family: [family],
-            children: this.childService.childGet(family.id),
-            requirements: this.requirementService.requirementGet(family.id)
-          })        );
+        if (families.length > 0) {
+          // Pour chaque famille, charger ses enfants et exigences
+          const familyDetails$ = families.map(family =>
+            forkJoin({
+              family: [family],
+              children: this.childService.childGet(family.id),
+              requirements: this.requirementService.requirementGet(family.id)
+            }).pipe(
+              map(result => ({
+                ...result.family[0], // Récupérer la famille depuis le tableau
+                children: result.children,
+                requirements: result.requirements
+              }))
+            )
+          );
 
-        if (familyDetails$.length > 0) {
           forkJoin(familyDetails$).subscribe({
             next: (familiesWithDetails) => {
               this.families = familiesWithDetails;
@@ -51,6 +58,7 @@ export class FamilyList implements OnInit {
             },
             error: (error) => {
               console.error('Erreur lors du chargement des détails des familles:', error);
+              // En cas d'erreur, afficher au moins les familles sans les détails
               this.families = families;
               this.loading = false;
             }
