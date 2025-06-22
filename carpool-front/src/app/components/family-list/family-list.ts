@@ -12,6 +12,7 @@ import {
 import {map, Observable} from 'rxjs';
 
 interface FamilyWithDetails extends Family {
+  id: number;
   name: string;
   carCapacity: number;
   children?: Observable<Child[]>;
@@ -32,8 +33,9 @@ export class FamilyList {
 
   families: Observable<FamilyWithDetails[]> = this.familyService.familyGet().pipe(
     map(families => families.map(family => ({
+      id: family.id!, // S'assurer que l'ID est bien défini
       name: family.name ?? '',
-      carCapacity: family.carCapacity,
+      carCapacity: family.carCapacity ?? 0,
       children: this.childService.childGet(family.id),
       requirements: this.requirementService.requirementGet(family.id),
     } as FamilyWithDetails))));
@@ -46,6 +48,7 @@ export class FamilyList {
         },
         error: (error) => {
           console.error('Erreur lors de la suppression:', error);
+          alert('Erreur lors de la suppression de la famille');
         }
       });
     }
