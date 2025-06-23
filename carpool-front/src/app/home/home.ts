@@ -1,7 +1,6 @@
 import {Component, inject} from '@angular/core';
-import {ApiModule, ChildResourceService, FamilyResourceService, RequirementResourceService} from '../modules/openapi';
+import {FamilyResourceService} from '../modules/openapi';
 import {AsyncPipe} from '@angular/common';
-import {HttpClientModule} from '@angular/common/http';
 
 @Component({
   selector: 'app-home',
@@ -13,8 +12,6 @@ import {HttpClientModule} from '@angular/common/http';
 })
 export class Home {
   familiesService = inject(FamilyResourceService)
-  childrenService = inject(ChildResourceService)
-  requirementsService = inject(RequirementResourceService)
 
   families = this.familiesService.familyGet()
 
@@ -23,7 +20,5 @@ export class Home {
       name: "swan",
       carCapacity: 1000,
     }).subscribe()
-
   }
-
 }

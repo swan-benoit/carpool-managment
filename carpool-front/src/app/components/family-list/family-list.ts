@@ -3,11 +3,9 @@ import {CommonModule} from '@angular/common';
 import {RouterModule} from '@angular/router';
 import {
   Child,
-  ChildResourceService,
   Family,
   FamilyResourceService,
-  Requirement,
-  RequirementResourceService
+  Requirement
 } from '../../modules/openapi';
 import {map, Observable} from 'rxjs';
 
@@ -28,16 +26,14 @@ interface FamilyWithDetails extends Family{
 })
 export class FamilyList {
   private familyService = inject(FamilyResourceService);
-  private childService = inject(ChildResourceService);
-  private requirementService = inject(RequirementResourceService);
 
   families: Observable<FamilyWithDetails[]> = this.familyService.familyGet().pipe(
     map(families => families.map(family => ({
-      id: family.id!, // S'assurer que l'ID est bien défini
+      id: family.id!, 
       name: family.name ?? '',
       carCapacity: family.carCapacity ?? 0,
-      children: family.children,
-      requirements: [],
+      children: family.children || [],
+      requirements: Array.from(family.requirements || []),
     } as FamilyWithDetails))));
 
   deleteFamily(family: Family) {

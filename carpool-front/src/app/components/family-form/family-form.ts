@@ -2,8 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FamilyResourceService, ChildResourceService, RequirementResourceService, Family, Child, Requirement, TimeSlot, WeekDay, WeekType } from '../../modules/openapi';
-import { forkJoin, switchMap, tap, EMPTY, of, concat } from 'rxjs';
+import { FamilyResourceService, Family, Child, Requirement, TimeSlot, WeekDay, WeekType } from '../../modules/openapi';
 
 @Component({
   selector: 'app-family-form',
@@ -17,18 +16,12 @@ export class FamilyForm implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private familyService = inject(FamilyResourceService);
-  private childService = inject(ChildResourceService);
-  private requirementService = inject(RequirementResourceService);
 
   familyForm: FormGroup;
   isEditMode = false;
   familyId: number | null = null;
   loading = false;
   error: string | null = null;
-
-  // Garder une trace des IDs existants pour la suppression
-  existingChildrenIds: number[] = [];
-  existingRequirementsIds: number[] = [];
 
   timeSlots = [
     { value: TimeSlot.Morning, label: 'Matin' },
@@ -63,8 +56,7 @@ export class FamilyForm implements OnInit {
       this.familyId = parseInt(id, 10);
       this.loadFamily();
     } else {
-      // Pour une nouvelle famille, on ajoute seulement un enfant par défaut
-      // Les indisponibilités sont optionnelles
+      // Pour une nouvelle famille, on ajoute un enfant par défaut
       this.addChild();
     }
   }
@@ -83,14 +75,9 @@ export class FamilyForm implements OnInit {
     this.loading = true;
     this.error = null;
 
-    // Charger la famille et ses données associées en parallèle
-    forkJoin({
-      family: this.familyService.familyIdGet(this.familyId),
-      children: this.childService.childGet(this.familyId),
-      requirements: this.requirementService.requirementGet(this.familyId)
-    }).subscribe({
-      next: ({ family, children, requirements }) => {
-        console.log('Données chargées:', { family, children, requirements });
+    this.familyService.familyIdGet(this.familyId).subscribe({
+      next: (family) => {
+        console.log('Famille chargée:', family);
 
         // Charger les données de la famille
         this.familyForm.patchValue({
@@ -106,13 +93,9 @@ export class FamilyForm implements OnInit {
           this.requirements.removeAt(0);
         }
 
-        // Sauvegarder les IDs existants
-        this.existingChildrenIds = children?.map(c => c.id!).filter(id => id) || [];
-        this.existingRequirementsIds = requirements?.map(r => r.id!).filter(id => id) || [];
-
         // Charger les enfants
-        if (children && children.length > 0) {
-          children.forEach(child => {
+        if (family.children && family.children.length > 0) {
+          family.children.forEach(child => {
             this.children.push(this.createChildFormGroup(child));
           });
         } else {
@@ -121,8 +104,8 @@ export class FamilyForm implements OnInit {
         }
 
         // Charger les indisponibilités
-        if (requirements && requirements.length > 0) {
-          requirements.forEach(requirement => {
+        if (family.requirements && family.requirements.size > 0) {
+          Array.from(family.requirements).forEach(requirement => {
             this.requirements.push(this.createRequirementFormGroup(requirement));
           });
         }
@@ -175,27 +158,40 @@ export class FamilyForm implements OnInit {
       this.error = null;
 
       const formValue = this.familyForm.value;
+      
+      // Préparer les données de la famille avec enfants et indisponibilités
       const family: Family = {
         name: formValue.name,
-        carCapacity: formValue.carCapacity
+        carCapacity: formValue.carCapacity,
+        children: formValue.children
+          .filter((child: any) => child.name && child.name.trim())
+          .map((child: any) => ({
+            id: child.id,
+            name: child.name.trim()
+          })),
+        requirements: new Set(formValue.requirements
+          .filter((req: any) => req.timeSlot && req.weekDay && req.weekType)
+          .map((req: any) => ({
+            id: req.id,
+            timeSlot: req.timeSlot,
+            weekDay: req.weekDay,
+            weekType: req.weekType
+          })))
       };
 
       if (this.isEditMode && this.familyId) {
         family.id = this.familyId;
-        this.updateFamily(family, formValue.children, formValue.requirements);
+        this.updateFamily(family);
       } else {
-        this.createFamily(family, formValue.children, formValue.requirements);
+        this.createFamily(family);
       }
     } else {
       this.markFormGroupTouched(this.familyForm);
     }
   }
 
-  createFamily(family: Family, children: any[], requirements: any[]) {
-    this.familyService.familyPost({
-      ...family,
-      children: children.map(c => ({name: c.name}))
-    }).subscribe({
+  createFamily(family: Family) {
+    this.familyService.familyPost(family).subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/families']);
@@ -208,11 +204,8 @@ export class FamilyForm implements OnInit {
     });
   }
 
-  updateFamily(family: Family, children: any[], requirements: any[]) {
-    this.familyService.familyIdPut(family.id!, {
-      ...family,
-      children: children.map(c => c.id == undefined ? {name: c.name} : {name: c.name, id: c.id}),
-    }).subscribe({
+  updateFamily(family: Family) {
+    this.familyService.familyIdPut(family.id!, family).subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/families']);
@@ -223,69 +216,6 @@ export class FamilyForm implements OnInit {
         this.loading = false;
       }
     });
-  }
-
-  saveChildrenAndRequirements(familyId: number, children: any[], requirements: any[]) {
-    // 1. Préparer les opérations de suppression
-    const currentChildrenIds = children
-      .filter(child => child.id)
-      .map(child => child.id);
-
-    const currentRequirementsIds = requirements
-      .filter(req => req.id)
-      .map(req => req.id);
-
-    const childrenToDelete = this.existingChildrenIds.filter(id => !currentChildrenIds.includes(id));
-    const requirementsToDelete = this.existingRequirementsIds.filter(id => !currentRequirementsIds.includes(id));
-
-    // 2. Préparer les opérations de création/mise à jour
-    const childrenOperations = children
-      .filter(child => child.name && child.name.trim())
-      .map(child => {
-        const childData: Child = {
-          name: child.name.trim(),
-          // family: { id: familyId }
-        };
-
-
-        if (child?.id) {
-          return this.childService.childIdPut(child.id, { ...childData, id: child.id });
-        } else {
-          return this.childService.childPost(childData);
-        }
-      });
-
-    const requirementsOperations = requirements
-      .filter(requirement => requirement.timeSlot && requirement.weekDay && requirement.weekType)
-      .map(requirement => {
-        const requirementData: Requirement = {
-          timeSlot: requirement.timeSlot,
-          weekDay: requirement.weekDay,
-          weekType: requirement.weekType,
-          family: { id: familyId }
-        };
-
-        if (requirement.id) {
-          return this.requirementService.requirementIdPut(requirement.id, { ...requirementData, id: requirement.id });
-        } else {
-          return this.requirementService.requirementPost(requirementData);
-        }
-      });
-
-    // 3. Créer les observables de suppression
-    const deletionOperations = [
-      ...childrenToDelete.map(id => this.childService.childIdDelete(id)),
-      ...requirementsToDelete.map(id => this.requirementService.requirementIdDelete(id))
-    ];
-
-    // 4. Exécuter toutes les opérations en séquence : suppressions d'abord, puis créations/mises à jour
-    const deletions$ = deletionOperations.length > 0 ? forkJoin(deletionOperations) : of([]);
-    const operations$ = [...childrenOperations, ...requirementsOperations];
-    const creationsUpdates$ = operations$.length > 0 ? forkJoin(operations$) : of([]);
-
-    return concat(deletions$, creationsUpdates$).pipe(
-      tap(() => console.log('Opérations terminées'))
-    );
   }
 
   cancel() {

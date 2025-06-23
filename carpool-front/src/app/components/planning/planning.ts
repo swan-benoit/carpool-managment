@@ -3,8 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import {
   FamilyResourceService,
-  ChildResourceService,
-  RequirementResourceService,
   Family,
   Child,
   Requirement,
@@ -12,7 +10,7 @@ import {
   WeekDay,
   WeekType
 } from '../../modules/openapi';
-import { forkJoin, map, Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 interface PlanningSlot {
   weekDay: WeekDay;
@@ -37,8 +35,6 @@ interface FamilyWithChildren extends Family {
 })
 export class Planning implements OnInit {
   private familyService = inject(FamilyResourceService);
-  private childService = inject(ChildResourceService);
-  private requirementService = inject(RequirementResourceService);
 
   families: FamilyWithChildren[] = [];
   planningSlots: PlanningSlot[] = [];
@@ -70,48 +66,17 @@ export class Planning implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.familyService.familyGet().pipe(
-      map(families => families.map(family => ({
-        ...family,
-        children: [],
-        requirements: []
-      } as FamilyWithChildren)))
-    ).subscribe({
+    this.familyService.familyGet().subscribe({
       next: (families) => {
-        // Charger les enfants et indisponibilités pour chaque famille
-        const familyDetailsRequests = families.map(family =>
-          forkJoin({
-            family: [family],
-            children: this.childService.childGet(family.id),
-            requirements: this.requirementService.requirementGet(family.id)
-          }).pipe(
-            map(({ family, children, requirements }) => ({
-              name: family.name,
-              id: family.id,
-              children: children || [],
-              requirements: requirements || []
-            } as FamilyWithChildren))
-          )
-        );
+        // Transformer les familles avec leurs enfants et indisponibilités
+        this.families = families.map(family => ({
+          ...family,
+          children: family.children || [],
+          requirements: Array.from(family.requirements || [])
+        } as FamilyWithChildren));
 
-        if (familyDetailsRequests.length > 0) {
-          forkJoin(familyDetailsRequests).subscribe({
-            next: (familiesWithDetails) => {
-              this.families = familiesWithDetails;
-              this.generatePlanningSlots();
-              this.loading = false;
-            },
-            error: (error) => {
-              console.error('Erreur lors du chargement des détails des familles:', error);
-              this.error = 'Erreur lors du chargement des données';
-              this.loading = false;
-            }
-          });
-        } else {
-          this.families = [];
-          this.generatePlanningSlots();
-          this.loading = false;
-        }
+        this.generatePlanningSlots();
+        this.loading = false;
       },
       error: (error) => {
         console.error('Erreur lors du chargement des familles:', error);
@@ -162,7 +127,6 @@ export class Planning implements OnInit {
     if (availableFamilies.length === 0) return undefined;
 
     // Logique simple : prendre la famille avec la plus grande capacité
-    // Dans un vrai système, on pourrait avoir une logique plus complexe
     return availableFamilies.reduce((best, current) =>
       (current.carCapacity || 0) > (best.carCapacity || 0) ? current : best
     );
