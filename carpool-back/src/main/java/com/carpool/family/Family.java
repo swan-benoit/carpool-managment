@@ -1,22 +1,29 @@
 package com.carpool.family;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
+import io.quarkus.panache.common.Sort;
+import jakarta.json.bind.annotation.JsonbTransient;
+import jakarta.persistence.*;
 
 import java.util.List;
 
 @Entity
-public class Family extends PanacheEntity {
+public class Family extends PanacheEntityBase {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+
     public String name;
+
     public int carCapacity;
-    @OneToMany
+
+    @OneToMany(mappedBy = "family", cascade = CascadeType.PERSIST)
     public List<Child> children;
-//
-//    public static List<FamilyWithChildren> getFamiliesWithChilren() {
-//        return Child.find( "select c.family, c from Child c"
-//        ).project(FamilyWithChildren.class).list();
-//    }
+
+    static List<Family> familiesWithChildren() {
+       return list("SELECT DISTINCT f FROM Family f LEFT JOIN FETCH f.children order by f.name");
+    };
+
 }

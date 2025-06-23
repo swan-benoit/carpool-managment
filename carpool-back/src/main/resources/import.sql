@@ -1,22 +1,16 @@
-INSERT INTO child (id, name) VALUES (1, 'Luce');
-INSERT INTO child (id, name) VALUES (2, 'Mael');
-INSERT INTO child (id, name) VALUES (3, 'Hedi');
-INSERT INTO child (id, name) VALUES (4, 'Issa');
-INSERT INTO child (id, name) VALUES (5, 'Come');
-INSERT INTO child (id, name) VALUES (6, 'Rose');
-INSERT INTO child (id, name) VALUES (7, 'Mélanie');
-INSERT INTO child (id, name) VALUES (8, 'Laetitia');
-INSERT INTO family (carcapacity, id, name) VALUES (7, 1, 'Famille de Mael');
-INSERT INTO family (carcapacity, id, name) VALUES (4, 51, 'Famille de laetitia et Mélanie');
-INSERT INTO family (carcapacity, id, name) VALUES (4, 101, 'Famille de Come et Rose');
-INSERT INTO family (carcapacity, id, name) VALUES (4, 151, 'Famille de Luce');
-INSERT INTO family (carcapacity, id, name) VALUES (4, 201, 'Famille de Hedi et Issa');
-INSERT INTO family_child (family_id, children_id) VALUES (151, 1);
-INSERT INTO family_child (family_id, children_id) VALUES (201, 4);
-INSERT INTO family_child (family_id, children_id) VALUES (201, 3);
-INSERT INTO family_child (family_id, children_id) VALUES (101, 5);
-INSERT INTO family_child (family_id, children_id) VALUES (101, 6);
-INSERT INTO family_child (family_id, children_id) VALUES (51, 7);
-INSERT INTO family_child (family_id, children_id) VALUES (51, 8);
-INSERT INTO family_child (family_id, children_id) VALUES (1, 2);
+INSERT INTO family (carcapacity, name) VALUES (7,  'Romain et Virginie');
+INSERT INTO family (carcapacity, name) VALUES (4,  'Anne et Swan');
+INSERT INTO family (carcapacity, name) VALUES (4,  'Axel et Soizic');
+INSERT INTO family (carcapacity, name) VALUES (4,  'Abdou et Lydia');
+INSERT INTO family (carcapacity, name) VALUES (4,  'Sonia et Jean philippe');
+
+INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Romain et Virginie'),  'Mael');
+INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Anne et Swan'),  'Luce');
+INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Axel et Soizic'),  'Come');
+INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Axel et Soizic'),  'Rose');
+INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Abdou et Lydia'),  'Issa');
+INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Abdou et Lydia'),  'Hedi');
+INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Sonia et Jean philippe'),  'Laetitia');
+INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Sonia et Jean philippe'),  'Mélanie');
+
 

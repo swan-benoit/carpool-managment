@@ -139,7 +139,7 @@ export class FamilyForm implements OnInit {
 
   createChildFormGroup(child?: Child): FormGroup {
     return this.fb.group({
-      id: [child?.id || null],
+      id: [child?.id],
       name: [child?.name || '', [Validators.required, Validators.minLength(2)]]
     });
   }
@@ -192,11 +192,10 @@ export class FamilyForm implements OnInit {
   }
 
   createFamily(family: Family, children: any[], requirements: any[]) {
-    this.familyService.familyPost(family).pipe(
-      switchMap(createdFamily =>
-        this.saveChildrenAndRequirements(createdFamily.id!, children, requirements)
-      )
-    ).subscribe({
+    this.familyService.familyPost({
+      ...family,
+      children: children.map(c => ({name: c.name}))
+    }).subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/families']);
@@ -210,15 +209,13 @@ export class FamilyForm implements OnInit {
   }
 
   updateFamily(family: Family, children: any[], requirements: any[]) {
-    console.log(family)
-    this.familyService.familyIdPut(family.id!, {...family, children }).pipe(
-      // switchMap(() =>
-      //   this.saveChildrenAndRequirements(family.id!, children, requirements)
-      // )
-    ).subscribe({
+    this.familyService.familyIdPut(family.id!, {
+      ...family,
+      children: children.map(c => c.id == undefined ? {name: c.name} : {name: c.name, id: c.id}),
+    }).subscribe({
       next: () => {
-        // this.loading = false;
-        // this.router.navigate(['/families']);
+        this.loading = false;
+        this.router.navigate(['/families']);
       },
       error: (error) => {
         console.error('Erreur lors de la mise à jour de la famille:', error);
@@ -247,7 +244,7 @@ export class FamilyForm implements OnInit {
       .map(child => {
         const childData: Child = {
           name: child.name.trim(),
-          family: { id: familyId }
+          // family: { id: familyId }
         };
 
 

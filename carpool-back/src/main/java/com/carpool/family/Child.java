@@ -1,17 +1,22 @@
 package com.carpool.family;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.json.bind.annotation.JsonbTransient;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 
 import java.util.List;
 
 @Entity
-public class Child extends PanacheEntity {
+public class Child extends PanacheEntityBase {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+
     public String name;
 
-//    @ManyToOne
-//    public Family family;
+    @ManyToOne
+    @JsonbTransient
+    public Family family;
 
 }
