@@ -179,6 +179,9 @@ export class FamilyForm implements OnInit {
           })))
       };
 
+      console.log('Données à envoyer:', family);
+      console.log('Requirements:', Array.from(family.requirements || []));
+
       if (this.isEditMode && this.familyId) {
         family.id = this.familyId;
         this.updateFamily(family);
@@ -191,8 +194,10 @@ export class FamilyForm implements OnInit {
   }
 
   createFamily(family: Family) {
+    console.log('Création famille avec requirements:', family);
     this.familyService.familyPost(family).subscribe({
-      next: () => {
+      next: (response) => {
+        console.log('Famille créée:', response);
         this.loading = false;
         this.router.navigate(['/families']);
       },
@@ -205,8 +210,10 @@ export class FamilyForm implements OnInit {
   }
 
   updateFamily(family: Family) {
+    console.log('Mise à jour famille avec requirements:', family);
     this.familyService.familyIdPut(family.id!, family).subscribe({
-      next: () => {
+      next: (response) => {
+        console.log('Famille mise à jour:', response);
         this.loading = false;
         this.router.navigate(['/families']);
       },
