@@ -159,6 +159,16 @@ export class FamilyForm implements OnInit {
 
       const formValue = this.familyForm.value;
       
+      // Préparer les requirements comme tableau (pas Set)
+      const requirementsArray = formValue.requirements
+        .filter((req: any) => req.timeSlot && req.weekDay && req.weekType)
+        .map((req: any) => ({
+          id: req.id,
+          timeSlot: req.timeSlot,
+          weekDay: req.weekDay,
+          weekType: req.weekType
+        }));
+
       // Préparer les données de la famille avec enfants et indisponibilités
       const family: Family = {
         name: formValue.name,
@@ -169,31 +179,30 @@ export class FamilyForm implements OnInit {
             id: child.id,
             name: child.name.trim()
           })),
-        requirements: new Set(formValue.requirements
-          .filter((req: any) => req.timeSlot && req.weekDay && req.weekType)
-          .map((req: any) => ({
-            id: req.id,
-            timeSlot: req.timeSlot,
-            weekDay: req.weekDay,
-            weekType: req.weekType
-          })))
+        requirements: new Set(requirementsArray) // Convertir en Set pour le type Family
       };
 
-      console.log('Données à envoyer:', family);
-      console.log('Requirements:', Array.from(family.requirements || []));
+      // Pour l'envoi au backend, on utilise un objet avec requirements comme tableau
+      const familyForBackend = {
+        ...family,
+        requirements: requirementsArray // Tableau pour le backend
+      };
+
+      console.log('Données à envoyer (avec tableau requirements):', familyForBackend);
+      console.log('Requirements array:', requirementsArray);
 
       if (this.isEditMode && this.familyId) {
-        family.id = this.familyId;
-        this.updateFamily(family);
+        familyForBackend.id = this.familyId;
+        this.updateFamily(familyForBackend as any);
       } else {
-        this.createFamily(family);
+        this.createFamily(familyForBackend as any);
       }
     } else {
       this.markFormGroupTouched(this.familyForm);
     }
   }
 
-  createFamily(family: Family) {
+  createFamily(family: any) {
     console.log('Création famille avec requirements:', family);
     this.familyService.familyPost(family).subscribe({
       next: (response) => {
@@ -209,7 +218,7 @@ export class FamilyForm implements OnInit {
     });
   }
 
-  updateFamily(family: Family) {
+  updateFamily(family: any) {
     console.log('Mise à jour famille avec requirements:', family);
     this.familyService.familyIdPut(family.id!, family).subscribe({
       next: (response) => {
