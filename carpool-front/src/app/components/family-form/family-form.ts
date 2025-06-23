@@ -159,7 +159,15 @@ export class FamilyForm implements OnInit {
 
       const formValue = this.familyForm.value;
       
-      // Préparer les requirements comme tableau (pas Set)
+      // Préparer les enfants
+      const childrenArray = formValue.children
+        .filter((child: any) => child.name && child.name.trim())
+        .map((child: any) => ({
+          id: child.id,
+          name: child.name.trim()
+        }));
+
+      // Préparer les requirements comme tableau
       const requirementsArray = formValue.requirements
         .filter((req: any) => req.timeSlot && req.weekDay && req.weekType)
         .map((req: any) => ({
@@ -169,65 +177,54 @@ export class FamilyForm implements OnInit {
           weekType: req.weekType
         }));
 
-      // Préparer les données de la famille avec enfants et indisponibilités
-      const family: Family = {
+      // ✅ OBJET CORRECT POUR LE BACKEND (avec requirements comme tableau)
+      const familyData = {
         name: formValue.name,
         carCapacity: formValue.carCapacity,
-        children: formValue.children
-          .filter((child: any) => child.name && child.name.trim())
-          .map((child: any) => ({
-            id: child.id,
-            name: child.name.trim()
-          })),
-        requirements: new Set(requirementsArray) // Convertir en Set pour le type Family
+        children: childrenArray,
+        requirements: requirementsArray // ✅ TABLEAU, pas Set
       };
 
-      // Pour l'envoi au backend, on utilise un objet avec requirements comme tableau
-      const familyForBackend = {
-        ...family,
-        requirements: requirementsArray // Tableau pour le backend
-      };
-
-      console.log('Données à envoyer (avec tableau requirements):', familyForBackend);
-      console.log('Requirements array:', requirementsArray);
+      console.log('🚀 Données envoyées au backend:', familyData);
+      console.log('📋 Requirements array:', requirementsArray);
 
       if (this.isEditMode && this.familyId) {
-        familyForBackend.id = this.familyId;
-        this.updateFamily(familyForBackend as any);
+        familyData.id = this.familyId;
+        this.updateFamily(familyData);
       } else {
-        this.createFamily(familyForBackend as any);
+        this.createFamily(familyData);
       }
     } else {
       this.markFormGroupTouched(this.familyForm);
     }
   }
 
-  createFamily(family: any) {
-    console.log('Création famille avec requirements:', family);
-    this.familyService.familyPost(family).subscribe({
+  createFamily(familyData: any) {
+    console.log('📤 Envoi création famille:', familyData);
+    this.familyService.familyPost(familyData).subscribe({
       next: (response) => {
-        console.log('Famille créée:', response);
+        console.log('✅ Famille créée:', response);
         this.loading = false;
         this.router.navigate(['/families']);
       },
       error: (error) => {
-        console.error('Erreur lors de la création de la famille:', error);
+        console.error('❌ Erreur création famille:', error);
         this.error = 'Erreur lors de la création de la famille';
         this.loading = false;
       }
     });
   }
 
-  updateFamily(family: any) {
-    console.log('Mise à jour famille avec requirements:', family);
-    this.familyService.familyIdPut(family.id!, family).subscribe({
+  updateFamily(familyData: any) {
+    console.log('📤 Envoi mise à jour famille:', familyData);
+    this.familyService.familyIdPut(familyData.id!, familyData).subscribe({
       next: (response) => {
-        console.log('Famille mise à jour:', response);
+        console.log('✅ Famille mise à jour:', response);
         this.loading = false;
         this.router.navigate(['/families']);
       },
       error: (error) => {
-        console.error('Erreur lors de la mise à jour de la famille:', error);
+        console.error('❌ Erreur mise à jour famille:', error);
         this.error = 'Erreur lors de la mise à jour de la famille';
         this.loading = false;
       }
