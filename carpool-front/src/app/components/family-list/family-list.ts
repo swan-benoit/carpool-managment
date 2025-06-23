@@ -11,12 +11,12 @@ import {
 } from '../../modules/openapi';
 import {map, Observable} from 'rxjs';
 
-interface FamilyWithDetails extends Family {
+interface FamilyWithDetails extends Family{
   id: number;
   name: string;
   carCapacity: number;
-  children?: Observable<Child[]>;
-  requirements?: Observable<Requirement[]>;
+  children?: Child[];
+  requirements?: Requirement[];
 }
 
 @Component({
@@ -36,8 +36,8 @@ export class FamilyList {
       id: family.id!, // S'assurer que l'ID est bien défini
       name: family.name ?? '',
       carCapacity: family.carCapacity ?? 0,
-      children: this.childService.childGet(family.id),
-      requirements: this.requirementService.requirementGet(family.id),
+      children: family.children,
+      requirements: [],
     } as FamilyWithDetails))));
 
   deleteFamily(family: Family) {

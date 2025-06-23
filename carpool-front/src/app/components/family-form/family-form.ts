@@ -210,14 +210,15 @@ export class FamilyForm implements OnInit {
   }
 
   updateFamily(family: Family, children: any[], requirements: any[]) {
-    this.familyService.familyIdPut(family.id!, family).pipe(
-      switchMap(() =>
-        this.saveChildrenAndRequirements(family.id!, children, requirements)
-      )
+    console.log(family)
+    this.familyService.familyIdPut(family.id!, {...family, children }).pipe(
+      // switchMap(() =>
+      //   this.saveChildrenAndRequirements(family.id!, children, requirements)
+      // )
     ).subscribe({
       next: () => {
-        this.loading = false;
-        this.router.navigate(['/families']);
+        // this.loading = false;
+        // this.router.navigate(['/families']);
       },
       error: (error) => {
         console.error('Erreur lors de la mise à jour de la famille:', error);
@@ -248,7 +249,7 @@ export class FamilyForm implements OnInit {
           name: child.name.trim(),
           family: { id: familyId }
         };
-        console.log(child);
+
 
         if (child?.id) {
           return this.childService.childIdPut(child.id, { ...childData, id: child.id });

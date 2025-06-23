@@ -1,6 +1,7 @@
 package com.carpool.family;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 
@@ -10,7 +11,7 @@ import java.util.List;
 public class Child extends PanacheEntity {
     public String name;
 
-    @ManyToOne
-    public Family family;
+//    @ManyToOne
+//    public Family family;
 
 }

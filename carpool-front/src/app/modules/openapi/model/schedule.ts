@@ -7,10 +7,16 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { Trip } from './trip';
+import { WeekType } from './week-type';
 
 
-export interface Child { 
+export interface Schedule { 
     id?: number;
-    name?: string;
+    weekType?: WeekType;
+    trips?: Array<Trip>;
 }
+export namespace Schedule {
+}
+
 

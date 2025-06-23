@@ -10,7 +10,9 @@ import java.util.List;
 @ApplicationScoped
 public class ScheduleService {
     public FullSchedule generateFullSchedule() {
-        List<Family> familyWithChildren = Family.listAll();
+//        List<FamilyWithChildren> familyWithChildren = Family.getFamiliesWithChilren();
+        List<ChildDto> project = Child.findAll().project(ChildDto.class)
+                .list();
 
         for (WeekType weekType : WeekType.values()) {
             for (WeekDay weekDay : WeekDay.values()) {

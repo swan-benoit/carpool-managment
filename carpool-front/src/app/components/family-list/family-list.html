@@ -43,11 +43,11 @@
           </div>
         </div>
 
-        @if (family.children | async; as children) {
+        @if (family.children) {
           <div class="section">
-            <h4>Enfants ({{ children.length }})</h4>
+            <h4>Enfants ({{ family.children.length }})</h4>
             <div class="children-list">
-            <span *ngFor="let child of children" class="child-tag">
+            <span *ngFor="let child of family.children" class="child-tag">
               {{ child.name }}
             </span>
             </div>
@@ -55,11 +55,11 @@
         }
 
 
-        @if (family.requirements | async; as requirements) {
+        @if (family.requirements) {
           <div class="section">
-            <h4>Indisponibilités ({{ requirements.length }})</h4>
+            <h4>Indisponibilités ({{ family.requirements.length }})</h4>
             <div class="requirements-list">
-              @for (requirement of requirements; track requirement.id) {
+              @for (requirement of family.requirements; track requirement.id) {
                 <div class="requirement-item">
                   <span class="requirement-day">{{ getWeekDayLabel(requirement.weekDay!) }}</span>
                   <span class="requirement-time">{{ getTimeSlotLabel(requirement.timeSlot!) }}</span>

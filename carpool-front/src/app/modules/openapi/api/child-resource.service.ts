@@ -90,7 +90,6 @@ export class ChildResourceService extends BaseService implements ChildResourceSe
 
     /**
      * List
-     * @param familyId 
      * @param id 
      * @param name 
      * @param namedQuery 
@@ -100,14 +99,12 @@ export class ChildResourceService extends BaseService implements ChildResourceSe
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public childGet(familyId?: number, id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<Child>>;
-    public childGet(familyId?: number, id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<Child>>>;
-    public childGet(familyId?: number, id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<Child>>>;
-    public childGet(familyId?: number, id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public childGet(id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<Child>>;
+    public childGet(id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<Child>>>;
+    public childGet(id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<Child>>>;
+    public childGet(id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarQueryParameters = new HttpParams({encoder: this.encoder});
-        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>familyId, 'family.id');
         localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
           <any>id, 'id');
         localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,

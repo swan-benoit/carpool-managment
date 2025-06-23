@@ -31,7 +31,6 @@ export interface ChildResourceServiceInterface {
     /**
      * List
      * 
-     * @param familyId 
      * @param id 
      * @param name 
      * @param namedQuery 
@@ -39,7 +38,7 @@ export interface ChildResourceServiceInterface {
      * @param size 
      * @param sort 
      */
-    childGet(familyId?: number, id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, extraHttpRequestParams?: any): Observable<Array<Child>>;
+    childGet(id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, extraHttpRequestParams?: any): Observable<Array<Child>>;
 
     /**
      * Delete
