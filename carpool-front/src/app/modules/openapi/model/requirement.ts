@@ -8,7 +8,6 @@
  * Do not edit the class manually.
  */
 import { WeekDay } from './week-day';
-import { Family } from './family';
 import { TimeSlot } from './time-slot';
 import { WeekType } from './week-type';
 
@@ -18,7 +17,6 @@ export interface Requirement {
     timeSlot?: TimeSlot;
     weekDay?: WeekDay;
     weekType?: WeekType;
-    family?: Family;
 }
 export namespace Requirement {
 }

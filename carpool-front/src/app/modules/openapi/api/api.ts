@@ -1,16 +1,10 @@
-export * from './child-resource.service';
-import { ChildResourceService } from './child-resource.service';
-export * from './child-resource.serviceInterface';
 export * from './family-resource.service';
 import { FamilyResourceService } from './family-resource.service';
 export * from './family-resource.serviceInterface';
 export * from './full-schedule-resource.service';
 import { FullScheduleResourceService } from './full-schedule-resource.service';
 export * from './full-schedule-resource.serviceInterface';
-export * from './requirement-resource.service';
-import { RequirementResourceService } from './requirement-resource.service';
-export * from './requirement-resource.serviceInterface';
 export * from './schedule-resource.service';
 import { ScheduleResourceService } from './schedule-resource.service';
 export * from './schedule-resource.serviceInterface';
-export const APIS = [ChildResourceService, FamilyResourceService, FullScheduleResourceService, RequirementResourceService, ScheduleResourceService];
+export const APIS = [FamilyResourceService, FullScheduleResourceService, ScheduleResourceService];

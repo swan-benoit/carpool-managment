@@ -23,48 +23,27 @@ export interface FamilyResourceServiceInterface {
     configuration: Configuration;
 
     /**
-     * Count
+     * Get Families
      * 
      */
-    familyCountGet(extraHttpRequestParams?: any): Observable<number>;
+    familyGet(extraHttpRequestParams?: any): Observable<Array<Family>>;
 
     /**
-     * List
-     * 
-     * @param carCapacity 
-     * @param id 
-     * @param name 
-     * @param namedQuery 
-     * @param page 
-     * @param size 
-     * @param sort 
-     */
-    familyGet(carCapacity?: number, id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, extraHttpRequestParams?: any): Observable<Array<Family>>;
-
-    /**
-     * Delete
-     * 
-     * @param id 
-     */
-    familyIdDelete(id: number, extraHttpRequestParams?: any): Observable<{}>;
-
-    /**
-     * Get
+     * Get Family
      * 
      * @param id 
      */
     familyIdGet(id: number, extraHttpRequestParams?: any): Observable<Family>;
 
     /**
-     * Update
+     * Update Family
      * 
      * @param id 
-     * @param family 
      */
-    familyIdPut(id: number, family: Family, extraHttpRequestParams?: any): Observable<Family>;
+    familyIdPut(id: number, extraHttpRequestParams?: any): Observable<Family>;
 
     /**
-     * Add
+     * Create Family
      * 
      * @param family 
      */

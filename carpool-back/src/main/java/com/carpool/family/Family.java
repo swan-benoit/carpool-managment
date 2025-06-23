@@ -8,6 +8,7 @@ import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Entity
 public class Family extends PanacheEntityBase {
@@ -22,8 +23,11 @@ public class Family extends PanacheEntityBase {
     @OneToMany(mappedBy = "family", cascade = CascadeType.PERSIST)
     public List<Child> children;
 
+    @OneToMany(mappedBy = "family", cascade = CascadeType.PERSIST)
+    public Set<Requirement> requirements;
+
     static List<Family> familiesWithChildren() {
-       return list("SELECT DISTINCT f FROM Family f LEFT JOIN FETCH f.children order by f.name");
+       return list("SELECT DISTINCT f FROM Family f LEFT JOIN FETCH f.children LEFT JOIN FETCH f.requirements order by f.name");
     };
 
 }

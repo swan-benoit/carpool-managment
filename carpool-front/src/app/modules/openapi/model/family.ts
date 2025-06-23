@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { Requirement } from './requirement';
 import { Child } from './child';
 
 
@@ -15,5 +16,6 @@ export interface Family {
     name?: string;
     carCapacity?: number;
     children?: Array<Child>;
+    requirements?: Set<Requirement>;
 }
 
