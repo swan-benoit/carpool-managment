@@ -1,7 +1,11 @@
 package com.carpool;
 
+import com.carpool.family.TimeSlot;
+import com.carpool.family.WeekDay;
+import com.carpool.family.WeekType;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
@@ -16,7 +20,7 @@ class FamilyResourceTest {
     URL familyEndpoint;
 
     @Test
-    void testHelloEndpoint() {
+    void test_get_families() {
         given()
                 .when().get(familyEndpoint)
                 .then()
@@ -45,6 +49,41 @@ class FamilyResourceTest {
                         "children[4].name[0]", equalTo("Laetitia"),
                         "children[4].name[1]", equalTo("Mélanie")
                 );
+    }
+
+    @Test
+    void test_create_family() {
+        given().contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "name": "Jérome et Sonia",
+                          "carCapacity": 6,
+                          "children": [
+                            {
+                              "name": "Max"
+                            }
+                          ],
+                          "requirements": [
+                            {
+                              "timeSlot": "MORNING",
+                              "weekDay": "MONDAY",
+                              "weekType": "EVEN"
+                            }
+                          ]
+                        }
+                        """)
+                .when().post(familyEndpoint)
+                .then()
+                .statusCode(201)
+                .body(
+                        "carCapacity", equalTo(6),
+                        "name", equalTo("Jérome et Sonia"),
+                        "children.name[0]", equalTo("Max"),
+                        "requirements.timeSlot[0]", equalTo(TimeSlot.MORNING.toString()),
+                        "requirements.weekDay[0]", equalTo(WeekDay.MONDAY.toString()),
+                        "requirements.weekType[0]", equalTo(WeekType.EVEN.toString())
+                );
+
     }
 
 }

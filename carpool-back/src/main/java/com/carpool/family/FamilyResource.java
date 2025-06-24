@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.hibernate.orm.rest.data.panache.PanacheEntityResource;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
+import org.jboss.resteasy.reactive.ResponseStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ public class FamilyResource {
 
     @POST
     @Transactional
+    @ResponseStatus(201)
     public Family createFamily(Family family) {
         family.persist();
         for (Child child : family.children) {
