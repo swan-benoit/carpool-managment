@@ -3,9 +3,11 @@ package com.carpool;
 import com.carpool.family.TimeSlot;
 import com.carpool.family.WeekDay;
 import com.carpool.family.WeekType;
+import io.quarkus.test.TestTransaction;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
@@ -19,10 +21,14 @@ class FamilyResourceTest {
     @TestHTTPResource("/family")
     URL familyEndpoint;
 
+    private Response getFamilies() {
+        return given()
+                .when().get(familyEndpoint);
+    }
+
     @Test
     void test_get_families() {
-        given()
-                .when().get(familyEndpoint)
+        getFamilies()
                 .then()
                 .statusCode(200)
                 .body(
@@ -82,6 +88,12 @@ class FamilyResourceTest {
                         "requirements.timeSlot[0]", equalTo(TimeSlot.MORNING.toString()),
                         "requirements.weekDay[0]", equalTo(WeekDay.MONDAY.toString()),
                         "requirements.weekType[0]", equalTo(WeekType.EVEN.toString())
+                );
+
+        getFamilies().then().statusCode(200)
+                .body(
+                        "find { it.name == 'Jérome et Sonia' }.carCapacity", equalTo(6),
+                        "find { it.name == 'Jérome et Sonia' }.children.name[0]", equalTo("Max")
                 );
 
     }
