@@ -1,11 +1,15 @@
 package com.carpool;
 
+import com.carpool.family.FamilyResource;
 import com.carpool.family.TimeSlot;
 import com.carpool.family.WeekDay;
 import com.carpool.family.WeekType;
+import io.quarkus.test.TestTransaction;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 
@@ -15,13 +19,12 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 @QuarkusTest
+@TestHTTPEndpoint(FamilyResource.class)
 class FamilyResourceTest {
-    @TestHTTPResource("/family")
-    URL familyEndpoint;
 
     private Response getFamilies() {
         return given()
-                .when().get(familyEndpoint);
+                .when().get();
     }
 
     @Test
@@ -55,6 +58,7 @@ class FamilyResourceTest {
                 );
     }
 
+    @TestTransaction
     @Test
     void test_create_family() {
         given().contentType(ContentType.JSON)
@@ -76,7 +80,7 @@ class FamilyResourceTest {
                           ]
                         }
                         """)
-                .when().post(familyEndpoint)
+                .when().post()
                 .then()
                 .statusCode(201)
                 .body(
@@ -96,6 +100,52 @@ class FamilyResourceTest {
                         "find { it.name == 'Jérome et Sonia' }.requirements.weekDay[0]", equalTo(WeekDay.MONDAY.toString()),
                         "find { it.name == 'Jérome et Sonia' }.requirements.weekType[0]", equalTo(WeekType.EVEN.toString())
                 );
+    }
+
+    @Test
+    @TestTransaction
+    void test_update_family() {
+        JsonPath jsonPath = getFamilies()
+                .then()
+                .statusCode(200)
+                .extract()
+                .jsonPath();
+        int familyId = jsonPath.getInt("find { it.name == 'Sonia et Jean philippe' }.id");
+        int laetitiaId = jsonPath.getInt("find { it.name == 'Sonia et Jean philippe' }.children[0].id");
+
+        given().contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "name": "Sonia et Jean philippe",
+                          "carCapacity":9,
+                          "children": [
+                            {
+                              "id": %s,
+                              "name": "Laetitia"
+                            }
+                          ],
+                          "requirements": [
+                            {
+                              "timeSlot": "EVENING",
+                              "weekDay": "FRIDAY",
+                              "weekType": "ODD"
+                            }
+                          ]
+                        }
+                        """.formatted(laetitiaId)).when()
+                .put("/" + familyId)
+                .then()
+                .statusCode(201);
+
+        getFamilies().then().statusCode(200)
+                .body(
+                        "find { it.name == 'Sonia et Jean philippe' }.carCapacity", equalTo(9),
+                        "find { it.name == 'Sonia et Jean philippe' }.children.size()", equalTo(1),
+                        "find { it.name == 'Sonia et Jean philippe' }.requirements.timeSlot[0]", equalTo(TimeSlot.EVENING.toString()),
+                        "find { it.name == 'Sonia et Jean philippe' }.requirements.weekDay[0]", equalTo(WeekDay.FRIDAY.toString()),
+                        "find { it.name == 'Sonia et Jean philippe' }.requirements.weekType[0]", equalTo(WeekType.ODD.toString())
+                );
+
 
     }
 

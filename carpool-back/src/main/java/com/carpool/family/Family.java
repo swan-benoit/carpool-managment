@@ -21,10 +21,10 @@ public class Family extends PanacheEntityBase {
 
     public int carCapacity;
 
-    @OneToMany(mappedBy = "family", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "family", cascade = CascadeType.MERGE)
     public List<Child> children;
 
-    @OneToMany(mappedBy = "family", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "family", cascade = CascadeType.MERGE)
     public Set<Requirement> requirements = new HashSet<>();
 
     static List<Family> familiesWithChildren() {
