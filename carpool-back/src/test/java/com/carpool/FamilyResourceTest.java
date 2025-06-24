@@ -3,7 +3,6 @@ package com.carpool;
 import com.carpool.family.TimeSlot;
 import com.carpool.family.WeekDay;
 import com.carpool.family.WeekType;
-import io.quarkus.test.TestTransaction;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -14,7 +13,6 @@ import java.net.URL;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
 
 @QuarkusTest
 class FamilyResourceTest {
@@ -93,7 +91,10 @@ class FamilyResourceTest {
         getFamilies().then().statusCode(200)
                 .body(
                         "find { it.name == 'Jérome et Sonia' }.carCapacity", equalTo(6),
-                        "find { it.name == 'Jérome et Sonia' }.children.name[0]", equalTo("Max")
+                        "find { it.name == 'Jérome et Sonia' }.children.name[0]", equalTo("Max"),
+                        "find { it.name == 'Jérome et Sonia' }.requirements.timeSlot[0]", equalTo(TimeSlot.MORNING.toString()),
+                        "find { it.name == 'Jérome et Sonia' }.requirements.weekDay[0]", equalTo(WeekDay.MONDAY.toString()),
+                        "find { it.name == 'Jérome et Sonia' }.requirements.weekType[0]", equalTo(WeekType.EVEN.toString())
                 );
 
     }
