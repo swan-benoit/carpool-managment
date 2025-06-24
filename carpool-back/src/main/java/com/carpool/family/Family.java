@@ -7,6 +7,7 @@ import io.quarkus.panache.common.Sort;
 import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ public class Family extends PanacheEntityBase {
     public List<Child> children;
 
     @OneToMany(mappedBy = "family", cascade = CascadeType.PERSIST)
-    public Set<Requirement> requirements;
+    public Set<Requirement> requirements = new HashSet<>();
 
     static List<Family> familiesWithChildren() {
        return list("SELECT DISTINCT f FROM Family f LEFT JOIN FETCH f.children LEFT JOIN FETCH f.requirements order by f.name");
