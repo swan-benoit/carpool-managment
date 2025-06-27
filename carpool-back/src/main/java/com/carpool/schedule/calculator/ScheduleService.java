@@ -1,33 +1,15 @@
-package com.carpool.schedule;
+package com.carpool.schedule.calculator;
 
 import com.carpool.family.*;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
 
 @ApplicationScoped
 public class ScheduleService {
-    public FullSchedule generateFullSchedule() {
-//        List<FamilyWithChildren> familyWithChildren = Family.getFamiliesWithChilren();
-        List<ChildDto> project = Child.findAll().project(ChildDto.class)
-                .list();
 
-        for (WeekType weekType : WeekType.values()) {
-            for (WeekDay weekDay : WeekDay.values()) {
-                for (TimeSlot timeSlot : TimeSlot.values()) {
-
-                }
-            }
-        }
-
-        return new FullSchedule();
-    }
-
-    public FullSchedule generateSchedule(List<Family> families) {
-        FullSchedule scheduleResult = new FullSchedule();
-        scheduleResult.families = families;
+    public ScheduleResult generateSchedule(List<Family> families) {
+       ScheduleResult scheduleResult = ScheduleResult.empty(families);
 
         for (WeekType weekType : WeekType.values()) {
             for (WeekDay weekDay : WeekDay.values()) {
@@ -47,7 +29,6 @@ public class ScheduleService {
         }
 
         return scheduleResult;
+   }
 
-    }
 }
-
