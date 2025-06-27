@@ -137,10 +137,13 @@ class FamilyResourceTest {
                 .then()
                 .statusCode(201);
 
+        String string = getFamilies().andReturn().asPrettyString();
+
         getFamilies().then().statusCode(200)
                 .body(
                         "find { it.name == 'Sonia et Jean philippe' }.carCapacity", equalTo(9),
                         "find { it.name == 'Sonia et Jean philippe' }.children.size()", equalTo(1),
+                        "find { it.name == 'Sonia et Jean philippe' }.children.name[0]", equalTo("Laetitia"),
                         "find { it.name == 'Sonia et Jean philippe' }.requirements.timeSlot[0]", equalTo(TimeSlot.EVENING.toString()),
                         "find { it.name == 'Sonia et Jean philippe' }.requirements.weekDay[0]", equalTo(WeekDay.FRIDAY.toString()),
                         "find { it.name == 'Sonia et Jean philippe' }.requirements.weekType[0]", equalTo(WeekType.ODD.toString())
