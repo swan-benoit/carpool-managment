@@ -11,6 +11,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
@@ -20,6 +22,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 
 @QuarkusTest
 @TestHTTPEndpoint(FamilyResource.class)
+@Tag("family")
 class FamilyResourceTest {
 
     private Response getFamilies() {
@@ -28,6 +31,7 @@ class FamilyResourceTest {
     }
 
     @Test
+    @DisplayName("get families")
     void test_get_families() {
         getFamilies()
                 .then()
@@ -60,6 +64,7 @@ class FamilyResourceTest {
 
     @TestTransaction
     @Test
+    @DisplayName("create family")
     void test_create_family() {
         given().contentType(ContentType.JSON)
                 .body("""
@@ -104,6 +109,7 @@ class FamilyResourceTest {
 
     @Test
     @TestTransaction
+    @DisplayName("update family")
     void test_update_family() {
         JsonPath jsonPath = getFamilies()
                 .then()
@@ -136,8 +142,6 @@ class FamilyResourceTest {
                 .put("/" + familyId)
                 .then()
                 .statusCode(201);
-
-        String string = getFamilies().andReturn().asPrettyString();
 
         getFamilies().then().statusCode(200)
                 .body(
