@@ -229,7 +229,6 @@ class ScheduleServiceTest {
         assertThat(luceMean).isEqualTo(2.5);
         assertThat(comeMean).isEqualTo(5.0);
         assertThat(hediMean).isEqualTo(5.0);
-
     }
 
     public static Family mael_family() {
@@ -246,6 +245,14 @@ class ScheduleServiceTest {
 
     public static Child luce() {
         return createChild("Luce", 10);
+    }
+
+    public static Child Anna() {
+        return createChild("Anna", 11);
+    }
+
+    public static Family anna_family() {
+        return createFamily(5L, List.of(Anna()), 4);
     }
 
     public static Family come_rose_family() {

@@ -1,27 +1,22 @@
 package com.carpool.family;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.*;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
-public class Child extends PanacheEntityBase {
+public class AbsenceDays extends PanacheEntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    public String name;
+    public WeekDay weekDay;
+    public WeekType weekType;
+
 
     @ManyToOne
     @JsonbTransient
-    public Family family;
-
-    @OneToMany(mappedBy = "child", cascade = CascadeType.ALL)
-    public Set<AbsenceDays> absenceDays = new HashSet<>();
-
+    public Child child;
 }

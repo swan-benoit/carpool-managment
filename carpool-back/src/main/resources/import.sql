@@ -3,6 +3,7 @@ INSERT INTO family (carcapacity, name) VALUES (4,  'Anne et Swan');
 INSERT INTO family (carcapacity, name) VALUES (4,  'Axel et Soizic');
 INSERT INTO family (carcapacity, name) VALUES (4,  'Abdou et Lydia');
 INSERT INTO family (carcapacity, name) VALUES (4,  'Sonia et Jean philippe');
+INSERT INTO family (carcapacity, name) VALUES (4,  'Cécile');
 
 INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Romain et Virginie'),  'Mael');
 INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Anne et Swan'),  'Luce');
@@ -12,5 +13,6 @@ INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.
 INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Abdou et Lydia'),  'Hedi');
 INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Sonia et Jean philippe'),  'Laetitia');
 INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Sonia et Jean philippe'),  'Mélanie');
+INSERT INTO child (family_id, name) VALUES ((SELECT id from family where family.name = 'Cécile'),  'Anna');
 
 

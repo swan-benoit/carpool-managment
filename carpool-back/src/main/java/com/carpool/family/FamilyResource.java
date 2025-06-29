@@ -35,6 +35,11 @@ public class FamilyResource {
         for (Child child : family.children) {
             child.family = family;
             child.persist();
+
+            for (var absenceDay : child.absenceDays) {
+                absenceDay.child = child;
+                absenceDay.persist();
+            }
         }
 
         for (Requirement requirement : family.requirements) {
