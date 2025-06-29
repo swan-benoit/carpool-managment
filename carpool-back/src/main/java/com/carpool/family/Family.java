@@ -3,11 +3,14 @@ package com.carpool.family;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
 import jakarta.persistence.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Entity
@@ -20,19 +23,21 @@ public class Family extends PanacheEntityBase {
 
     public int carCapacity;
 
-    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL)
-    public List<Child> children;
+    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Child> children = new CopyOnWriteArrayList<>();
 
-    @OneToMany(mappedBy = "family", cascade = CascadeType.MERGE)
+    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
     public Set<Requirement> requirements = new HashSet<>();
 
     static List<Family> familiesWithChildren() {
-        return list("""
+        Stream<Family> stream = stream("""
                                  SELECT DISTINCT f FROM Family f
                                  LEFT JOIN FETCH f.children c
                                  LEFT JOIN FETCH c.absenceDays
                                  LEFT JOIN FETCH f.requirements order by f.name
                 """);
+        return stream.peek(f -> f.children = f.children.stream().distinct().toList()).toList();
+
     }
 
     static Family familyWithChildren(Long id) {
@@ -45,40 +50,38 @@ public class Family extends PanacheEntityBase {
         return list.getFirst();
     }
 
-    ;
-
     static Family updateFamilyWithChildren(Long id, Family updated) {
-        updated.id = id;
-        Family familyBefore = familyWithChildren(id);
-        delete("DELETE FROM Child c WHERE c.id NOT IN :ids AND c.familyId = :familyId", Parameters
-                .with("ids", toDeleteChildren(updated, familyBefore))
-                .and("familyId", id)
-        );
-        for (Child child : updated.children) {
-            child.family = updated;
-            for (var absences : child.absenceDays) {
-                absences.child = child;
-            }
-        }
-        for (var requirement : familyBefore.requirements) {
-            if (updated.requirements.stream().noneMatch(child1 -> Objects.equals(child1.id, requirement.id))) {
-                requirement.delete();
-            }
-        }
-        for (Requirement requirement : updated.requirements) {
-            requirement.family = updated;
-        }
-        getEntityManager().merge(updated);
+        Family existingFamily = familyWithChildren(id);
+        existingFamily.name = updated.name;
+        existingFamily.carCapacity = updated.carCapacity;
 
+        List<Child> children = existingFamily.children;
+        children.clear();
+
+        for (Child c : updated.children) {
+            Child child = new Child();
+            child.name = c.name;
+            child.family = existingFamily;
+            for (var a: c.absenceDays) {
+                a.child = child;
+                child.absenceDays.add(a);
+            }
+            child.absenceDays = c.absenceDays;
+            children.add(child);
+        }
+
+        existingFamily.requirements.clear();
+        updated.requirements.forEach(c -> {
+            Requirement requirement = new Requirement();
+            requirement.timeSlot = c.timeSlot;
+            requirement.weekDay = c.weekDay;
+            requirement.weekType = c.weekType;
+            requirement.family = existingFamily;
+            existingFamily.requirements.add(requirement);
+
+        });
         return updated;
     }
 
-    private static Stream<Child> toDeleteChildren(Family updated, Family familyBefore) {
-        return familyBefore.children.stream()
-                .filter(
-                        c -> updated.children.stream()
-                                .noneMatch(before_child -> Objects.equals(c.id, before_child.id))
-                );
-    }
 
 }

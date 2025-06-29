@@ -21,7 +21,7 @@ public class Child extends PanacheEntityBase {
     @JsonbTransient
     public Family family;
 
-    @OneToMany(mappedBy = "child", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
     public Set<AbsenceDays> absenceDays = new HashSet<>();
 
 }

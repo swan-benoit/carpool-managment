@@ -117,10 +117,8 @@ class FamilyResourceTest {
                         "carCapacity", equalTo(6),
                         "name", equalTo("Jérome et Sonia"),
                         "children.name[0]", equalTo("Max"),
-                        "children.absenceDays[0].weekType[0]", equalTo(WeekType.EVEN.toString()),
-                        "children.absenceDays[0].weekDay[0]", equalTo(WeekDay.MONDAY.toString()),
-                        "children.absenceDays[0].weekType[1]", equalTo(WeekType.EVEN.toString()),
-                        "children.absenceDays[0].weekDay[1]", equalTo(WeekDay.FRIDAY.toString()),
+                        "children.absenceDays[0].weekType", containsInAnyOrder(WeekType.EVEN.toString(),WeekType.EVEN.toString()),
+                        "children.absenceDays[0].weekDay", containsInAnyOrder(WeekDay.MONDAY.toString(), WeekDay.FRIDAY.toString()),
                         "requirements.timeSlot[0]", equalTo(TimeSlot.MORNING.toString()),
                         "requirements.weekDay[0]", equalTo(WeekDay.MONDAY.toString()),
                         "requirements.weekType[0]", equalTo(WeekType.EVEN.toString())
@@ -135,10 +133,8 @@ class FamilyResourceTest {
                         "find { it.id == %s }.requirements.timeSlot[0]".formatted(id), equalTo(TimeSlot.MORNING.toString()),
                         "find { it.id == %s }.requirements.weekDay[0]".formatted(id), equalTo(WeekDay.MONDAY.toString()),
                         "find { it.id == %s }.requirements.weekType[0]".formatted(id), equalTo(WeekType.EVEN.toString()),
-                        "find { it.id == %s }.children.absenceDays[0].weekType[1]".formatted(id), equalTo(WeekType.EVEN.toString()),
-                        "find { it.id == %s }.children.absenceDays[0].weekType[0]".formatted(id), equalTo(WeekType.EVEN.toString()),
-                        "find { it.id == %s }.children.absenceDays[0].weekDay[0]".formatted(id), equalTo(WeekDay.MONDAY.toString()),
-                        "find { it.id == %s }.children.absenceDays[0].weekDay[1]".formatted(id), equalTo(WeekDay.FRIDAY.toString())
+                        "find { it.id == %s }.children.absenceDays[0].weekType".formatted(id), containsInAnyOrder(WeekType.EVEN.toString(), WeekType.EVEN.toString()),
+                        "find { it.id == %s }.children.absenceDays[0].weekDay".formatted(id), containsInAnyOrder(WeekDay.MONDAY.toString(), WeekDay.FRIDAY.toString())
                 );
     }
 
@@ -203,7 +199,6 @@ class FamilyResourceTest {
                                 WeekDay.FRIDAY.toString(), WeekDay.MONDAY.toString()
                         )
                 );
-
 
     }
 
