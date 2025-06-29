@@ -31,23 +31,7 @@ public class FamilyResource {
     @Transactional
     @ResponseStatus(201)
     public Family createFamily(Family family) {
-        family.persist();
-        for (Child child : family.children) {
-            child.family = family;
-            child.persist();
-
-            for (var absenceDay : child.absenceDays) {
-                absenceDay.child = child;
-                absenceDay.persist();
-            }
-        }
-
-        for (Requirement requirement : family.requirements) {
-            requirement.family = family;
-            requirement.persist();
-        }
-
-        return family;
+        return Family.createFamilyWithChildren(family);
     }
 
     @PUT

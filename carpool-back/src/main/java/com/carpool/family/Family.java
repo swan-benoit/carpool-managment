@@ -50,6 +50,23 @@ public class Family extends PanacheEntityBase {
         return list.getFirst();
     }
 
+    static Family createFamilyWithChildren(Family family) {
+        for (Child child : family.children) {
+            child.family = family;
+
+            for (var absenceDay : child.absenceDays) {
+                absenceDay.child = child;
+            }
+        }
+
+        for (Requirement requirement : family.requirements) {
+            requirement.family = family;
+        }
+
+        family.persist();
+
+        return family;
+    }
     static Family updateFamilyWithChildren(Long id, Family updated) {
         Family existingFamily = familyWithChildren(id);
         existingFamily.name = updated.name;
