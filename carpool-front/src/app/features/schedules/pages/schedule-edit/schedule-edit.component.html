@@ -49,54 +49,61 @@
       <div class="time-slot" *ngFor="let slot of timeSlots">
         <div class="time-label">{{ slot.label }}</div>
         <div class="trip-cell" *ngFor="let day of weekDays">
-          <div class="trip-content"
-               *ngIf="getTripForSlot(day.value, slot.value) as trip; else emptyTrip">
-            <div class="driver-info">
-              <strong>{{ trip.driver?.name }}</strong>
-            </div>
-            <div class="children-info" *ngIf="trip.children && trip.children.length > 0">
-              <span class="children-count">{{ trip.children.length }} enfant(s)</span>
-              <div class="children-list">
-                <span *ngFor="let child of trip.children; let last = last">
-                  {{ child.name }}<span *ngIf="!last">, </span>
-                </span>
+          <div class="trips-container">
+            <!-- Trajets existants -->
+            <div class="trip-item" 
+                 *ngFor="let trip of getTripsForSlot(day.value, slot.value); let i = index">
+              <div class="trip-content">
+                <div class="driver-info">
+                  <strong>{{ trip.driver?.name }}</strong>
+                </div>
+                <div class="children-info" *ngIf="trip.children && trip.children.length > 0">
+                  <span class="children-count">{{ trip.children.length }} enfant(s)</span>
+                  <div class="children-list">
+                    <span *ngFor="let child of trip.children; let last = last">
+                      {{ child.name }}<span *ngIf="!last">, </span>
+                    </span>
+                  </div>
+                </div>
+                <div class="trip-actions">
+                  <button
+                    type="button"
+                    (click)="openTripModal(day.value, slot.value, i)"
+                    class="btn-edit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="deleteTrip(day.value, slot.value, i)"
+                    class="btn-delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3,6 5,6 21,6"></polyline>
+                      <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="trip-actions">
+
+            <!-- Bouton d'ajout de trajet -->
+            <div class="add-trip-container" *ngIf="families$ | async as families">
               <button
                 type="button"
                 (click)="openTripModal(day.value, slot.value)"
-                class="btn-edit">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-              </button>
-              <button
-                type="button"
-                (click)="deleteTrip(day.value, slot.value)"
-                class="btn-delete">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3,6 5,6 21,6"></polyline>
-                  <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <ng-template #emptyTrip>
-            <div class="empty-trip">
-              <button
-                type="button"
-                (click)="openTripModal(day.value, slot.value)"
-                class="btn-add-trip">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                class="btn-add-trip"
+                [disabled]="!canAddMoreTrips(day.value, slot.value, families)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                Ajouter un trajet
+                <span *ngIf="getTripsForSlot(day.value, slot.value).length === 0">Ajouter un trajet</span>
+                <span *ngIf="getTripsForSlot(day.value, slot.value).length > 0">Ajouter un autre trajet</span>
               </button>
             </div>
-          </ng-template>
+          </div>
         </div>
       </div>
     </div>
@@ -119,14 +126,14 @@
         <div class="form-row">
           <div class="form-group">
             <label for="weekDay">Jour</label>
-            <select id="weekDay" formControlName="weekDay" class="form-control">
+            <select id="weekDay" formControlName="weekDay" class="form-control" disabled>
               <option *ngFor="let day of weekDays" [value]="day.value">{{ day.label }}</option>
             </select>
           </div>
 
           <div class="form-group">
             <label for="timeSlot">Créneau</label>
-            <select id="timeSlot" formControlName="timeSlot" class="form-control">
+            <select id="timeSlot" formControlName="timeSlot" class="form-control" disabled>
               <option *ngFor="let slot of timeSlots" [value]="slot.value">{{ slot.label }}</option>
             </select>
           </div>
@@ -148,6 +155,11 @@
 
         <div class="form-group" *ngIf="tripForm.get('driverId')?.value">
           <label>Enfants à transporter</label>
+          <div class="capacity-info" *ngIf="tripForm.get('driverId')?.value">
+            <span class="capacity-text">
+              Places restantes : {{ getRemainingCapacity(families) }}
+            </span>
+          </div>
           <div class="children-selection">
             <div
               class="child-checkbox"
@@ -157,6 +169,7 @@
                 [id]="'child-' + child.id"
                 [value]="child.id"
                 [checked]="tripForm.get('childrenIds')?.value?.includes(child.id)"
+                [disabled]="!tripForm.get('childrenIds')?.value?.includes(child.id) && getRemainingCapacity(families) <= 0"
                 (change)="onChildSelectionChange($event, child.id!)">
               <label [for]="'child-' + child.id">{{ child.name }}</label>
             </div>

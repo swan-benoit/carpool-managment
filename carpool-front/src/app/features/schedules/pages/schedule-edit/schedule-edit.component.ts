@@ -33,6 +33,7 @@ export class ScheduleEditComponent implements OnInit {
   tripForm!: FormGroup;
   showTripModal = false;
   editingTrip?: Trip;
+  editingTripIndex?: number;
 
   weekDays = [
     { value: WeekDay.Monday, label: 'Lundi' },
@@ -100,18 +101,21 @@ export class ScheduleEditComponent implements OnInit {
     return this.getCurrentSchedule()?.trips || [];
   }
 
-  getTripForSlot(weekDay: WeekDay, timeSlot: TimeSlot): Trip | undefined {
-    return this.getCurrentTrips().find(trip =>
+  getTripsForSlot(weekDay: WeekDay, timeSlot: TimeSlot): Trip[] {
+    return this.getCurrentTrips().filter(trip =>
       trip.weekDay === weekDay && trip.timeSlot === timeSlot
     );
   }
 
-  openTripModal(weekDay: WeekDay, timeSlot: TimeSlot): void {
+  openTripModal(weekDay: WeekDay, timeSlot: TimeSlot, tripIndex?: number): void {
     this.selectedSlot = { weekDay, timeSlot };
-    this.editingTrip = this.getTripForSlot(weekDay, timeSlot);
-
-    if (this.editingTrip) {
+    
+    if (tripIndex !== undefined) {
       // Mode édition
+      const trips = this.getTripsForSlot(weekDay, timeSlot);
+      this.editingTrip = trips[tripIndex];
+      this.editingTripIndex = tripIndex;
+      
       this.tripForm.patchValue({
         weekDay: this.editingTrip.weekDay,
         timeSlot: this.editingTrip.timeSlot,
@@ -120,6 +124,9 @@ export class ScheduleEditComponent implements OnInit {
       });
     } else {
       // Mode création
+      this.editingTrip = undefined;
+      this.editingTripIndex = undefined;
+      
       this.tripForm.patchValue({
         weekDay,
         timeSlot,
@@ -135,6 +142,7 @@ export class ScheduleEditComponent implements OnInit {
     this.showTripModal = false;
     this.selectedSlot = undefined;
     this.editingTrip = undefined;
+    this.editingTripIndex = undefined;
     this.tripForm.reset();
   }
 
@@ -212,13 +220,18 @@ export class ScheduleEditComponent implements OnInit {
           currentSchedule.trips = [];
         }
 
-        if (this.editingTrip) {
+        if (this.editingTrip && this.editingTripIndex !== undefined) {
           // Modifier le trajet existant
-          const index = currentSchedule.trips.findIndex(t => t.id === this.editingTrip!.id);
-          if (index !== -1) {
-            currentSchedule.trips[index] = trip;
+          const tripIndex = currentSchedule.trips.findIndex(t => 
+            t.weekDay === this.selectedSlot!.weekDay && 
+            t.timeSlot === this.selectedSlot!.timeSlot &&
+            t.id === this.editingTrip!.id
+          );
+          if (tripIndex !== -1) {
+            currentSchedule.trips[tripIndex] = trip;
           }
         } else {
+          // Ajouter un nouveau trajet
           trip.id = undefined; // ID temporaire
           currentSchedule.trips.push(trip);
         }
@@ -228,12 +241,17 @@ export class ScheduleEditComponent implements OnInit {
     }
   }
 
-  deleteTrip(weekDay: WeekDay, timeSlot: TimeSlot): void {
+  deleteTrip(weekDay: WeekDay, timeSlot: TimeSlot, tripIndex: number): void {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce trajet ?')) {
       const currentSchedule = this.getCurrentSchedule();
       if (currentSchedule?.trips) {
-        currentSchedule.trips = currentSchedule.trips.filter(trip =>
-          !(trip.weekDay === weekDay && trip.timeSlot === timeSlot)
+        const trips = this.getTripsForSlot(weekDay, timeSlot);
+        const tripToDelete = trips[tripIndex];
+        
+        currentSchedule.trips = currentSchedule.trips.filter(trip => 
+          !(trip.weekDay === weekDay && 
+            trip.timeSlot === timeSlot && 
+            trip.id === tripToDelete.id)
         );
       }
     }
@@ -258,5 +276,25 @@ export class ScheduleEditComponent implements OnInit {
 
   cancel(): void {
     this.router.navigate(['/schedules']);
+  }
+
+  getRemainingCapacity(families: Family[]): number {
+    if (!this.selectedSlot) return 0;
+    
+    const driverId = this.tripForm.get('driverId')?.value;
+    if (!driverId) return 0;
+    
+    const driver = families.find(f => f.id === +driverId);
+    if (!driver) return 0;
+    
+    const selectedChildrenCount = this.tripForm.get('childrenIds')?.value?.length || 0;
+    return driver.carCapacity! - selectedChildrenCount;
+  }
+
+  canAddMoreTrips(weekDay: WeekDay, timeSlot: TimeSlot, families: Family[]): boolean {
+    const existingTrips = this.getTripsForSlot(weekDay, timeSlot);
+    const usedFamilyIds = existingTrips.map(trip => trip.driver?.id);
+    const availableFamilies = families.filter(family => !usedFamilyIds.includes(family.id));
+    return availableFamilies.length > 0;
   }
 }
