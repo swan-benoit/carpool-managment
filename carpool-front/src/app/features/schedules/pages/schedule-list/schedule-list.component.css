@@ -8,108 +8,197 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  border-radius: 2rem;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.05), transparent);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
 }
 
 .header h1 {
-  color: white;
-  font-size: 2rem;
-  font-weight: 700;
+  color: #1e40af;
+  font-size: 2.5rem;
+  font-weight: 800;
   margin: 0;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.header h1::after {
+  content: "📅";
+  margin-left: 1rem;
+  animation: gentle-bounce 2s ease-in-out infinite;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
   border: none;
-  border-radius: 8px;
-  font-weight: 500;
+  border-radius: 1.5rem;
+  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+  z-index: -1;
+}
+
+.btn:hover::before {
+  left: 100%;
 }
 
 .btn-primary {
-  background: #667eea;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:hover {
-  background: #5a67d8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(59, 130, 246, 0.4);
 }
 
 .btn-secondary {
-  background: #4a5568;
+  background: linear-gradient(135deg, #6b7280, #4b5563);
   color: white;
+  box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
 }
 
 .btn-secondary:hover {
-  background: #2d3748;
+  background: linear-gradient(135deg, #4b5563, #374151);
+  transform: translateY(-3px);
 }
 
 .btn-info {
-  background: #3182ce;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
   color: white;
+  box-shadow: 0 8px 25px rgba(6, 182, 212, 0.3);
 }
 
 .btn-info:hover {
-  background: #2c5282;
+  background: linear-gradient(135deg, #0891b2, #0e7490);
+  transform: translateY(-3px);
 }
 
 .btn-danger {
-  background: #e53e3e;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
 }
 
 .btn-danger:hover {
-  background: #c53030;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-3px);
 }
 
 .btn-sm {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  border-radius: 1rem;
 }
 
 .schedules-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 2rem;
 }
 
 .schedule-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  border-radius: 2rem;
+  padding: 2rem;
+  border: 2px solid rgba(59, 130, 246, 0.1);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.schedule-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b, #ef4444);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.schedule-card:hover::before {
+  opacity: 1;
 }
 
 .schedule-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .schedule-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.1);
+  position: relative;
+}
+
+.schedule-header::after {
+  content: "🗓️";
+  position: absolute;
+  right: 0;
+  top: -0.5rem;
+  font-size: 1.5rem;
+  opacity: 0.7;
 }
 
 .schedule-header h3 {
   margin: 0;
-  color: #2d3748;
-  font-size: 1.25rem;
-  font-weight: 600;
+  color: #1e40af;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(59, 130, 246, 0.1);
 }
 
 .schedule-status {
@@ -118,26 +207,29 @@
 }
 
 .status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  border-radius: 1.5rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .status-badge.complete {
-  background: #c6f6d5;
-  color: #22543d;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .status-badge.incomplete {
-  background: #fed7d7;
-  color: #c53030;
+  background: linear-gradient(135deg, #fed7d7, #fca5a5);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .schedule-info {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .info-item {
@@ -145,79 +237,117 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 1rem;
+  border: 1px solid rgba(59, 130, 246, 0.1);
 }
 
 .label {
-  font-weight: 500;
-  color: #4a5568;
+  font-weight: 600;
+  color: #1d4ed8;
 }
 
 .value {
-  color: #2d3748;
-  font-weight: 600;
+  color: #1e40af;
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
 .week-sections {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin: 1rem 0;
+  margin: 1.5rem 0;
 }
 
 .week-section {
-  padding: 1rem;
-  background: #f7fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  transition: all 0.3s ease;
+}
+
+.week-section:hover {
+  background: rgba(59, 130, 246, 0.08);
+  transform: translateY(-2px);
 }
 
 .week-section h4 {
-  margin: 0 0 0.5rem 0;
-  color: #2d3748;
-  font-size: 0.875rem;
-  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #1e40af;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.week-section:first-child h4::before {
+  content: "📊";
+}
+
+.week-section:last-child h4::before {
+  content: "📈";
 }
 
 .trips-count {
-  color: #4a5568;
-  font-size: 0.875rem;
+  color: #1d4ed8;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .progress-section {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(245, 158, 11, 0.05);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(245, 158, 11, 0.1);
 }
 
 .progress-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #4a5568;
-  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progress-label::before {
+  content: "⚡";
 }
 
 .progress-bar {
   width: 100%;
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 4px;
+  height: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 1rem;
   overflow: hidden;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  transition: width 0.5s ease;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 .progress-text {
-  font-size: 0.75rem;
-  color: #4a5568;
+  font-size: 0.875rem;
+  color: #92400e;
   text-align: right;
+  font-weight: 600;
 }
 
 .schedule-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   justify-content: flex-end;
 }
 
@@ -227,25 +357,43 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: 6rem 2rem;
   text-align: center;
-  color: white;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  border-radius: 2rem;
+  border: 2px dashed rgba(59, 130, 246, 0.3);
+  position: relative;
+}
+
+.empty-state::before {
+  content: "🌈";
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  font-size: 2rem;
+  animation: gentle-bounce 2s ease-in-out infinite;
 }
 
 .empty-state svg {
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
   opacity: 0.6;
+  color: #3b82f6;
+  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.2));
 }
 
 .empty-state h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  margin: 0 0 1rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e40af;
 }
 
 .empty-state p {
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 2rem 0;
   opacity: 0.8;
+  color: #1d4ed8;
+  font-size: 1.1rem;
 }
 
 @media (max-width: 768px) {
@@ -255,12 +403,23 @@
 
   .header {
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
     align-items: stretch;
+    padding: 1.5rem;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+    text-align: center;
   }
 
   .schedules-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .schedule-card {
+    padding: 1.5rem;
   }
 
   .schedule-header {
