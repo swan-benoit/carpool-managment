@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
-import { Family } from '../../../../modules/openapi';
+import { Family, WeekDay, WeekType } from '../../../../modules/openapi';
 import { FamilyService } from '../../services/family.service';
 
 @Component({
@@ -36,6 +36,24 @@ export class FamilyListComponent implements OnInit {
           alert('Erreur lors de la suppression de la famille');
         }
       });
+    }
+  }
+
+  getShortDay(weekDay?: WeekDay): string {
+    switch (weekDay) {
+      case WeekDay.Monday: return 'Lun';
+      case WeekDay.Tuesday: return 'Mar';
+      case WeekDay.Thursday: return 'Jeu';
+      case WeekDay.Friday: return 'Ven';
+      default: return '';
+    }
+  }
+
+  getShortWeekType(weekType?: WeekType): string {
+    switch (weekType) {
+      case WeekType.Even: return 'P';
+      case WeekType.Odd: return 'I';
+      default: return '';
     }
   }
 }

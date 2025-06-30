@@ -42,10 +42,17 @@
           <h4>Enfants ({{ family.children.length }})</h4>
           <div class="children-list">
             <div class="child-item" *ngFor="let child of family.children">
-              <span class="child-name">{{ child.name }}</span>
-              <span class="absence-count" *ngIf="child.absenceDays && child.absenceDays.size > 0">
-                {{ child.absenceDays.size }} absence(s)
-              </span>
+              <div class="child-info">
+                <span class="child-name">{{ child.name }}</span>
+                <div class="child-absences" *ngIf="child.absenceDays && child.absenceDays.size > 0">
+                  <span class="absences-label">Absences:</span>
+                  <div class="absences-tags">
+                    <span class="absence-tag" *ngFor="let absence of child.absenceDays">
+                      {{ getShortDay(absence.weekDay) }} {{ getShortWeekType(absence.weekType) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
