@@ -58,7 +58,7 @@
                   <strong>{{ trip.driver?.name }}</strong>
                 </div>
                 <div class="children-info" *ngIf="trip.children && trip.children.length > 0">
-                  <span class="children-count">{{ trip.children.length }} enfant(s)</span>
+                  <span class="children-count">{{ trip.children.length }}/{{ trip.driver?.carCapacity }} enfants</span>
                   <div class="children-list">
                     <span *ngFor="let child of trip.children; let last = last">
                       {{ child.name }}<span *ngIf="!last">, </span>
@@ -155,11 +155,18 @@
 
         <div class="form-group" *ngIf="tripForm.get('driverId')?.value">
           <label>Enfants à transporter</label>
-          <div class="capacity-info" *ngIf="tripForm.get('driverId')?.value">
+          
+          <!-- Indicateur de capacité -->
+          <div class="capacity-info">
             <span class="capacity-text">
-              Places restantes : {{ getRemainingCapacity(families) }}
+              🚗 Places utilisées : {{ (tripForm.get('childrenIds')?.value?.length || 0) }} / {{ families.find(f => f.id === +tripForm.get('driverId')?.value)?.carCapacity }}
+            </span>
+            <span class="capacity-text" 
+                  [style.color]="getRemainingCapacity(families) > 0 ? '#10b981' : '#ef4444'">
+              • Places restantes : {{ getRemainingCapacity(families) }}
             </span>
           </div>
+
           <div class="children-selection">
             <div
               class="child-checkbox"
@@ -169,10 +176,21 @@
                 [id]="'child-' + child.id"
                 [value]="child.id"
                 [checked]="tripForm.get('childrenIds')?.value?.includes(child.id)"
-                [disabled]="!tripForm.get('childrenIds')?.value?.includes(child.id) && getRemainingCapacity(families) <= 0"
+                [disabled]="isChildSelectionDisabled(child, families)"
                 (change)="onChildSelectionChange($event, child.id!)">
-              <label [for]="'child-' + child.id">{{ child.name }}</label>
+              <label [for]="'child-' + child.id" 
+                     [class.disabled]="isChildSelectionDisabled(child, families)">
+                {{ child.name }}
+                <span *ngIf="isChildSelectionDisabled(child, families)" class="disabled-reason">
+                  (Capacité atteinte)
+                </span>
+              </label>
             </div>
+          </div>
+
+          <!-- Message d'aide -->
+          <div class="help-text" *ngIf="getRemainingCapacity(families) === 0 && tripForm.get('driverId')?.value">
+            ⚠️ Capacité maximale atteinte ! Vous ne pouvez pas sélectionner plus d'enfants.
           </div>
         </div>
 

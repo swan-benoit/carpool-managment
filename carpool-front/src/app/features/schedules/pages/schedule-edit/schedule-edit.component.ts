@@ -184,15 +184,32 @@ export class ScheduleEditComponent implements OnInit {
 
   onChildSelectionChange(event: any, childId: number): void {
     const currentIds = this.tripForm.get('childrenIds')?.value || [];
-    if (event.target.checked) {
-      this.tripForm.patchValue({
-        childrenIds: [...currentIds, childId]
-      });
-    } else {
-      this.tripForm.patchValue({
-        childrenIds: currentIds.filter((id: number) => id !== childId)
-      });
-    }
+    const driverId = this.tripForm.get('driverId')?.value;
+    
+    if (!driverId) return;
+    
+    // Récupérer la famille conductrice pour vérifier la capacité
+    this.families$.subscribe(families => {
+      const driver = families.find(f => f.id === +driverId);
+      if (!driver) return;
+      
+      if (event.target.checked) {
+        // Vérifier si on peut ajouter cet enfant sans dépasser la capacité
+        if (currentIds.length < driver.carCapacity!) {
+          this.tripForm.patchValue({
+            childrenIds: [...currentIds, childId]
+          });
+        } else {
+          // Décocher la case si la capacité est dépassée
+          event.target.checked = false;
+          alert(`Capacité maximale atteinte ! Cette voiture ne peut transporter que ${driver.carCapacity} enfants.`);
+        }
+      } else {
+        this.tripForm.patchValue({
+          childrenIds: currentIds.filter((id: number) => id !== childId)
+        });
+      }
+    });
   }
 
   saveTripModal(families: Family[]): void {
@@ -204,6 +221,12 @@ export class ScheduleEditComponent implements OnInit {
       );
 
       if (!driver) return;
+
+      // Validation finale de la capacité
+      if (children.length > driver.carCapacity!) {
+        alert(`Erreur : ${children.length} enfants sélectionnés mais la voiture ne peut transporter que ${driver.carCapacity} enfants maximum.`);
+        return;
+      }
 
       const trip: Trip = {
         id: this.editingTrip?.id,
@@ -296,5 +319,16 @@ export class ScheduleEditComponent implements OnInit {
     const usedFamilyIds = existingTrips.map(trip => trip.driver?.id);
     const availableFamilies = families.filter(family => !usedFamilyIds.includes(family.id));
     return availableFamilies.length > 0;
+  }
+
+  isChildSelectionDisabled(child: Child, families: Family[]): boolean {
+    const currentIds = this.tripForm.get('childrenIds')?.value || [];
+    const isAlreadySelected = currentIds.includes(child.id);
+    
+    // Si l'enfant est déjà sélectionné, il peut être désélectionné
+    if (isAlreadySelected) return false;
+    
+    // Sinon, vérifier si on peut encore ajouter des enfants
+    return this.getRemainingCapacity(families) <= 0;
   }
 }
