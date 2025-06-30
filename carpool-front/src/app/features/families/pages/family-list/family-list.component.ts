@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
-import { Family, WeekDay, WeekType } from '../../../../modules/openapi';
+import { Family, WeekDay, WeekType, AbsenceDays } from '../../../../modules/openapi';
 import { FamilyService } from '../../services/family.service';
 
 @Component({
@@ -37,6 +37,17 @@ export class FamilyListComponent implements OnInit {
         }
       });
     }
+  }
+
+  // Convertir Set en Array pour l'itération dans le template
+  getAbsenceDaysArray(absenceDays?: Set<AbsenceDays>): AbsenceDays[] {
+    if (!absenceDays) return [];
+    return Array.from(absenceDays);
+  }
+
+  // Vérifier si un enfant a des absences
+  hasAbsences(absenceDays?: Set<AbsenceDays>): boolean {
+    return absenceDays ? absenceDays.size > 0 : false;
   }
 
   getShortDay(weekDay?: WeekDay): string {
