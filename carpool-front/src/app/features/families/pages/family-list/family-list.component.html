@@ -50,12 +50,12 @@
           </div>
         </div>
 
-        <div class="requirements-section" *ngIf="family.requirements && family.requirements.size > 0">
-          <h4>Exigences ({{ family.requirements.size }})</h4>
-          <div class="requirements-list">
-            <div class="requirement-item" *ngFor="let requirement of family.requirements">
-              <span class="requirement-text">
-                {{ requirement.weekDay }} {{ requirement.timeSlot }} ({{ requirement.weekType }})
+        <div class="unavailabilities-section" *ngIf="family.requirements && family.requirements.size > 0">
+          <h4>Indisponibilités ({{ family.requirements.size }})</h4>
+          <div class="unavailabilities-list">
+            <div class="unavailability-item" *ngFor="let unavailability of family.requirements">
+              <span class="unavailability-text">
+                {{ unavailability.weekDay }} {{ unavailability.timeSlot }} ({{ unavailability.weekType }})
               </span>
             </div>
           </div>

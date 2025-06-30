@@ -66,7 +66,7 @@ export class FamilyFormComponent implements OnInit {
     return this.familyForm.get('children') as FormArray;
   }
 
-  get requirements(): FormArray {
+  get unavailabilities(): FormArray {
     return this.familyForm.get('requirements') as FormArray;
   }
 
@@ -100,10 +100,10 @@ export class FamilyFormComponent implements OnInit {
       });
     }
 
-    // Populate requirements
+    // Populate unavailabilities
     if (family.requirements) {
-      Array.from(family.requirements).forEach(requirement => {
-        this.addRequirement(requirement);
+      Array.from(family.requirements).forEach(unavailability => {
+        this.addUnavailability(unavailability);
       });
     }
   }
@@ -133,12 +133,12 @@ export class FamilyFormComponent implements OnInit {
     });
   }
 
-  createRequirementFormGroup(requirement?: Requirement): FormGroup {
+  createUnavailabilityFormGroup(unavailability?: Requirement): FormGroup {
     return this.fb.group({
-      id: [requirement?.id || null],
-      timeSlot: [requirement?.timeSlot || '', Validators.required],
-      weekDay: [requirement?.weekDay || '', Validators.required],
-      weekType: [requirement?.weekType || '', Validators.required]
+      id: [unavailability?.id || null],
+      timeSlot: [unavailability?.timeSlot || '', Validators.required],
+      weekDay: [unavailability?.weekDay || '', Validators.required],
+      weekType: [unavailability?.weekType || '', Validators.required]
     });
   }
 
@@ -150,12 +150,12 @@ export class FamilyFormComponent implements OnInit {
     this.children.removeAt(index);
   }
 
-  addRequirement(requirement?: Requirement): void {
-    this.requirements.push(this.createRequirementFormGroup(requirement));
+  addUnavailability(unavailability?: Requirement): void {
+    this.unavailabilities.push(this.createUnavailabilityFormGroup(unavailability));
   }
 
-  removeRequirement(index: number): void {
-    this.requirements.removeAt(index);
+  removeUnavailability(index: number): void {
+    this.unavailabilities.removeAt(index);
   }
 
   getChildAbsenceDays(childIndex: number): FormArray {

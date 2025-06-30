@@ -160,14 +160,14 @@
 }
 
 .children-list,
-.requirements-list {
+.unavailabilities-list {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
 .child-item,
-.requirement-item {
+.unavailability-item {
   padding: 1.5rem;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -210,7 +210,7 @@
 }
 
 .absence-fields,
-.requirement-fields {
+.unavailability-fields {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
   gap: 1rem;
@@ -227,7 +227,7 @@
 }
 
 .empty-children,
-.empty-requirements {
+.empty-unavailabilities {
   text-align: center;
   padding: 2rem;
   color: #4a5568;
@@ -263,7 +263,7 @@
   }
 
   .absence-fields,
-  .requirement-fields {
+  .unavailability-fields {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
