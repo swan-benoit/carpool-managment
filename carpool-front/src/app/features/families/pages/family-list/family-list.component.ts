@@ -53,7 +53,7 @@ export class FamilyListComponent implements OnInit {
 
   // Vérifier si une famille a des indisponibilités
   hasUnavailabilities(unavailabilities?: Set<Requirement>): boolean {
-    return unavailabilities ? unavailabilities.size > 0 : false;
+    return unavailabilities ? Array.from(unavailabilities?? []).length > 0 : false;
   }
 
   getShortDay(weekDay?: WeekDay): string {
@@ -68,16 +68,16 @@ export class FamilyListComponent implements OnInit {
 
   getShortWeekType(weekType?: WeekType): string {
     switch (weekType) {
-      case WeekType.Even: return 'P';
-      case WeekType.Odd: return 'I';
+      case WeekType.Even: return 'PAIR';
+      case WeekType.Odd: return 'IMPAIR';
       default: return '';
     }
   }
 
   getShortTimeSlot(timeSlot?: TimeSlot): string {
     switch (timeSlot) {
-      case TimeSlot.Morning: return 'M';
-      case TimeSlot.Evening: return 'S';
+      case TimeSlot.Morning: return 'AM';
+      case TimeSlot.Evening: return 'PM';
       default: return '';
     }
   }
