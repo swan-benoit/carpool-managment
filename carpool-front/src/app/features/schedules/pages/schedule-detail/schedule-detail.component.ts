@@ -52,15 +52,7 @@ export class ScheduleDetailComponent implements OnInit {
     });
   }
 
-  getTripsArray(trips?: Set<Trip>): Trip[] {
-    return trips ? Array.from(trips) : [];
-  }
-
   getTripForSlot(trips: Trip[], weekDay: WeekDay, timeSlot: TimeSlot): Trip | undefined {
     return trips.find(trip => trip.weekDay === weekDay && trip.timeSlot === timeSlot);
-  }
-
-  getChildrenArray(children?: Set<any>): any[] {
-    return children ? Array.from(children) : [];
   }
 }

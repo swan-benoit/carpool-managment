@@ -41,8 +41,8 @@ export class ScheduleListComponent implements OnInit {
 
   // Compter le nombre de trajets dans un planning
   getTotalTrips(schedule: FullSchedule): number {
-    const evenTrips = schedule.evenSchedule?.trips ? Array.from(schedule.evenSchedule.trips).length : 0;
-    const oddTrips = schedule.oddSchedule?.trips ? Array.from(schedule.oddSchedule.trips).length : 0;
+    const evenTrips = schedule.evenSchedule?.trips ? schedule.evenSchedule.trips.length : 0;
+    const oddTrips = schedule.oddSchedule?.trips ? schedule.oddSchedule.trips.length : 0;
     return evenTrips + oddTrips;
   }
 
@@ -51,6 +51,4 @@ export class ScheduleListComponent implements OnInit {
     const totalTrips = this.getTotalTrips(schedule);
     return totalTrips >= 16; // 8 créneaux × 2 semaines
   }
-
-  protected readonly Array = Array;
 }
