@@ -1,0 +1,180 @@
+<div class="schedule-edit-container">
+  <div class="header">
+    <div class="header-content">
+      <h1>Modifier le planning : {{ schedule?.name }}</h1>
+      <div class="header-actions">
+        <button type="button" (click)="saveSchedule()" [disabled]="isSaving" class="btn btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17,21 17,13 7,13 7,21"></polyline>
+            <polyline points="7,3 7,8 15,8"></polyline>
+          </svg>
+          {{ isSaving ? 'Sauvegarde...' : 'Sauvegarder' }}
+        </button>
+        <button type="button" (click)="cancel()" class="btn btn-secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="schedule-content" *ngIf="!isLoading && schedule">
+    <!-- Sélecteur de semaine -->
+    <div class="week-selector">
+      <button 
+        type="button" 
+        (click)="selectedWeekType = 'EVEN'" 
+        [class.active]="selectedWeekType === 'EVEN'"
+        class="week-btn">
+        Semaines paires
+      </button>
+      <button 
+        type="button" 
+        (click)="selectedWeekType = 'ODD'" 
+        [class.active]="selectedWeekType === 'ODD'"
+        class="week-btn">
+        Semaines impaires
+      </button>
+    </div>
+
+    <!-- Grille de planning -->
+    <div class="schedule-grid">
+      <div class="time-header"></div>
+      <div class="day-header" *ngFor="let day of weekDays">{{ day.label }}</div>
+
+      <div class="time-slot" *ngFor="let slot of timeSlots">
+        <div class="time-label">{{ slot.label }}</div>
+        <div class="trip-cell" *ngFor="let day of weekDays">
+          <div class="trip-content" 
+               *ngIf="getTripForSlot(day.value, slot.value) as trip; else emptyTrip">
+            <div class="driver-info">
+              <strong>{{ trip.driver?.name }}</strong>
+            </div>
+            <div class="children-info" *ngIf="trip.children && trip.children.length > 0">
+              <span class="children-count">{{ trip.children.length }} enfant(s)</span>
+              <div class="children-list">
+                <span *ngFor="let child of trip.children; let last = last">
+                  {{ child.name }}<span *ngIf="!last">, </span>
+                </span>
+              </div>
+            </div>
+            <div class="trip-actions">
+              <button 
+                type="button" 
+                (click)="openTripModal(day.value, slot.value)" 
+                class="btn-edit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+              <button 
+                type="button" 
+                (click)="deleteTrip(day.value, slot.value)" 
+                class="btn-delete">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3,6 5,6 21,6"></polyline>
+                  <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <ng-template #emptyTrip>
+            <div class="empty-trip">
+              <button 
+                type="button" 
+                (click)="openTripModal(day.value, slot.value)" 
+                class="btn-add-trip">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Ajouter un trajet
+              </button>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal d'ajout/édition de trajet -->
+  <div class="modal-overlay" *ngIf="showTripModal" (click)="closeTripModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()" *ngIf="families$ | async as families">
+      <div class="modal-header">
+        <h3>{{ editingTrip ? 'Modifier le trajet' : 'Ajouter un trajet' }}</h3>
+        <button type="button" (click)="closeTripModal()" class="btn-close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form [formGroup]="tripForm" (ngSubmit)="saveTripModal(families)" class="modal-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="weekDay">Jour</label>
+            <select id="weekDay" formControlName="weekDay" class="form-control" disabled>
+              <option *ngFor="let day of weekDays" [value]="day.value">{{ day.label }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="timeSlot">Créneau</label>
+            <select id="timeSlot" formControlName="timeSlot" class="form-control" disabled>
+              <option *ngFor="let slot of timeSlots" [value]="slot.value">{{ slot.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="driverId">Famille conductrice *</label>
+          <select 
+            id="driverId" 
+            formControlName="driverId" 
+            (change)="onDriverChange(families)"
+            class="form-control">
+            <option value="">Sélectionner une famille</option>
+            <option *ngFor="let family of families" [value]="family.id">
+              {{ family.name }} ({{ family.carCapacity }} places)
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group" *ngIf="tripForm.get('driverId')?.value">
+          <label>Enfants à transporter</label>
+          <div class="children-selection">
+            <div 
+              class="child-checkbox" 
+              *ngFor="let child of getAvailableChildren(families)">
+              <input 
+                type="checkbox" 
+                [id]="'child-' + child.id"
+                [value]="child.id"
+                [checked]="tripForm.get('childrenIds')?.value?.includes(child.id)"
+                (change)="onChildSelectionChange($event, child.id!)">
+              <label [for]="'child-' + child.id">{{ child.name }}</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" (click)="closeTripModal()" class="btn btn-secondary">Annuler</button>
+          <button type="submit" [disabled]="tripForm.invalid" class="btn btn-primary">
+            {{ editingTrip ? 'Modifier' : 'Ajouter' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
+    <p>Chargement du planning...</p>
+  </div>
+</div>
