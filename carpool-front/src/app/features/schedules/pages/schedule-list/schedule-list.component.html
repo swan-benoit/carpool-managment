@@ -31,14 +31,14 @@
           <div class="week-section">
             <h4>Semaines paires</h4>
             <div class="trips-count">
-              {{ schedule.evenSchedule?.trips ? Array.from(schedule.evenSchedule.trips).length : 0 }} trajets
+              {{  schedule.evenSchedule?.trips?.length ?? 0 }} trajets
             </div>
           </div>
 
           <div class="week-section">
             <h4>Semaines impaires</h4>
             <div class="trips-count">
-              {{ schedule.oddSchedule?.trips ? Array.from(schedule.oddSchedule.trips).length : 0 }} trajets
+              {{ schedule.oddSchedule?.trips?.length ?? 0 }} trajets
             </div>
           </div>
         </div>

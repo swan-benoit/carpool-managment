@@ -51,4 +51,6 @@ export class ScheduleListComponent implements OnInit {
     const totalTrips = this.getTotalTrips(schedule);
     return totalTrips >= 16; // 8 créneaux × 2 semaines
   }
+
+  protected readonly Array = Array;
 }

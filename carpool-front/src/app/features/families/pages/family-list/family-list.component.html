@@ -44,11 +44,11 @@
             <div class="child-item" *ngFor="let child of family.children">
               <div class="child-info">
                 <span class="child-name">{{ child.name }}</span>
-                @if (child.absenceDays ?? 0 > 0 ) {
+                @if (child.absenceDays?.length ?? 0 > 0 ) {
                   <div class="child-absences">
                     <span class="absences-label">Absences:</span>
                     <div class="absences-tags">
-                    <span class="absence-tag" *ngFor="let absence of getAbsenceDaysArray(child.absenceDays)">
+                    <span class="absence-tag" *ngFor="let absence of child.absenceDays">
                       {{ getShortWeekType(absence.weekType) }} {{ getShortDay(absence.weekDay) }}
                     </span>
                     </div>
@@ -60,12 +60,12 @@
           </div>
         </div>
 
-        @if (hasUnavailabilities(family.requirements)) {
+        @if (family.requirements?.length ?? 0 > 0) {
           <div class="unavailabilities-section">
-            <h4>Indisponibilités famille ({{ family.requirements?.size }})</h4>
+            <h4>Indisponibilités famille ({{ family.requirements?.length }})</h4>
             <div class="unavailabilities-list">
               <div class="unavailability-tags">
-              <span class="unavailability-tag" *ngFor="let unavailability of getUnavailabilitiesArray(family.requirements)">
+              <span class="unavailability-tag" *ngFor="let unavailability of family.requirements">
                 {{ getShortDay(unavailability.weekDay) }} {{ getShortTimeSlot(unavailability.timeSlot) }} {{ getShortWeekType(unavailability.weekType) }}
               </span>
               </div>

@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
-import { FullSchedule } from '../../../../modules/openapi';
-import { ScheduleService } from '../../services/schedule.service';
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute, Router} from '@angular/router';
+import {FullSchedule} from '../../../../modules/openapi';
+import {ScheduleService} from '../../services/schedule.service';
 
 @Component({
   selector: 'app-schedule-form',
@@ -74,10 +74,10 @@ export class ScheduleFormComponent implements OnInit {
         id: this.scheduleId,
         name: formValue.name,
         evenSchedule: {
-          trips: new Set()
+          trips: []
         },
         oddSchedule: {
-          trips: new Set()
+          trips: []
         }
       };
 

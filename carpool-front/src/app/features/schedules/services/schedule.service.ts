@@ -9,7 +9,7 @@ export class ScheduleService {
   constructor(private fullScheduleResourceService: FullScheduleResourceService) {}
 
   getSchedules(): Observable<FullSchedule[]> {
-    return this.fullScheduleResourceService.fullScheduleGet(undefined, undefined, undefined, undefined, undefined, ['name']);
+    return this.fullScheduleResourceService.fullScheduleGet();
   }
 
   getSchedule(id: number): Observable<FullSchedule> {

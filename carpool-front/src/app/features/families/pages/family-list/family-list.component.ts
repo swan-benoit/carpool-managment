@@ -39,23 +39,6 @@ export class FamilyListComponent implements OnInit {
     }
   }
 
-  // Convertir Set en Array pour l'itération dans le template
-  getAbsenceDaysArray(absenceDays?: Set<AbsenceDays>): AbsenceDays[] {
-    if (!absenceDays) return [];
-    return Array.from(absenceDays);
-  }
-
-  // Convertir Set d'indisponibilités en Array pour l'itération
-  getUnavailabilitiesArray(unavailabilities?: Set<Requirement>): Requirement[] {
-    if (!unavailabilities) return [];
-    return Array.from(unavailabilities);
-  }
-
-  // Vérifier si une famille a des indisponibilités
-  hasUnavailabilities(unavailabilities?: Set<Requirement>): boolean {
-    return unavailabilities ? Array.from(unavailabilities?? []).length > 0 : false;
-  }
-
   getShortDay(weekDay?: WeekDay): string {
     switch (weekDay) {
       case WeekDay.Monday: return 'Lun';
