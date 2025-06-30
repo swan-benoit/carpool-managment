@@ -12,7 +12,8 @@ import { Schedule } from './schedule';
 
 export interface FullSchedule { 
     id?: number;
-    oddSchedule?: Schedule;
+    name?: string;
     evenSchedule?: Schedule;
+    oddSchedule?: Schedule;
 }
 

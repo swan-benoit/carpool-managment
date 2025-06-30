@@ -1,4 +1,4 @@
-export * from './car';
+export * from './absence-days';
 export * from './child';
 export * from './family';
 export * from './full-schedule';

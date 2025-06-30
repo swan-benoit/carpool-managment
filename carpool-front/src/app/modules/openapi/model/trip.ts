@@ -8,17 +8,17 @@
  * Do not edit the class manually.
  */
 import { WeekDay } from './week-day';
-import { Car } from './car';
+import { Family } from './family';
 import { TimeSlot } from './time-slot';
-import { WeekType } from './week-type';
+import { Child } from './child';
 
 
 export interface Trip { 
     id?: number;
     weekDay?: WeekDay;
     timeSlot?: TimeSlot;
-    weekType?: WeekType;
-    cars?: Array<Car>;
+    driver?: Family;
+    children?: Set<Child>;
 }
 export namespace Trip {
 }

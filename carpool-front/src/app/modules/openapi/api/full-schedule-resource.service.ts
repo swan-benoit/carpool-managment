@@ -91,6 +91,7 @@ export class FullScheduleResourceService extends BaseService implements FullSche
     /**
      * List
      * @param id 
+     * @param name 
      * @param namedQuery 
      * @param page 
      * @param size 
@@ -98,14 +99,16 @@ export class FullScheduleResourceService extends BaseService implements FullSche
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public fullScheduleGet(id?: number, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<FullSchedule>>;
-    public fullScheduleGet(id?: number, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<FullSchedule>>>;
-    public fullScheduleGet(id?: number, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<FullSchedule>>>;
-    public fullScheduleGet(id?: number, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public fullScheduleGet(id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<FullSchedule>>;
+    public fullScheduleGet(id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<FullSchedule>>>;
+    public fullScheduleGet(id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<FullSchedule>>>;
+    public fullScheduleGet(id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarQueryParameters = new HttpParams({encoder: this.encoder});
         localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
           <any>id, 'id');
+        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+          <any>name, 'name');
         localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
           <any>namedQuery, 'namedQuery');
         localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,

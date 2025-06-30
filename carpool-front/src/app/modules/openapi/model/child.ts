@@ -7,10 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { AbsenceDays } from './absence-days';
 
 
 export interface Child { 
     id?: number;
     name?: string;
+    absenceDays?: Set<AbsenceDays>;
 }
 

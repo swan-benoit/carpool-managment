@@ -8,15 +8,10 @@
  * Do not edit the class manually.
  */
 import { Trip } from './trip';
-import { WeekType } from './week-type';
 
 
 export interface Schedule { 
     id?: number;
-    weekType?: WeekType;
-    trips?: Array<Trip>;
+    trips?: Set<Trip>;
 }
-export namespace Schedule {
-}
-
 

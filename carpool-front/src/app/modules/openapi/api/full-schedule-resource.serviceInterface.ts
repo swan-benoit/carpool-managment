@@ -32,12 +32,13 @@ export interface FullScheduleResourceServiceInterface {
      * List
      * 
      * @param id 
+     * @param name 
      * @param namedQuery 
      * @param page 
      * @param size 
      * @param sort 
      */
-    fullScheduleGet(id?: number, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, extraHttpRequestParams?: any): Observable<Array<FullSchedule>>;
+    fullScheduleGet(id?: number, name?: string, namedQuery?: string, page?: number, size?: number, sort?: Array<string>, extraHttpRequestParams?: any): Observable<Array<FullSchedule>>;
 
     /**
      * Delete
