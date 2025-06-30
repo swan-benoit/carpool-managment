@@ -3,6 +3,7 @@
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #e8f5e8 0%, #f0f9ff 50%, #fef7cd 100%);
+  position: relative;
 }
 
 .main-nav {
@@ -41,6 +42,76 @@
   top: -0.5rem;
   font-size: 1.2rem;
   animation: gentle-bounce 3s ease-in-out infinite;
+}
+
+/* Petit colibri dans le titre */
+.title-colibri {
+  font-size: 1.2rem;
+  margin-left: 0.5rem;
+  animation: colibri-flutter 4s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.2));
+}
+
+@keyframes colibri-flutter {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  25% { 
+    transform: translateY(-3px) rotate(5deg) scale(1.05);
+  }
+  50% { 
+    transform: translateY(-1px) rotate(0deg) scale(1);
+  }
+  75% { 
+    transform: translateY(-2px) rotate(-3deg) scale(1.02);
+  }
+}
+
+/* Colibri volant en arrière-plan */
+.colibri-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.colibri {
+  position: absolute;
+  font-size: 1.5rem;
+  animation: colibri-flight 20s linear infinite;
+  filter: drop-shadow(0 2px 8px rgba(16, 185, 129, 0.3));
+}
+
+@keyframes colibri-flight {
+  0% {
+    left: -5%;
+    top: 20%;
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    left: 30%;
+    top: 15%;
+    transform: rotate(10deg) scale(1.1);
+  }
+  50% {
+    left: 70%;
+    top: 25%;
+    transform: rotate(-5deg) scale(0.9);
+  }
+  75% {
+    left: 90%;
+    top: 10%;
+    transform: rotate(15deg) scale(1.05);
+  }
+  100% {
+    left: 105%;
+    top: 30%;
+    transform: rotate(0deg) scale(1);
+  }
 }
 
 .nav-links {
@@ -194,5 +265,56 @@
   .nav-link {
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
+  }
+
+  /* Colibri plus petit sur mobile */
+  .colibri {
+    font-size: 1.2rem;
+  }
+
+  .title-colibri {
+    font-size: 1rem;
+  }
+
+  /* Animation plus rapide sur mobile */
+  @keyframes colibri-flight {
+    0% {
+      left: -10%;
+      top: 25%;
+      transform: rotate(0deg) scale(0.8);
+    }
+    50% {
+      left: 60%;
+      top: 20%;
+      transform: rotate(10deg) scale(0.9);
+    }
+    100% {
+      left: 110%;
+      top: 30%;
+      transform: rotate(0deg) scale(0.8);
+    }
+  }
+}
+
+/* Animation au survol du titre pour faire réagir le colibri */
+.nav-brand:hover .title-colibri {
+  animation: colibri-excited 0.8s ease-in-out;
+}
+
+@keyframes colibri-excited {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  20% { 
+    transform: translateY(-5px) rotate(15deg) scale(1.2);
+  }
+  40% { 
+    transform: translateY(-3px) rotate(-10deg) scale(1.1);
+  }
+  60% { 
+    transform: translateY(-4px) rotate(8deg) scale(1.15);
+  }
+  80% { 
+    transform: translateY(-2px) rotate(-5deg) scale(1.05);
   }
 }
