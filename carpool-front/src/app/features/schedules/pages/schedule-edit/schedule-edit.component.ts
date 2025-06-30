@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
-import { 
-  FullSchedule, 
-  Trip, 
-  WeekDay, 
-  TimeSlot, 
-  Family, 
-  Child 
+import {
+  FullSchedule,
+  Trip,
+  WeekDay,
+  TimeSlot,
+  Family,
+  Child
 } from '../../../../modules/openapi';
 import { ScheduleService } from '../../services/schedule.service';
 import { FamilyService } from '../../../families/services/family.service';
@@ -26,10 +26,10 @@ export class ScheduleEditComponent implements OnInit {
   families$!: Observable<Family[]>;
   isLoading = true;
   isSaving = false;
-  
+
   selectedWeekType: 'EVEN' | 'ODD' = 'EVEN';
   selectedSlot?: { weekDay: WeekDay; timeSlot: TimeSlot };
-  
+
   tripForm!: FormGroup;
   showTripModal = false;
   editingTrip?: Trip;
@@ -91,8 +91,8 @@ export class ScheduleEditComponent implements OnInit {
   }
 
   getCurrentSchedule() {
-    return this.selectedWeekType === 'EVEN' 
-      ? this.schedule?.evenSchedule 
+    return this.selectedWeekType === 'EVEN'
+      ? this.schedule?.evenSchedule
       : this.schedule?.oddSchedule;
   }
 
@@ -101,7 +101,7 @@ export class ScheduleEditComponent implements OnInit {
   }
 
   getTripForSlot(weekDay: WeekDay, timeSlot: TimeSlot): Trip | undefined {
-    return this.getCurrentTrips().find(trip => 
+    return this.getCurrentTrips().find(trip =>
       trip.weekDay === weekDay && trip.timeSlot === timeSlot
     );
   }
@@ -109,7 +109,7 @@ export class ScheduleEditComponent implements OnInit {
   openTripModal(weekDay: WeekDay, timeSlot: TimeSlot): void {
     this.selectedSlot = { weekDay, timeSlot };
     this.editingTrip = this.getTripForSlot(weekDay, timeSlot);
-    
+
     if (this.editingTrip) {
       // Mode édition
       this.tripForm.patchValue({
@@ -127,7 +127,7 @@ export class ScheduleEditComponent implements OnInit {
         childrenIds: []
       });
     }
-    
+
     this.showTripModal = true;
   }
 
@@ -158,19 +158,19 @@ export class ScheduleEditComponent implements OnInit {
 
   getAvailableChildren(families: Family[]): Child[] {
     if (!this.selectedSlot) return [];
-    
+
     const allChildren = this.getAllChildren(families);
     const currentTrips = this.getCurrentTrips();
-    
+
     // Exclure les enfants déjà assignés à d'autres trajets pour ce créneau
     const assignedChildrenIds = currentTrips
-      .filter(trip => 
-        trip.weekDay === this.selectedSlot!.weekDay && 
+      .filter(trip =>
+        trip.weekDay === this.selectedSlot!.weekDay &&
         trip.timeSlot === this.selectedSlot!.timeSlot &&
         trip.id !== this.editingTrip?.id
       )
       .flatMap(trip => trip.children?.map(child => child.id) || []);
-    
+
     return allChildren.filter(child => !assignedChildrenIds.includes(child.id));
   }
 
@@ -191,7 +191,7 @@ export class ScheduleEditComponent implements OnInit {
     if (this.tripForm.valid && this.schedule && this.selectedSlot) {
       const formValue = this.tripForm.value;
       const driver = families.find(f => f.id === +formValue.driverId);
-      const children = this.getAllChildren(families).filter(child => 
+      const children = this.getAllChildren(families).filter(child =>
         formValue.childrenIds.includes(child.id)
       );
 
@@ -219,8 +219,7 @@ export class ScheduleEditComponent implements OnInit {
             currentSchedule.trips[index] = trip;
           }
         } else {
-          // Ajouter un nouveau trajet
-          trip.id = Date.now(); // ID temporaire
+          trip.id = undefined; // ID temporaire
           currentSchedule.trips.push(trip);
         }
       }
@@ -233,7 +232,7 @@ export class ScheduleEditComponent implements OnInit {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce trajet ?')) {
       const currentSchedule = this.getCurrentSchedule();
       if (currentSchedule?.trips) {
-        currentSchedule.trips = currentSchedule.trips.filter(trip => 
+        currentSchedule.trips = currentSchedule.trips.filter(trip =>
           !(trip.weekDay === weekDay && trip.timeSlot === timeSlot)
         );
       }
