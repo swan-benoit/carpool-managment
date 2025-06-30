@@ -2,14 +2,20 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #e8f5e8 0%, #f0f9ff 50%, #fef7cd 100%);
+  background: linear-gradient(135deg, #e8f5e8 0%, #f0f9ff 30%, #ecfdf5 60%, #fef7cd 100%);
   position: relative;
+  overflow-x: hidden;
 }
 
 .main-nav {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(15px);
-  border-bottom: 2px solid rgba(34, 197, 94, 0.2);
+  backdrop-filter: blur(20px);
+  border-bottom: 3px solid transparent;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)),
+    linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6, #ec4899, #f97316);
+  background-origin: border-box;
+  background-clip: content-box, border-box;
   padding: 1.5rem 2rem;
   display: flex;
   justify-content: space-between;
@@ -17,14 +23,17 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.1);
+  box-shadow: 
+    0 8px 32px rgba(16, 185, 129, 0.1),
+    0 4px 16px rgba(59, 130, 246, 0.08),
+    0 2px 8px rgba(139, 92, 246, 0.06);
 }
 
 .nav-brand {
   display: flex;
   align-items: center;
   gap: 1rem;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 1.5rem;
   color: #065f46;
   position: relative;
@@ -32,42 +41,55 @@
 
 .nav-brand svg {
   color: #10b981;
-  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.3));
+  filter: drop-shadow(0 2px 8px rgba(16, 185, 129, 0.4));
+  animation: colibri-wing-flutter 4s ease-in-out infinite;
 }
 
 .nav-brand::after {
-  content: "🌿";
+  content: "🌺";
   position: absolute;
-  right: -1.5rem;
+  right: -2rem;
   top: -0.5rem;
-  font-size: 1.2rem;
-  animation: gentle-bounce 3s ease-in-out infinite;
+  font-size: 1.5rem;
+  animation: tropical-flower-sway 5s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));
 }
 
-/* Petit colibri dans le titre */
+/* Colibri réaliste dans le titre */
 .title-colibri {
-  font-size: 1.2rem;
-  margin-left: 0.5rem;
-  animation: colibri-flutter 4s ease-in-out infinite;
-  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.2));
+  font-size: 1.5rem;
+  margin-left: 0.75rem;
+  position: relative;
+  animation: real-colibri-hover 6s ease-in-out infinite;
+  filter: drop-shadow(0 3px 6px rgba(16, 185, 129, 0.3));
 }
 
-@keyframes colibri-flutter {
+/* Animation réaliste de vol de colibri */
+@keyframes real-colibri-hover {
   0%, 100% { 
-    transform: translateY(0px) rotate(0deg) scale(1);
+    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
   }
-  25% { 
-    transform: translateY(-3px) rotate(5deg) scale(1.05);
+  15% { 
+    transform: translateY(-4px) translateX(2px) rotate(8deg) scale(1.1);
   }
-  50% { 
-    transform: translateY(-1px) rotate(0deg) scale(1);
+  30% { 
+    transform: translateY(-2px) translateX(-1px) rotate(-3deg) scale(1.05);
+  }
+  45% { 
+    transform: translateY(-5px) translateX(3px) rotate(5deg) scale(1.08);
+  }
+  60% { 
+    transform: translateY(-1px) translateX(0px) rotate(0deg) scale(1.02);
   }
   75% { 
-    transform: translateY(-2px) rotate(-3deg) scale(1.02);
+    transform: translateY(-3px) translateX(-2px) rotate(-5deg) scale(1.06);
+  }
+  90% { 
+    transform: translateY(-2px) translateX(1px) rotate(2deg) scale(1.03);
   }
 }
 
-/* Colibri volant en arrière-plan */
+/* Colibri volant en arrière-plan avec trajectoire réaliste */
 .colibri-container {
   position: fixed;
   top: 0;
@@ -81,36 +103,67 @@
 
 .colibri {
   position: absolute;
-  font-size: 1.5rem;
-  animation: colibri-flight 20s linear infinite;
-  filter: drop-shadow(0 2px 8px rgba(16, 185, 129, 0.3));
+  font-size: 2rem;
+  animation: realistic-colibri-flight 25s linear infinite;
+  filter: drop-shadow(0 3px 8px rgba(16, 185, 129, 0.4));
 }
 
-@keyframes colibri-flight {
+/* Vol réaliste avec changements de direction et pauses */
+@keyframes realistic-colibri-flight {
   0% {
-    left: -5%;
-    top: 20%;
+    left: -8%;
+    top: 25%;
     transform: rotate(0deg) scale(1);
   }
-  25% {
-    left: 30%;
-    top: 15%;
+  12% {
+    left: 15%;
+    top: 20%;
+    transform: rotate(15deg) scale(1.2);
+  }
+  18% {
+    left: 20%;
+    top: 18%;
     transform: rotate(10deg) scale(1.1);
   }
-  50% {
-    left: 70%;
-    top: 25%;
+  25% {
+    left: 35%;
+    top: 15%;
     transform: rotate(-5deg) scale(0.9);
+  }
+  35% {
+    left: 45%;
+    top: 22%;
+    transform: rotate(20deg) scale(1.15);
+  }
+  45% {
+    left: 60%;
+    top: 28%;
+    transform: rotate(-10deg) scale(0.95);
+  }
+  55% {
+    left: 70%;
+    top: 18%;
+    transform: rotate(8deg) scale(1.05);
+  }
+  65% {
+    left: 80%;
+    top: 25%;
+    transform: rotate(-15deg) scale(1.1);
   }
   75% {
     left: 90%;
-    top: 10%;
-    transform: rotate(15deg) scale(1.05);
+    top: 12%;
+    transform: rotate(25deg) scale(1.2);
+  }
+  85% {
+    left: 95%;
+    top: 20%;
+    transform: rotate(5deg) scale(1.0);
   }
   100% {
-    left: 105%;
-    top: 30%;
-    transform: rotate(0deg) scale(1);
+    left: 108%;
+    top: 35%;
+    transform: rotate(0deg) scale(0.8);
   }
 }
 
@@ -124,13 +177,14 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  border-radius: 1rem;
+  border-radius: 1.5rem;
   text-decoration: none;
   color: #065f46;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  font-weight: 700;
+  transition: all 0.4s ease;
   position: relative;
   overflow: hidden;
+  border: 2px solid transparent;
 }
 
 .nav-link::before {
@@ -140,8 +194,15 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
-  transition: left 0.5s ease;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(16, 185, 129, 0.1),
+    rgba(59, 130, 246, 0.1),
+    rgba(139, 92, 246, 0.1),
+    transparent
+  );
+  transition: left 0.6s ease;
 }
 
 .nav-link:hover::before {
@@ -149,34 +210,43 @@
 }
 
 .nav-link:hover {
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  background: linear-gradient(135deg, #ecfdf5, #dbeafe, #f3e8ff);
   color: #047857;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2);
+  transform: translateY(-3px) scale(1.05);
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 
+    0 10px 25px rgba(16, 185, 129, 0.2),
+    0 5px 15px rgba(59, 130, 246, 0.15),
+    0 3px 10px rgba(139, 92, 246, 0.1);
 }
 
 .nav-link svg {
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
 }
 
 .nav-link:hover svg {
   color: #10b981;
-  transform: scale(1.1);
+  transform: scale(1.2) rotate(5deg);
+  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.3));
 }
 
 .nav-link.active {
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 
+    0 8px 25px rgba(16, 185, 129, 0.4),
+    0 4px 15px rgba(5, 150, 105, 0.3);
 }
 
 .nav-link.active svg {
   color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .main-content {
   flex: 1;
-  background: linear-gradient(135deg, #e8f5e8 0%, #f0f9ff 50%, #fef7cd 100%);
+  background: linear-gradient(135deg, #e8f5e8 0%, #f0f9ff 30%, #ecfdf5 60%, #fef7cd 100%);
   position: relative;
 }
 
@@ -188,9 +258,11 @@
   right: 0;
   bottom: 0;
   background-image: 
-    radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+    radial-gradient(circle at 15% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 85% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 45% 45%, rgba(245, 158, 11, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -200,7 +272,7 @@
   z-index: 1;
 }
 
-/* Effets de particules flottantes */
+/* Éléments flottants inspirés de la nature tropicale */
 .floating-elements {
   position: fixed;
   top: 0;
@@ -213,37 +285,58 @@
 
 .floating-element {
   position: absolute;
-  opacity: 0.6;
-  animation: float 6s ease-in-out infinite;
+  opacity: 0.7;
+  animation: tropical-float 8s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .floating-element:nth-child(1) {
-  top: 10%;
+  top: 15%;
   left: 10%;
   animation-delay: 0s;
+  font-size: 1.5rem;
 }
 
 .floating-element:nth-child(2) {
-  top: 20%;
-  right: 10%;
-  animation-delay: 2s;
+  top: 25%;
+  right: 15%;
+  animation-delay: 3s;
+  font-size: 1.2rem;
 }
 
 .floating-element:nth-child(3) {
-  bottom: 20%;
+  bottom: 25%;
   left: 20%;
-  animation-delay: 4s;
+  animation-delay: 6s;
+  font-size: 1.3rem;
 }
 
-@keyframes float {
+.floating-element:nth-child(4) {
+  top: 60%;
+  right: 25%;
+  animation-delay: 2s;
+  font-size: 1.1rem;
+}
+
+.floating-element:nth-child(5) {
+  bottom: 40%;
+  left: 60%;
+  animation-delay: 4s;
+  font-size: 1.4rem;
+}
+
+@keyframes tropical-float {
   0%, 100% {
-    transform: translateY(0px) rotate(0deg);
+    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
   }
-  33% {
-    transform: translateY(-20px) rotate(5deg);
+  25% {
+    transform: translateY(-25px) translateX(10px) rotate(5deg) scale(1.1);
   }
-  66% {
-    transform: translateY(-10px) rotate(-5deg);
+  50% {
+    transform: translateY(-15px) translateX(-5px) rotate(-3deg) scale(1.05);
+  }
+  75% {
+    transform: translateY(-30px) translateX(15px) rotate(8deg) scale(1.08);
   }
 }
 
@@ -269,28 +362,33 @@
 
   /* Colibri plus petit sur mobile */
   .colibri {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
   }
 
   .title-colibri {
-    font-size: 1rem;
+    font-size: 1.2rem;
   }
 
   /* Animation plus rapide sur mobile */
-  @keyframes colibri-flight {
+  @keyframes realistic-colibri-flight {
     0% {
       left: -10%;
-      top: 25%;
+      top: 30%;
       transform: rotate(0deg) scale(0.8);
     }
-    50% {
-      left: 60%;
-      top: 20%;
-      transform: rotate(10deg) scale(0.9);
+    30% {
+      left: 40%;
+      top: 25%;
+      transform: rotate(15deg) scale(1.0);
+    }
+    60% {
+      left: 80%;
+      top: 35%;
+      transform: rotate(-10deg) scale(0.9);
     }
     100% {
       left: 110%;
-      top: 30%;
+      top: 40%;
       transform: rotate(0deg) scale(0.8);
     }
   }
@@ -298,23 +396,47 @@
 
 /* Animation au survol du titre pour faire réagir le colibri */
 .nav-brand:hover .title-colibri {
-  animation: colibri-excited 0.8s ease-in-out;
+  animation: colibri-excited 1.2s ease-in-out;
 }
 
 @keyframes colibri-excited {
   0%, 100% { 
-    transform: translateY(0px) rotate(0deg) scale(1);
+    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
   }
-  20% { 
-    transform: translateY(-5px) rotate(15deg) scale(1.2);
+  15% { 
+    transform: translateY(-8px) translateX(5px) rotate(20deg) scale(1.3);
   }
-  40% { 
-    transform: translateY(-3px) rotate(-10deg) scale(1.1);
+  30% { 
+    transform: translateY(-5px) translateX(-3px) rotate(-15deg) scale(1.2);
+  }
+  45% { 
+    transform: translateY(-10px) translateX(8px) rotate(25deg) scale(1.4);
   }
   60% { 
-    transform: translateY(-4px) rotate(8deg) scale(1.15);
+    transform: translateY(-3px) translateX(0px) rotate(0deg) scale(1.1);
   }
-  80% { 
-    transform: translateY(-2px) rotate(-5deg) scale(1.05);
+  75% { 
+    transform: translateY(-6px) translateX(-4px) rotate(-12deg) scale(1.25);
   }
+  90% { 
+    transform: translateY(-4px) translateX(2px) rotate(8deg) scale(1.15);
+  }
+}
+
+/* Effet de brillance iridescente sur le titre */
+.nav-brand:hover {
+  background: linear-gradient(
+    45deg,
+    #10b981,
+    #3b82f6,
+    #8b5cf6,
+    #ec4899,
+    #f97316,
+    #10b981
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: magical-gradient 2s ease-in-out;
 }
