@@ -45,11 +45,6 @@ export class FamilyListComponent implements OnInit {
     return Array.from(absenceDays);
   }
 
-  // Vérifier si un enfant a des absences
-  hasAbsences(absenceDays?: Set<AbsenceDays>): boolean {
-    return absenceDays ? absenceDays.size > 0 : false;
-  }
-
   // Convertir Set d'indisponibilités en Array pour l'itération
   getUnavailabilitiesArray(unavailabilities?: Set<Requirement>): Requirement[] {
     if (!unavailabilities) return [];
