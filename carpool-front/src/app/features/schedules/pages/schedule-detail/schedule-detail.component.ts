@@ -52,7 +52,7 @@ export class ScheduleDetailComponent implements OnInit {
     });
   }
 
-  getTripForSlot(trips: Trip[], weekDay: WeekDay, timeSlot: TimeSlot): Trip | undefined {
-    return trips.find(trip => trip.weekDay === weekDay && trip.timeSlot === timeSlot);
+  getTripsForSlot(trips: Trip[], weekDay: WeekDay, timeSlot: TimeSlot): Trip[] {
+    return trips.filter(trip => trip.weekDay === weekDay && trip.timeSlot === timeSlot);
   }
 }
