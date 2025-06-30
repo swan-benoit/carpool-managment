@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
-import { Family, WeekDay, WeekType, AbsenceDays } from '../../../../modules/openapi';
+import { Family, WeekDay, WeekType, TimeSlot, AbsenceDays, Requirement } from '../../../../modules/openapi';
 import { FamilyService } from '../../services/family.service';
 
 @Component({
@@ -50,6 +50,17 @@ export class FamilyListComponent implements OnInit {
     return absenceDays ? absenceDays.size > 0 : false;
   }
 
+  // Convertir Set d'indisponibilités en Array pour l'itération
+  getUnavailabilitiesArray(unavailabilities?: Set<Requirement>): Requirement[] {
+    if (!unavailabilities) return [];
+    return Array.from(unavailabilities);
+  }
+
+  // Vérifier si une famille a des indisponibilités
+  hasUnavailabilities(unavailabilities?: Set<Requirement>): boolean {
+    return unavailabilities ? unavailabilities.size > 0 : false;
+  }
+
   getShortDay(weekDay?: WeekDay): string {
     switch (weekDay) {
       case WeekDay.Monday: return 'Lun';
@@ -64,6 +75,14 @@ export class FamilyListComponent implements OnInit {
     switch (weekType) {
       case WeekType.Even: return 'P';
       case WeekType.Odd: return 'I';
+      default: return '';
+    }
+  }
+
+  getShortTimeSlot(timeSlot?: TimeSlot): string {
+    switch (timeSlot) {
+      case TimeSlot.Morning: return 'M';
+      case TimeSlot.Evening: return 'S';
       default: return '';
     }
   }
