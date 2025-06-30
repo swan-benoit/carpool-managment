@@ -176,20 +176,23 @@ export class FamilyFormComponent implements OnInit {
     if (this.familyForm.valid) {
       this.isLoading = true;
       const formValue = this.familyForm.value;
-      
+
       const family: Family = {
         id: this.familyId,
         name: formValue.name,
         carCapacity: formValue.carCapacity,
-        children: formValue.children.map((child: any) => ({
-          id: child.id,
-          name: child.name,
-          absenceDays: new Set(child.absenceDays)
-        })),
-        requirements: new Set(formValue.requirements)
+        children: formValue.children.map((child: any) => {
+          console.log(child.absenceDays);
+          return ({
+            id: child.id,
+            name: child.name,
+            absenceDays: child.absenceDays
+          });
+        }),
+        requirements: formValue.requirements
       };
 
-      const operation = this.isEditMode 
+      const operation = this.isEditMode
         ? this.familyService.updateFamily(this.familyId!, family)
         : this.familyService.createFamily(family);
 
