@@ -1,0 +1,54 @@
+<div class="schedule-form-container">
+  <div class="form-header">
+    <h1>{{ isEditMode ? 'Modifier le planning' : 'Créer un planning' }}</h1>
+    <button type="button" (click)="cancel()" class="btn btn-secondary">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+      Annuler
+    </button>
+  </div>
+
+  <form [formGroup]="scheduleForm" (ngSubmit)="onSubmit()" class="schedule-form">
+    <div class="form-section">
+      <h2>Informations du planning</h2>
+      
+      <div class="form-group">
+        <label for="name">Nom du planning *</label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          class="form-control"
+          [class.error]="scheduleForm.get('name')?.invalid && scheduleForm.get('name')?.touched"
+          placeholder="Ex: Planning Semestre 1 2024"
+        >
+        <div class="error-message" *ngIf="scheduleForm.get('name')?.invalid && scheduleForm.get('name')?.touched">
+          <span *ngIf="scheduleForm.get('name')?.errors?.['required']">Le nom est obligatoire</span>
+          <span *ngIf="scheduleForm.get('name')?.errors?.['minlength']">Le nom doit contenir au moins 3 caractères</span>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <div>
+          <p><strong>Information :</strong></p>
+          <p>Un planning vide sera créé. Vous pourrez ensuite ajouter les trajets via l'interface de gestion des plannings.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="cancel()" class="btn btn-secondary">Annuler</button>
+      <button type="submit" [disabled]="scheduleForm.invalid || isLoading" class="btn btn-primary">
+        <span *ngIf="isLoading">Sauvegarde...</span>
+        <span *ngIf="!isLoading">{{ isEditMode ? 'Modifier' : 'Créer' }}</span>
+      </button>
+    </div>
+  </form>
+</div>
