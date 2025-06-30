@@ -34,14 +34,14 @@
             <div class="time-label">{{ slot.label }}</div>
             <div class="trip-cell" *ngFor="let day of weekDays">
               <div class="trip-content"
-                   *ngIf="getTripForSlot(getTripsArray(schedule.evenSchedule?.trips), day.value, slot.value) as trip; else emptyTrip">
+                   *ngIf="getTripForSlot(schedule?.evenSchedule?.trips ?? [], day.value, slot.value) as trip; else emptyTrip">
                 <div class="driver-info">
                   <strong>{{ trip.driver?.name }}</strong>
                 </div>
-                <div class="children-info" *ngIf="trip.children && getChildrenArray(trip.children).length > 0">
-                  <span class="children-count">{{ getChildrenArray(trip.children).length }} enfant(s)</span>
+                <div class="children-info" *ngIf="trip.children && trip.children.length > 0">
+                  <span class="children-count">{{ trip.children.length }} enfant(s)</span>
                   <div class="children-list">
-                    <span *ngFor="let child of getChildrenArray(trip.children); let last = last">
+                    <span *ngFor="let child of trip.children; let last = last">
                       {{ child.name }}<span *ngIf="!last">, </span>
                     </span>
                   </div>
@@ -66,14 +66,14 @@
             <div class="time-label">{{ slot.label }}</div>
             <div class="trip-cell" *ngFor="let day of weekDays">
               <div class="trip-content"
-                   *ngIf="getTripForSlot(getTripsArray(schedule.oddSchedule?.trips), day.value, slot.value) as trip; else emptyTrip">
+                   *ngIf="getTripForSlot(schedule?.oddSchedule?.trips ?? [], day.value, slot.value) as trip; else emptyTrip">
                 <div class="driver-info">
                   <strong>{{ trip.driver?.name }}</strong>
                 </div>
-                <div class="children-info" *ngIf="trip.children && getChildrenArray(trip.children).length > 0">
-                  <span class="children-count">{{ getChildrenArray(trip.children).length }} enfant(s)</span>
+                <div class="children-info" *ngIf="trip.children && trip.children.length > 0">
+                  <span class="children-count">{{ trip.children.length }} enfant(s)</span>
                   <div class="children-list">
-                    <span *ngFor="let child of getChildrenArray(trip.children); let last = last">
+                    <span *ngFor="let child of trip.children; let last = last">
                       {{ child.name }}<span *ngIf="!last">, </span>
                     </span>
                   </div>
@@ -92,70 +92,5 @@
   <div class="loading-state" *ngIf="isLoading">
     <div class="loading-spinner"></div>
     <p>Chargement du planning...</p>
-  </div>
-</div>
-
-<!-- Modal d'ajout/modification de trajet -->
-<div class="modal-overlay" *ngIf="showTripModal" (click)="closeTripModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>{{ editingTrip ? 'Modifier' : 'Ajouter' }} un trajet</h3>
-      <p class="modal-subtitle">
-        Semaine {{ getWeekTypeLabel(selectedWeekType) }} - {{ getDayLabel(selectedWeekDay) }} {{ getTimeSlotLabel(selectedTimeSlot) }}
-      </p>
-      <button class="close-btn" (click)="closeTripModal()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-    </div>
-
-    <form [formGroup]="tripForm" (ngSubmit)="saveTrip()" class="modal-form">
-      <div class="form-group">
-        <label for="driver">Conducteur *</label>
-        <select id="driver" formControlName="driverId" class="form-control" (change)="onDriverChange()">
-          <option value="">Sélectionner un conducteur</option>
-          <option *ngFor="let family of families" [value]="family.id">
-            {{ family.name }} ({{ family.carCapacity }} places)
-          </option>
-        </select>
-      </div>
-
-      <div class="form-group" *ngIf="getSelectedDriver()">
-        <label>Enfants à transporter</label>
-        <div class="children-selection">
-          <div class="capacity-info">
-            Capacité: {{ (tripForm.get('childrenIds')?.value || []).length }}/{{ getSelectedDriver()?.carCapacity }}
-          </div>
-          <div class="children-list">
-            <label class="child-checkbox" *ngFor="let child of getAllChildren()">
-              <input
-                type="checkbox"
-                [checked]="isChildSelected(child.id!)"
-                [disabled]="!canSelectChild(child)"
-                (change)="onChildrenChange(child.id!, $event)"
-              >
-              <span class="checkmark"></span>
-              <span class="child-name">{{ child.name }}</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" *ngIf="editingTrip" (click)="deleteTrip()" class="btn btn-danger">
-          Supprimer
-        </button>
-        <div class="action-buttons">
-          <button type="button" (click)="closeTripModal()" class="btn btn-secondary">
-            Annuler
-          </button>
-          <button type="submit" [disabled]="tripForm.invalid" class="btn btn-primary">
-            {{ editingTrip ? 'Modifier' : 'Ajouter' }}
-          </button>
-        </div>
-      </div>
-    </form>
   </div>
 </div>
