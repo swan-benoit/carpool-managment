@@ -23,82 +23,10 @@ public class Family extends PanacheEntityBase {
 
     public int carCapacity;
 
-    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<Child> children = new CopyOnWriteArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Child> children ;
 
-    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<Requirement> requirements = new HashSet<>();
-
-    static List<Family> familiesWithChildren() {
-        Stream<Family> stream = stream("""
-                                 SELECT DISTINCT f FROM Family f
-                                 LEFT JOIN FETCH f.children c
-                                 LEFT JOIN FETCH c.absenceDays
-                                 LEFT JOIN FETCH f.requirements order by f.name
-                """);
-        return stream.peek(f -> f.children = f.children.stream().distinct().toList()).toList();
-
-    }
-
-    static Family familyWithChildren(Long id) {
-        List<Family> list = list("""
-                                SELECT DISTINCT f FROM Family f
-                                LEFT JOIN FETCH f.children c
-                                LEFT JOIN FETCH c.absenceDays
-                                LEFT JOIN FETCH f.requirements WHERE f.id = ?1 order by f.name
-         """, id);
-        return list.getFirst();
-    }
-
-    static Family createFamilyWithChildren(Family family) {
-        for (Child child : family.children) {
-            child.family = family;
-
-            for (var absenceDay : child.absenceDays) {
-                absenceDay.child = child;
-            }
-        }
-
-        for (Requirement requirement : family.requirements) {
-            requirement.family = family;
-        }
-
-        family.persist();
-
-        return family;
-    }
-    static Family updateFamilyWithChildren(Long id, Family updated) {
-        Family existingFamily = familyWithChildren(id);
-        existingFamily.name = updated.name;
-        existingFamily.carCapacity = updated.carCapacity;
-
-        List<Child> children = existingFamily.children;
-        children.clear();
-
-        for (Child c : updated.children) {
-            Child child = new Child();
-            child.name = c.name;
-            child.family = existingFamily;
-            for (var a: c.absenceDays) {
-                a.child = child;
-                child.absenceDays.add(a);
-            }
-            child.absenceDays = c.absenceDays;
-            children.add(child);
-        }
-
-        existingFamily.requirements.clear();
-        updated.requirements.forEach(c -> {
-            Requirement requirement = new Requirement();
-            requirement.timeSlot = c.timeSlot;
-            requirement.weekDay = c.weekDay;
-            requirement.weekType = c.weekType;
-            requirement.family = existingFamily;
-            existingFamily.requirements.add(requirement);
-
-        });
-        return updated;
-    }
-
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<Requirement> requirements;
 
 }

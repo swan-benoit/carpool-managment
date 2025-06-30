@@ -1,17 +1,7 @@
 package com.carpool.schedule;
 
-import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
+import com.carpool.schedule.persistence.Schedule;
+import io.quarkus.hibernate.orm.rest.data.panache.PanacheEntityResource;
 
-@Path("schedule")
-public class ScheduleResource {
-    
-    @Inject
-    ScheduleService scheduleService;
-    @GET
-    public FullSchedule generateFullSchedule() {
-        return scheduleService.generateFullSchedule();
-    }
-    
+public interface ScheduleResource extends PanacheEntityResource<Schedule, Long> {
 }

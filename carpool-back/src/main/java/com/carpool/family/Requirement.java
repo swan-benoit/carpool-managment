@@ -15,7 +15,4 @@ public class Requirement extends PanacheEntityBase {
     public WeekDay weekDay;
     public WeekType weekType;
 
-    @ManyToOne
-    @JsonbTransient
-    public Family family;
 }

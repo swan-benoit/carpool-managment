@@ -6,30 +6,25 @@ import com.carpool.family.WeekDay;
 import com.carpool.family.WeekType;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
-import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-
-import java.net.URL;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 
 @QuarkusTest
-@TestHTTPEndpoint(FamilyResource.class)
 @Tag("family")
 class FamilyResourceTest {
 
     private Response getFamilies() {
         return given()
-                .when().get();
+                .when().get("/family?sort=name");
     }
 
     @Test
@@ -110,7 +105,7 @@ class FamilyResourceTest {
                           ]
                         }
                         """)
-                .when().post()
+                .when().post("/family")
                 .then()
                 .statusCode(201)
                 .body(
@@ -126,6 +121,7 @@ class FamilyResourceTest {
                 .jsonPath()
                 .getInt("id");
 
+        String famillyPrettyPrint = getFamillyPrettyPrint();
         getFamilies().then().statusCode(200)
                 .body(
                         "find { it.id == %s }.carCapacity".formatted(id), equalTo(6),
@@ -180,9 +176,9 @@ class FamilyResourceTest {
                           ]
                         }
                         """.formatted(laetitiaId)).when()
-                .put("/" + familyId)
+                .put("/family/" + familyId)
                 .then()
-                .statusCode(201);
+                .statusCode(204);
 
         getFamilies().then().statusCode(200)
                 .body(
@@ -200,6 +196,10 @@ class FamilyResourceTest {
                         )
                 );
 
+    }
+
+    private String getFamillyPrettyPrint() {
+        return getFamilies().andReturn().body().prettyPrint();
     }
 
 }

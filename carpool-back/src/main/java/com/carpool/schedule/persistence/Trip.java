@@ -1,17 +1,25 @@
-package com.carpool.family;
+package com.carpool.schedule.persistence;
 
+import com.carpool.family.*;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.*;
 
-import java.util.List;
+import java.util.Set;
 
 @Entity
-public class AbsenceDays extends PanacheEntityBase {
+public class Trip extends PanacheEntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
     public WeekDay weekDay;
-    public WeekType weekType;
+    public TimeSlot timeSlot;
+
+    @OneToOne
+    public Family driver;
+
+    @OneToMany
+    public Set<Child> children;
+
 }
