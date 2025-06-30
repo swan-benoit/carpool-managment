@@ -1,0 +1,78 @@
+<div class="family-list-container">
+  <div class="header">
+    <h1>Gestion des Familles</h1>
+    <a routerLink="/families/new" class="btn btn-primary">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Ajouter une famille
+    </a>
+  </div>
+
+  <div class="families-grid" *ngIf="families$ | async as families">
+    <div class="family-card" *ngFor="let family of families">
+      <div class="family-header">
+        <h3>{{ family.name }}</h3>
+        <div class="family-actions">
+          <a [routerLink]="['/families', family.id, 'edit']" class="btn btn-secondary btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Modifier
+          </a>
+          <button (click)="deleteFamily(family)" class="btn btn-danger btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3,6 5,6 21,6"></polyline>
+              <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+            </svg>
+            Supprimer
+          </button>
+        </div>
+      </div>
+
+      <div class="family-info">
+        <div class="info-item">
+          <span class="label">Capacité voiture:</span>
+          <span class="value">{{ family.carCapacity }} places</span>
+        </div>
+
+        <div class="children-section" *ngIf="family.children && family.children.length > 0">
+          <h4>Enfants ({{ family.children.length }})</h4>
+          <div class="children-list">
+            <div class="child-item" *ngFor="let child of family.children">
+              <span class="child-name">{{ child.name }}</span>
+              <span class="absence-count" *ngIf="child.absenceDays && child.absenceDays.size > 0">
+                {{ child.absenceDays.size }} absence(s)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="requirements-section" *ngIf="family.requirements && family.requirements.size > 0">
+          <h4>Exigences ({{ family.requirements.size }})</h4>
+          <div class="requirements-list">
+            <div class="requirement-item" *ngFor="let requirement of family.requirements">
+              <span class="requirement-text">
+                {{ requirement.weekDay }} {{ requirement.timeSlot }} ({{ requirement.weekType }})
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="families.length === 0">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      <h3>Aucune famille enregistrée</h3>
+      <p>Commencez par ajouter votre première famille</p>
+      <a routerLink="/families/new" class="btn btn-primary">Ajouter une famille</a>
+    </div>
+  </div>
+</div>

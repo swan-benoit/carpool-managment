@@ -1,0 +1,209 @@
+<div class="family-form-container">
+  <div class="form-header">
+    <h1>{{ isEditMode ? 'Modifier la famille' : 'Ajouter une famille' }}</h1>
+    <button type="button" (click)="cancel()" class="btn btn-secondary">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+      Annuler
+    </button>
+  </div>
+
+  <form [formGroup]="familyForm" (ngSubmit)="onSubmit()" class="family-form">
+    <!-- Informations de base -->
+    <div class="form-section">
+      <h2>Informations de base</h2>
+      
+      <div class="form-group">
+        <label for="name">Nom de la famille *</label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          class="form-control"
+          [class.error]="familyForm.get('name')?.invalid && familyForm.get('name')?.touched"
+          placeholder="Ex: Famille Dupont"
+        >
+        <div class="error-message" *ngIf="familyForm.get('name')?.invalid && familyForm.get('name')?.touched">
+          <span *ngIf="familyForm.get('name')?.errors?.['required']">Le nom est obligatoire</span>
+          <span *ngIf="familyForm.get('name')?.errors?.['minlength']">Le nom doit contenir au moins 2 caractères</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="carCapacity">Capacité de la voiture *</label>
+        <input
+          type="number"
+          id="carCapacity"
+          formControlName="carCapacity"
+          class="form-control"
+          [class.error]="familyForm.get('carCapacity')?.invalid && familyForm.get('carCapacity')?.touched"
+          min="1"
+          max="20"
+        >
+        <div class="error-message" *ngIf="familyForm.get('carCapacity')?.invalid && familyForm.get('carCapacity')?.touched">
+          <span *ngIf="familyForm.get('carCapacity')?.errors?.['required']">La capacité est obligatoire</span>
+          <span *ngIf="familyForm.get('carCapacity')?.errors?.['min']">La capacité doit être d'au moins 1</span>
+          <span *ngIf="familyForm.get('carCapacity')?.errors?.['max']">La capacité ne peut pas dépasser 20</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enfants -->
+    <div class="form-section">
+      <div class="section-header">
+        <h2>Enfants</h2>
+        <button type="button" (click)="addChild()" class="btn btn-primary btn-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Ajouter un enfant
+        </button>
+      </div>
+
+      <div class="children-list" formArrayName="children">
+        <div class="child-item" *ngFor="let child of children.controls; let i = index" [formGroupName]="i">
+          <div class="child-header">
+            <h3>Enfant {{ i + 1 }}</h3>
+            <button type="button" (click)="removeChild(i)" class="btn btn-danger btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"></polyline>
+                <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2,2h4a2,2,0,0,1,2,2V6"></path>
+              </svg>
+              Supprimer
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label [for]="'childName' + i">Nom de l'enfant *</label>
+            <input
+              type="text"
+              [id]="'childName' + i"
+              formControlName="name"
+              class="form-control"
+              [class.error]="child.get('name')?.invalid && child.get('name')?.touched"
+              placeholder="Prénom de l'enfant"
+            >
+            <div class="error-message" *ngIf="child.get('name')?.invalid && child.get('name')?.touched">
+              <span *ngIf="child.get('name')?.errors?.['required']">Le nom est obligatoire</span>
+              <span *ngIf="child.get('name')?.errors?.['minlength']">Le nom doit contenir au moins 2 caractères</span>
+            </div>
+          </div>
+
+          <!-- Jours d'absence -->
+          <div class="absence-section">
+            <div class="subsection-header">
+              <h4>Jours d'absence</h4>
+              <button type="button" (click)="addAbsenceDay(i)" class="btn btn-secondary btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Ajouter une absence
+              </button>
+            </div>
+
+            <div class="absence-list" formArrayName="absenceDays">
+              <div class="absence-item" *ngFor="let absence of getChildAbsenceDays(i).controls; let j = index" [formGroupName]="j">
+                <div class="absence-fields">
+                  <div class="form-group">
+                    <label [for]="'weekDay' + i + j">Jour</label>
+                    <select [id]="'weekDay' + i + j" formControlName="weekDay" class="form-control">
+                      <option value="">Sélectionner un jour</option>
+                      <option *ngFor="let day of weekDays" [value]="day.value">{{ day.label }}</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label [for]="'weekType' + i + j">Type de semaine</label>
+                    <select [id]="'weekType' + i + j" formControlName="weekType" class="form-control">
+                      <option value="">Sélectionner un type</option>
+                      <option *ngFor="let type of weekTypes" [value]="type.value">{{ type.label }}</option>
+                    </select>
+                  </div>
+
+                  <button type="button" (click)="removeAbsenceDay(i, j)" class="btn btn-danger btn-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-children" *ngIf="children.length === 0">
+          <p>Aucun enfant ajouté. Cliquez sur "Ajouter un enfant" pour commencer.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exigences -->
+    <div class="form-section">
+      <div class="section-header">
+        <h2>Exigences de transport</h2>
+        <button type="button" (click)="addRequirement()" class="btn btn-primary btn-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Ajouter une exigence
+        </button>
+      </div>
+
+      <div class="requirements-list" formArrayName="requirements">
+        <div class="requirement-item" *ngFor="let requirement of requirements.controls; let i = index" [formGroupName]="i">
+          <div class="requirement-fields">
+            <div class="form-group">
+              <label [for]="'reqTimeSlot' + i">Créneau</label>
+              <select [id]="'reqTimeSlot' + i" formControlName="timeSlot" class="form-control">
+                <option value="">Sélectionner un créneau</option>
+                <option *ngFor="let slot of timeSlots" [value]="slot.value">{{ slot.label }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label [for]="'reqWeekDay' + i">Jour</label>
+              <select [id]="'reqWeekDay' + i" formControlName="weekDay" class="form-control">
+                <option value="">Sélectionner un jour</option>
+                <option *ngFor="let day of weekDays" [value]="day.value">{{ day.label }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label [for]="'reqWeekType' + i">Type de semaine</label>
+              <select [id]="'reqWeekType' + i" formControlName="weekType" class="form-control">
+                <option value="">Sélectionner un type</option>
+                <option *ngFor="let type of weekTypes" [value]="type.value">{{ type.label }}</option>
+              </select>
+            </div>
+
+            <button type="button" (click)="removeRequirement(i)" class="btn btn-danger btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"></polyline>
+                <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2,2h4a2,2,0,0,1,2,2V6"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="empty-requirements" *ngIf="requirements.length === 0">
+          <p>Aucune exigence définie. Les exigences permettent de spécifier des contraintes particulières.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" (click)="cancel()" class="btn btn-secondary">Annuler</button>
+      <button type="submit" [disabled]="familyForm.invalid || isLoading" class="btn btn-primary">
+        <span *ngIf="isLoading">Sauvegarde...</span>
+        <span *ngIf="!isLoading">{{ isEditMode ? 'Modifier' : 'Créer' }}</span>
+      </button>
+    </div>
+  </form>
+</div>
