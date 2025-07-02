@@ -347,7 +347,7 @@ export class TripModalComponent implements OnInit {
         // ✅ CORRECTION IMPORTANTE :
         // - Pour les nouveaux trajets (mode création) : id = undefined
         // - Pour les trajets existants (mode édition) : id = ID existant
-        id: this.isEditMode ? this.editingTrip!.id : undefined,
+        id: this.editingTrip?.id,
         weekDay: formValue.weekDay,
         timeSlot: formValue.timeSlot,
         driver: driver,
@@ -380,12 +380,22 @@ export class TripModalComponent implements OnInit {
         } else {
           // ✅ Mode création : ajouter un nouveau trajet avec id = undefined
           // Le backend générera automatiquement l'ID lors de la sauvegarde
-          currentSchedule.trips.push(trip);
+          currentSchedule.trips.push({
+            id: undefined,
+            ...trip
+          });
         }
       }
 
       // Émettre le planning mis à jour
-      this.tripSaved.emit(updatedSchedule);
+      console.log({
+        id: this.editingTrip?.id,
+        ...updatedSchedule
+      })
+      this.tripSaved.emit({
+        id: this.editingTrip?.id,
+        ...updatedSchedule
+      });
     }
   }
 

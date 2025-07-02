@@ -20,7 +20,7 @@ public class Trip extends PanacheEntityBase {
     @OneToOne
     public Family driver;
 
-    @OneToMany
+    @ManyToMany
     public Set<Child> children;
 
 }
