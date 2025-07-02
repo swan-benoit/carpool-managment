@@ -65,6 +65,7 @@
   background: rgba(16, 185, 129, 0.05);
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .trip-item:hover {
@@ -72,6 +73,58 @@
   background: rgba(16, 185, 129, 0.08);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+}
+
+/* Styles pour les trajets pleins */
+.trip-item.trip-full {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
+}
+
+.trip-item.trip-full:hover {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: rgba(245, 158, 11, 0.12);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.25);
+}
+
+.trip-status {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 10;
+}
+
+.full-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border-radius: 1rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.full-indicator svg {
+  width: 12px;
+  height: 12px;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.6);
+    transform: scale(1.05);
+  }
 }
 
 .trip-content {
@@ -107,6 +160,27 @@
   margin-bottom: 0.5rem;
   font-weight: 600;
   color: #065f46;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  transition: all 0.3s ease;
+}
+
+/* Styles pour les compteurs selon la capacité */
+.children-count.count-warning {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #92400e;
+  font-weight: 700;
+}
+
+.children-count.count-full {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 .children-list {
@@ -199,6 +273,11 @@
     padding: 1.25rem;
     font-size: 1rem;
   }
+
+  .full-indicator {
+    font-size: 0.5rem;
+    padding: 0.2rem 0.5rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -220,5 +299,16 @@
   .day-header {
     padding: 1rem;
     font-size: 0.875rem;
+  }
+
+  .full-indicator {
+    font-size: 0.5rem;
+    padding: 0.15rem 0.4rem;
+    gap: 0.15rem;
+  }
+
+  .full-indicator svg {
+    width: 10px;
+    height: 10px;
   }
 }

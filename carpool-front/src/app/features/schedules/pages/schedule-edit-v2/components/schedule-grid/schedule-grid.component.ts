@@ -86,4 +86,22 @@ export class ScheduleGridComponent {
     const availableFamilies = this.families.filter(family => !usedFamilyIds.includes(family.id));
     return availableFamilies.length > 0;
   }
+
+  /**
+   * Vérifie si un trajet est plein (capacité maximale atteinte)
+   */
+  isTripFull(trip: Trip): boolean {
+    if (!trip.driver || !trip.children) return false;
+    return trip.children.length >= trip.driver.carCapacity!;
+  }
+
+  /**
+   * Vérifie si un trajet est proche de la capacité maximale (80% ou plus)
+   */
+  isNearCapacity(trip: Trip): boolean {
+    if (!trip.driver || !trip.children) return false;
+    const capacity = trip.driver.carCapacity!;
+    const occupancy = trip.children.length;
+    return occupancy >= Math.ceil(capacity * 0.8) && occupancy < capacity;
+  }
 }
