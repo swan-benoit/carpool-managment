@@ -287,7 +287,9 @@ export class TripModalComponent implements OnInit {
       }
 
       const trip: Trip = {
-        id: this.editingTrip?.id,
+        // IMPORTANT: L'ID doit être undefined pour les nouveaux trajets
+        // Le backend se chargera de générer l'ID approprié
+        id: this.editingTrip?.id, // undefined pour les nouveaux trajets, ID existant pour les modifications
         weekDay: formValue.weekDay,
         timeSlot: formValue.timeSlot,
         driver: driver,
@@ -319,7 +321,7 @@ export class TripModalComponent implements OnInit {
           }
         } else {
           // Ajouter un nouveau trajet
-          trip.id = Date.now(); // ID temporaire pour éviter les conflits
+          // L'ID reste undefined - le backend générera l'ID lors de la sauvegarde
           currentSchedule.trips.push(trip);
         }
       }
