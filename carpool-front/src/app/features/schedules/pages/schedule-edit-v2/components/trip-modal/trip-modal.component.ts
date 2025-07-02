@@ -150,15 +150,38 @@ export class TripModalComponent implements OnInit {
   }
 
   /**
-   * ✅ NOUVELLE MÉTHODE : Vérifie si un enfant est absent pour le créneau donné
+   * ✅ CORRECTION CRITIQUE : Vérifie si un enfant est absent pour le créneau donné
+   * Le problème était dans la comparaison des enums
    */
   private isChildAbsent(child: Child): boolean {
-    if (!this.modalData || !child.absenceDays) return false;
+    if (!this.modalData || !child.absenceDays || child.absenceDays.length === 0) {
+      return false;
+    }
 
-    return child.absenceDays.some(absence => 
-      absence.weekDay === this.modalData!.weekDay && 
-      absence.weekType === this.modalData!.weekType
-    );
+    console.log('🔍 Vérification absence pour:', child.name);
+    console.log('📅 Créneau actuel:', {
+      weekDay: this.modalData.weekDay,
+      weekType: this.modalData.weekType
+    });
+    console.log('🚫 Jours d\'absence:', child.absenceDays);
+
+    const isAbsent = child.absenceDays.some(absence => {
+      // ✅ CORRECTION : Comparaison directe des valeurs string
+      const weekDayMatch = absence.weekDay === this.modalData!.weekDay;
+      const weekTypeMatch = absence.weekType === this.modalData!.weekType;
+      
+      console.log('🔍 Comparaison:', {
+        absence,
+        weekDayMatch,
+        weekTypeMatch,
+        result: weekDayMatch && weekTypeMatch
+      });
+      
+      return weekDayMatch && weekTypeMatch;
+    });
+
+    console.log('✅ Résultat final pour', child.name, ':', isAbsent ? 'ABSENT' : 'DISPONIBLE');
+    return isAbsent;
   }
 
   /**
@@ -255,6 +278,8 @@ export class TripModalComponent implements OnInit {
         const driverChildrenIds = driver.children
           ?.filter(child => !this.isChildAbsent(child)) // ✅ Filtrer les enfants absents
           ?.map(child => child.id) || [];
+        
+        console.log('👨‍👩‍👧‍👦 Enfants de la famille conductrice (non absents):', driverChildrenIds);
         
         this.tripForm.patchValue({
           childrenIds: driverChildrenIds
@@ -463,10 +488,10 @@ export class TripModalComponent implements OnInit {
       }
 
       // Émettre le planning mis à jour
-      console.log({
+      console.log('💾 Sauvegarde du planning:', {
         id: this.editingTrip?.id,
         ...updatedSchedule
-      })
+      });
       this.tripSaved.emit({
         id: this.editingTrip?.id,
         ...updatedSchedule

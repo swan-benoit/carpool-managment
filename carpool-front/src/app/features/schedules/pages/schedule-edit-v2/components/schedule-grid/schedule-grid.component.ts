@@ -106,6 +106,20 @@ export class ScheduleGridComponent {
   }
 
   /**
+   * ✅ CORRECTION CRITIQUE : Vérifie si un enfant est absent pour le créneau donné
+   */
+  private isChildAbsent(child: Child, weekDay: WeekDay): boolean {
+    if (!child.absenceDays || child.absenceDays.length === 0) {
+      return false;
+    }
+
+    return child.absenceDays.some(absence => 
+      absence.weekDay === weekDay && 
+      absence.weekType === this.selectedWeekType
+    );
+  }
+
+  /**
    * ✅ NOUVELLE MÉTHODE : Obtient tous les enfants qui doivent être transportés pour un créneau donné
    * Exclut automatiquement les enfants absents
    */
@@ -115,15 +129,7 @@ export class ScheduleGridComponent {
     
     // ✅ MODIFICATION : Filtrer les enfants qui ne sont pas absents pour ce créneau
     return allChildren.filter(child => {
-      if (!child.absenceDays) return true;
-      
-      // Vérifier si l'enfant est absent pour ce jour et ce type de semaine
-      const isAbsent = child.absenceDays.some(absence => 
-        absence.weekDay === weekDay && 
-        absence.weekType === this.selectedWeekType
-      );
-      
-      return !isAbsent; // ✅ Retourner seulement les enfants NON absents
+      return !this.isChildAbsent(child, weekDay);
     });
   }
 
@@ -193,12 +199,7 @@ export class ScheduleGridComponent {
     const allChildren = this.families.flatMap(family => family.children || []);
     
     return allChildren.filter(child => {
-      if (!child.absenceDays) return false;
-      
-      return child.absenceDays.some(absence => 
-        absence.weekDay === weekDay && 
-        absence.weekType === this.selectedWeekType
-      );
+      return this.isChildAbsent(child, weekDay);
     }).length;
   }
 
@@ -209,12 +210,7 @@ export class ScheduleGridComponent {
     const allChildren = this.families.flatMap(family => family.children || []);
     
     return allChildren.filter(child => {
-      if (!child.absenceDays) return false;
-      
-      return child.absenceDays.some(absence => 
-        absence.weekDay === weekDay && 
-        absence.weekType === this.selectedWeekType
-      );
+      return this.isChildAbsent(child, weekDay);
     });
   }
 }
