@@ -103,11 +103,11 @@ export class TripModalComponent implements OnInit {
   private getTripsForSlot(weekDay: WeekDay, timeSlot: TimeSlot): Trip[] {
     if (!this.schedule || !this.modalData) return [];
 
-    const currentSchedule = this.modalData.weekType === WeekType.Even 
-      ? this.schedule.evenSchedule 
+    const currentSchedule = this.modalData.weekType === WeekType.Even
+      ? this.schedule.evenSchedule
       : this.schedule.oddSchedule;
-    
-    return currentSchedule?.trips?.filter(trip => 
+
+    return currentSchedule?.trips?.filter(trip =>
       trip.weekDay === weekDay && trip.timeSlot === timeSlot
     ) || [];
   }
@@ -147,9 +147,9 @@ export class TripModalComponent implements OnInit {
     if (!this.modalData) return null;
 
     const currentTrips = this.getTripsForSlot(this.modalData.weekDay, this.modalData.timeSlot);
-    
-    const otherTrip = currentTrips.find(trip => 
-      trip.id !== this.editingTrip?.id && 
+
+    const otherTrip = currentTrips.find(trip =>
+      trip.id !== this.editingTrip?.id &&
       trip.children?.some(assignedChild => assignedChild.id === child.id)
     );
 
@@ -168,9 +168,9 @@ export class TripModalComponent implements OnInit {
     if (!this.modalData) return false;
 
     const currentTrips = this.getTripsForSlot(this.modalData.weekDay, this.modalData.timeSlot);
-    
-    return currentTrips.some(trip => 
-      trip.id !== this.editingTrip?.id && 
+
+    return currentTrips.some(trip =>
+      trip.id !== this.editingTrip?.id &&
       trip.children?.some(assignedChild => assignedChild.id === child.id)
     );
   }
@@ -193,16 +193,16 @@ export class TripModalComponent implements OnInit {
   onChildSelectionChange(childId: number, event: Event): void {
     const target = event.target as HTMLInputElement;
     const isChecked = target.checked;
-    
+
     const currentIds = this.tripForm.get('childrenIds')?.value || [];
     const childState = this.childrenSelectionState.find(state => state.child.id === childId);
-    
+
     if (isChecked) {
       // Si l'enfant est dans un autre trajet, le supprimer de cet autre trajet
       if (childState?.isInOtherTrip) {
         this.removeChildFromOtherTrip(childId);
       }
-      
+
       this.tripForm.patchValue({
         childrenIds: [...currentIds, childId]
       });
@@ -211,26 +211,26 @@ export class TripModalComponent implements OnInit {
         childrenIds: currentIds.filter((id: number) => id !== childId)
       });
     }
-    
+
     this.updateChildrenSelectionState();
   }
 
   private removeChildFromOtherTrip(childId: number): void {
     if (!this.modalData || !this.schedule) return;
 
-    const currentSchedule = this.modalData.weekType === WeekType.Even 
-      ? this.schedule.evenSchedule 
+    const currentSchedule = this.modalData.weekType === WeekType.Even
+      ? this.schedule.evenSchedule
       : this.schedule.oddSchedule;
 
     if (!currentSchedule?.trips) return;
 
     // Trouver et modifier le trajet qui contient cet enfant
     currentSchedule.trips.forEach(trip => {
-      if (trip.id !== this.editingTrip?.id && 
-          trip.weekDay === this.modalData!.weekDay && 
+      if (trip.id !== this.editingTrip?.id &&
+          trip.weekDay === this.modalData!.weekDay &&
           trip.timeSlot === this.modalData!.timeSlot &&
           trip.children?.some(child => child.id === childId)) {
-        
+
         // Supprimer l'enfant de ce trajet
         trip.children = trip.children?.filter(child => child.id !== childId) || [];
       }
@@ -258,7 +258,7 @@ export class TripModalComponent implements OnInit {
    * Méthode extraite du template pour éviter la logique complexe dans le HTML
    */
   hasChildrenInOtherTrips(): boolean {
-    return this.childrenSelectionState.some(state => 
+    return this.childrenSelectionState.some(state =>
       state.isInOtherTrip && !state.isSelected
     );
   }
@@ -288,7 +288,7 @@ export class TripModalComponent implements OnInit {
       }
 
       const trip: Trip = {
-        // ✅ CORRECTION IMPORTANTE : 
+        // ✅ CORRECTION IMPORTANTE :
         // - Pour les nouveaux trajets (mode création) : id = undefined
         // - Pour les trajets existants (mode édition) : id = ID existant
         id: this.isEditMode ? this.editingTrip!.id : undefined,
@@ -300,10 +300,10 @@ export class TripModalComponent implements OnInit {
 
       // Créer une copie profonde du planning pour éviter les mutations
       const updatedSchedule: FullSchedule = JSON.parse(JSON.stringify(this.schedule));
-      
+
       // Mettre à jour le planning local
-      const currentSchedule = this.modalData.weekType === WeekType.Even 
-        ? updatedSchedule.evenSchedule 
+      const currentSchedule = this.modalData.weekType === WeekType.Even
+        ? updatedSchedule.evenSchedule
         : updatedSchedule.oddSchedule;
 
       if (currentSchedule) {

@@ -11,7 +11,7 @@ export const schedulesRoutes: Routes = [
   },
   {
     path: ':id/edit',
-    loadComponent: () => import('./pages/schedule-edit/schedule-edit.component').then(c => c.ScheduleEditComponent)
+    loadComponent: () => import('./pages/schedule-edit-v2/schedule-edit-v2.component').then(c => c.ScheduleEditV2Component)
   },
   {
     path: ':id/edit-v2',
