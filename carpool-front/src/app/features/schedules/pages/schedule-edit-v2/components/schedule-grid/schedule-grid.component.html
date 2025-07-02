@@ -5,6 +5,27 @@
   <div class="time-slot" *ngFor="let slot of timeSlots">
     <div class="time-label">{{ slot.label }}</div>
     <div class="trip-cell" *ngFor="let day of weekDays">
+      <!-- Indicateur de complétude du slot -->
+      <div class="slot-status" [class.slot-complete]="isSlotComplete(day.value, slot.value)" [class.slot-incomplete]="!isSlotComplete(day.value, slot.value)">
+        <div class="status-indicator">
+          <svg *ngIf="isSlotComplete(day.value, slot.value)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4"></path>
+            <circle cx="12" cy="12" r="10"></circle>
+          </svg>
+          <svg *ngIf="!isSlotComplete(day.value, slot.value)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span class="status-text">
+            {{ isSlotComplete(day.value, slot.value) ? 'Tous transportés' : 'Enfants manquants' }}
+          </span>
+        </div>
+        <div class="children-summary">
+          {{ getTransportedChildrenCount(day.value, slot.value) }}/{{ getTotalChildrenForSlot(day.value, slot.value) }} enfants
+        </div>
+      </div>
+
       <div class="trips-container">
         <!-- Trajets existants -->
         <div class="trip-item"

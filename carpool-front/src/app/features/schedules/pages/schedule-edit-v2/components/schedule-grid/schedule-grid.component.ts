@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Family, FullSchedule, TimeSlot, Trip, WeekDay, WeekType } from '../../../../../../modules/openapi';
+import { Family, FullSchedule, TimeSlot, Trip, WeekDay, WeekType, Child } from '../../../../../../modules/openapi';
 import { TripModalData } from '../../schedule-edit-v2.component';
 
 interface WeekDayOption {
@@ -103,5 +103,82 @@ export class ScheduleGridComponent {
     const capacity = trip.driver.carCapacity!;
     const occupancy = trip.children.length;
     return occupancy >= Math.ceil(capacity * 0.8) && occupancy < capacity;
+  }
+
+  /**
+   * Obtient tous les enfants qui doivent être transportés pour un créneau donné
+   */
+  private getAllChildrenForSlot(weekDay: WeekDay, timeSlot: TimeSlot): Child[] {
+    // Récupérer tous les enfants de toutes les familles
+    const allChildren = this.families.flatMap(family => family.children || []);
+    
+    // Filtrer les enfants qui ne sont pas absents pour ce créneau
+    return allChildren.filter(child => {
+      if (!child.absenceDays) return true;
+      
+      // Vérifier si l'enfant est absent pour ce jour et ce type de semaine
+      const isAbsent = child.absenceDays.some(absence => 
+        absence.weekDay === weekDay && 
+        absence.weekType === this.selectedWeekType
+      );
+      
+      return !isAbsent;
+    });
+  }
+
+  /**
+   * Obtient le nombre total d'enfants qui doivent être transportés pour un créneau
+   */
+  getTotalChildrenForSlot(weekDay: WeekDay, timeSlot: TimeSlot): number {
+    return this.getAllChildrenForSlot(weekDay, timeSlot).length;
+  }
+
+  /**
+   * Obtient le nombre d'enfants actuellement transportés pour un créneau
+   */
+  getTransportedChildrenCount(weekDay: WeekDay, timeSlot: TimeSlot): number {
+    const trips = this.getTripsForSlot(weekDay, timeSlot);
+    const transportedChildren = new Set<number>();
+    
+    trips.forEach(trip => {
+      trip.children?.forEach(child => {
+        if (child.id) {
+          transportedChildren.add(child.id);
+        }
+      });
+    });
+    
+    return transportedChildren.size;
+  }
+
+  /**
+   * Vérifie si tous les enfants sont transportés pour un créneau donné
+   */
+  isSlotComplete(weekDay: WeekDay, timeSlot: TimeSlot): boolean {
+    const totalChildren = this.getTotalChildrenForSlot(weekDay, timeSlot);
+    const transportedChildren = this.getTransportedChildrenCount(weekDay, timeSlot);
+    
+    return totalChildren > 0 && transportedChildren >= totalChildren;
+  }
+
+  /**
+   * Obtient la liste des enfants non transportés pour un créneau
+   */
+  getMissingChildren(weekDay: WeekDay, timeSlot: TimeSlot): Child[] {
+    const allChildren = this.getAllChildrenForSlot(weekDay, timeSlot);
+    const trips = this.getTripsForSlot(weekDay, timeSlot);
+    const transportedChildrenIds = new Set<number>();
+    
+    trips.forEach(trip => {
+      trip.children?.forEach(child => {
+        if (child.id) {
+          transportedChildrenIds.add(child.id);
+        }
+      });
+    });
+    
+    return allChildren.filter(child => 
+      child.id && !transportedChildrenIds.has(child.id)
+    );
   }
 }
