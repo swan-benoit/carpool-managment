@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, combineLatest, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { Family, FullSchedule, TimeSlot, WeekDay, WeekType } from '../../../../modules/openapi';
 import { ScheduleService } from '../../services/schedule.service';
 import { FamilyService } from '../../../families/services/family.service';
@@ -40,53 +40,63 @@ export interface TripModalData {
   styleUrl: './schedule-edit-v2.component.css'
 })
 export class ScheduleEditV2Component implements OnInit {
-  state$: Observable<ScheduleEditState>;
+  state$!: Observable<ScheduleEditState>;
   showTripModal = false;
   tripModalData: TripModalData | null = null;
 
   private scheduleId: number | null = null;
+  private currentState: ScheduleEditState = {
+    schedule: null,
+    families: [],
+    isLoading: true,
+    isSaving: false,
+    selectedWeekType: WeekType.Even
+  };
 
   constructor(
     private scheduleService: ScheduleService,
     private familyService: FamilyService,
     private route: ActivatedRoute,
     private router: Router
-  ) {
-    this.state$ = this.initializeState();
-  }
+  ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.scheduleId = +id;
-      this.loadData();
+      this.initializeState();
+    } else {
+      // Rediriger vers la liste si pas d'ID
+      this.router.navigate(['/schedules']);
     }
   }
 
-  private initializeState(): Observable<ScheduleEditState> {
-    return combineLatest([
-      this.scheduleService.getSchedule(this.scheduleId || 0),
+  private initializeState(): void {
+    if (!this.scheduleId) return;
+
+    this.state$ = combineLatest([
+      this.scheduleService.getSchedule(this.scheduleId),
       this.familyService.getFamilies()
     ]).pipe(
-      map(([schedule, families]) => ({
-        schedule,
-        families,
-        isLoading: false,
-        isSaving: false,
-        selectedWeekType: WeekType.Even
-      }))
+      map(([schedule, families]) => {
+        this.currentState = {
+          schedule,
+          families,
+          isLoading: false,
+          isSaving: false,
+          selectedWeekType: WeekType.Even
+        };
+        return this.currentState;
+      })
     );
-  }
-
-  private loadData(): void {
-    // Les données sont chargées via l'Observable state$
   }
 
   onWeekTypeChange(weekType: WeekType): void {
-    // Mettre à jour le type de semaine sélectionné
-    this.state$ = this.state$.pipe(
-      map(state => ({ ...state, selectedWeekType: weekType }))
-    );
+    this.currentState = {
+      ...this.currentState,
+      selectedWeekType: weekType
+    };
+    this.state$ = of(this.currentState);
   }
 
   onOpenTripModal(data: TripModalData): void {
@@ -101,27 +111,36 @@ export class ScheduleEditV2Component implements OnInit {
 
   onTripSaved(): void {
     this.onCloseTripModal();
-    this.loadData(); // Recharger les données
+    // Pas besoin de recharger, les données sont déjà mises à jour dans le state
   }
 
   onTripDeleted(): void {
-    this.loadData(); // Recharger les données
+    // Pas besoin de recharger, les données sont déjà mises à jour dans le state
   }
 
   onSaveSchedule(): void {
-    this.state$.subscribe(state => {
-      if (state.schedule && this.scheduleId) {
-        this.scheduleService.updateSchedule(this.scheduleId, state.schedule).subscribe({
-          next: () => {
-            this.router.navigate(['/schedules', this.scheduleId, 'view']);
-          },
-          error: (error) => {
-            console.error('Erreur lors de la sauvegarde:', error);
-            alert('Erreur lors de la sauvegarde');
-          }
-        });
-      }
-    });
+    if (this.currentState.schedule && this.scheduleId) {
+      this.currentState = {
+        ...this.currentState,
+        isSaving: true
+      };
+      this.state$ = of(this.currentState);
+
+      this.scheduleService.updateSchedule(this.scheduleId, this.currentState.schedule).subscribe({
+        next: () => {
+          this.router.navigate(['/schedules', this.scheduleId, 'view']);
+        },
+        error: (error) => {
+          console.error('Erreur lors de la sauvegarde:', error);
+          alert('Erreur lors de la sauvegarde');
+          this.currentState = {
+            ...this.currentState,
+            isSaving: false
+          };
+          this.state$ = of(this.currentState);
+        }
+      });
+    }
   }
 
   onCancel(): void {
