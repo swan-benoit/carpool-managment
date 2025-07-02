@@ -155,13 +155,13 @@
 
         <div class="form-group" *ngIf="tripForm.get('driverId')?.value">
           <label>Enfants à transporter</label>
-          
+
           <!-- Indicateur de capacité -->
           <div class="capacity-info">
             <span class="capacity-text">
-              🚗 Places utilisées : {{ (tripForm.get('childrenIds')?.value?.length || 0) }} / {{ families.find(f => f.id === +tripForm.get('driverId')?.value)?.carCapacity }}
+              🚗 Places utilisées : {{ ((tripForm.get('childrenIds')?.value ?? []).length || 0) }} / {{ getCarpacity(families) }}
             </span>
-            <span class="capacity-text" 
+            <span class="capacity-text"
                   [style.color]="getRemainingCapacity(families) > 0 ? '#10b981' : '#ef4444'">
               • Places restantes : {{ getRemainingCapacity(families) }}
             </span>
@@ -175,10 +175,10 @@
                 type="checkbox"
                 [id]="'child-' + child.id"
                 [value]="child.id"
-                [checked]="tripForm.get('childrenIds')?.value?.includes(child.id)"
+                [checked]="(tripForm.get('childrenIds')?.value ?? []).includes(child.id)"
                 [disabled]="isChildSelectionDisabled(child, families)"
                 (change)="onChildSelectionChange($event, child.id!)">
-              <label [for]="'child-' + child.id" 
+              <label [for]="'child-' + child.id"
                      [class.disabled]="isChildSelectionDisabled(child, families)">
                 {{ child.name }}
                 <span *ngIf="isChildSelectionDisabled(child, families)" class="disabled-reason">
@@ -204,8 +204,4 @@
     </div>
   </div>
 
-  <div class="loading-state" *ngIf="isLoading">
-    <div class="loading-spinner"></div>
-    <p>Chargement du planning...</p>
-  </div>
 </div>

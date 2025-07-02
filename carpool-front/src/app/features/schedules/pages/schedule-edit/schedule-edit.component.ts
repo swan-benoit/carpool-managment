@@ -1,18 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
-import {
-  FullSchedule,
-  Trip,
-  WeekDay,
-  TimeSlot,
-  Family,
-  Child
-} from '../../../../modules/openapi';
-import { ScheduleService } from '../../services/schedule.service';
-import { FamilyService } from '../../../families/services/family.service';
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute, Router} from '@angular/router';
+import {Observable} from 'rxjs';
+import {Child, Family, FullSchedule, TimeSlot, Trip, WeekDay} from '../../../../modules/openapi';
+import {ScheduleService} from '../../services/schedule.service';
+import {FamilyService} from '../../../families/services/family.service';
 
 @Component({
   selector: 'app-schedule-edit',
@@ -109,13 +102,13 @@ export class ScheduleEditComponent implements OnInit {
 
   openTripModal(weekDay: WeekDay, timeSlot: TimeSlot, tripIndex?: number): void {
     this.selectedSlot = { weekDay, timeSlot };
-    
+
     if (tripIndex !== undefined) {
       // Mode édition
       const trips = this.getTripsForSlot(weekDay, timeSlot);
       this.editingTrip = trips[tripIndex];
       this.editingTripIndex = tripIndex;
-      
+
       this.tripForm.patchValue({
         weekDay: this.editingTrip.weekDay,
         timeSlot: this.editingTrip.timeSlot,
@@ -126,7 +119,7 @@ export class ScheduleEditComponent implements OnInit {
       // Mode création
       this.editingTrip = undefined;
       this.editingTripIndex = undefined;
-      
+
       this.tripForm.patchValue({
         weekDay,
         timeSlot,
@@ -185,14 +178,14 @@ export class ScheduleEditComponent implements OnInit {
   onChildSelectionChange(event: any, childId: number): void {
     const currentIds = this.tripForm.get('childrenIds')?.value || [];
     const driverId = this.tripForm.get('driverId')?.value;
-    
+
     if (!driverId) return;
-    
+
     // Récupérer la famille conductrice pour vérifier la capacité
     this.families$.subscribe(families => {
       const driver = families.find(f => f.id === +driverId);
       if (!driver) return;
-      
+
       if (event.target.checked) {
         // Vérifier si on peut ajouter cet enfant sans dépasser la capacité
         if (currentIds.length < driver.carCapacity!) {
@@ -245,8 +238,8 @@ export class ScheduleEditComponent implements OnInit {
 
         if (this.editingTrip && this.editingTripIndex !== undefined) {
           // Modifier le trajet existant
-          const tripIndex = currentSchedule.trips.findIndex(t => 
-            t.weekDay === this.selectedSlot!.weekDay && 
+          const tripIndex = currentSchedule.trips.findIndex(t =>
+            t.weekDay === this.selectedSlot!.weekDay &&
             t.timeSlot === this.selectedSlot!.timeSlot &&
             t.id === this.editingTrip!.id
           );
@@ -270,10 +263,10 @@ export class ScheduleEditComponent implements OnInit {
       if (currentSchedule?.trips) {
         const trips = this.getTripsForSlot(weekDay, timeSlot);
         const tripToDelete = trips[tripIndex];
-        
-        currentSchedule.trips = currentSchedule.trips.filter(trip => 
-          !(trip.weekDay === weekDay && 
-            trip.timeSlot === timeSlot && 
+
+        currentSchedule.trips = currentSchedule.trips.filter(trip =>
+          !(trip.weekDay === weekDay &&
+            trip.timeSlot === timeSlot &&
             trip.id === tripToDelete.id)
         );
       }
@@ -303,13 +296,13 @@ export class ScheduleEditComponent implements OnInit {
 
   getRemainingCapacity(families: Family[]): number {
     if (!this.selectedSlot) return 0;
-    
+
     const driverId = this.tripForm.get('driverId')?.value;
     if (!driverId) return 0;
-    
+
     const driver = families.find(f => f.id === +driverId);
     if (!driver) return 0;
-    
+
     const selectedChildrenCount = this.tripForm.get('childrenIds')?.value?.length || 0;
     return driver.carCapacity! - selectedChildrenCount;
   }
@@ -324,11 +317,16 @@ export class ScheduleEditComponent implements OnInit {
   isChildSelectionDisabled(child: Child, families: Family[]): boolean {
     const currentIds = this.tripForm.get('childrenIds')?.value || [];
     const isAlreadySelected = currentIds.includes(child.id);
-    
+
     // Si l'enfant est déjà sélectionné, il peut être désélectionné
     if (isAlreadySelected) return false;
-    
+
     // Sinon, vérifier si on peut encore ajouter des enfants
     return this.getRemainingCapacity(families) <= 0;
+  }
+
+  getCarpacity(families: Family[]) {
+    let driverId = this.tripForm.get('driverId')?.value;
+    return families.find(f => f.id == driverId)?.carCapacity ?? 0;
   }
 }
