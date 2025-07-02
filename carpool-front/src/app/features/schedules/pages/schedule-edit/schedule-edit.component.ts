@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
-import {Observable, combineLatest, map, startWith} from 'rxjs';
+import {Observable} from 'rxjs';
 import {Child, Family, FullSchedule, TimeSlot, Trip, WeekDay} from '../../../../modules/openapi';
 import {ScheduleService} from '../../services/schedule.service';
 import {FamilyService} from '../../../families/services/family.service';
@@ -28,8 +28,8 @@ export class ScheduleEditComponent implements OnInit {
   editingTrip?: Trip;
   editingTripIndex?: number;
 
-  // Observable pour les enfants disponibles
-  availableChildren$!: Observable<Child[]>;
+  // Cache pour les enfants disponibles
+  availableChildrenCache: Child[] = [];
 
   weekDays = [
     { value: WeekDay.Monday, label: 'Lundi' },
@@ -67,6 +67,17 @@ export class ScheduleEditComponent implements OnInit {
       timeSlot: ['', Validators.required],
       driverId: ['', Validators.required],
       childrenIds: [[]]
+    });
+
+    // Écouter les changements de jour et créneau pour mettre à jour la liste des enfants
+    this.tripForm.get('weekDay')?.valueChanges.subscribe(() => {
+      this.updateAvailableChildren();
+      this.resetChildrenSelection();
+    });
+
+    this.tripForm.get('timeSlot')?.valueChanges.subscribe(() => {
+      this.updateAvailableChildren();
+      this.resetChildrenSelection();
     });
   }
 
@@ -131,25 +142,30 @@ export class ScheduleEditComponent implements OnInit {
       });
     }
 
-    // Créer l'observable pour les enfants disponibles
-    this.setupAvailableChildrenObservable();
+    // Mettre à jour la liste des enfants disponibles
+    this.updateAvailableChildren();
     this.showTripModal = true;
   }
 
-  setupAvailableChildrenObservable(): void {
-    // Combiner les changements de formulaire avec la liste des familles
-    this.availableChildren$ = combineLatest([
-      this.families$,
-      this.tripForm.get('weekDay')!.valueChanges.pipe(startWith(this.tripForm.get('weekDay')?.value)),
-      this.tripForm.get('timeSlot')!.valueChanges.pipe(startWith(this.tripForm.get('timeSlot')?.value))
-    ]).pipe(
-      map(([families, weekDay, timeSlot]) => {
-        return this.calculateAvailableChildren(families, weekDay, timeSlot);
-      })
-    );
+  closeTripModal(): void {
+    this.showTripModal = false;
+    this.selectedSlot = undefined;
+    this.editingTrip = undefined;
+    this.editingTripIndex = undefined;
+    this.availableChildrenCache = [];
+    this.tripForm.reset();
   }
 
-  calculateAvailableChildren(families: Family[], weekDay: WeekDay, timeSlot: TimeSlot): Child[] {
+  updateAvailableChildren(): void {
+    this.families$.subscribe(families => {
+      this.availableChildrenCache = this.calculateAvailableChildren(families);
+    });
+  }
+
+  calculateAvailableChildren(families: Family[]): Child[] {
+    const weekDay = this.tripForm.get('weekDay')?.value;
+    const timeSlot = this.tripForm.get('timeSlot')?.value;
+
     if (!weekDay || !timeSlot) {
       return [];
     }
@@ -170,12 +186,10 @@ export class ScheduleEditComponent implements OnInit {
     return allChildren.filter(child => !assignedChildrenIds.includes(child.id));
   }
 
-  closeTripModal(): void {
-    this.showTripModal = false;
-    this.selectedSlot = undefined;
-    this.editingTrip = undefined;
-    this.editingTripIndex = undefined;
-    this.tripForm.reset();
+  resetChildrenSelection(): void {
+    this.tripForm.patchValue({
+      childrenIds: []
+    });
   }
 
   onDriverChange(families: Family[]): void {
@@ -183,16 +197,13 @@ export class ScheduleEditComponent implements OnInit {
     if (driverId) {
       const driver = families.find(f => f.id === +driverId);
       if (driver) {
-        // Obtenir les enfants disponibles actuels
-        this.availableChildren$.subscribe(availableChildren => {
-          // Pré-sélectionner les enfants de la famille conductrice qui sont disponibles
-          const driverChildrenIds = driver.children
-            ?.filter(child => availableChildren.some(available => available.id === child.id))
-            .map(child => child.id) || [];
-          
-          this.tripForm.patchValue({
-            childrenIds: driverChildrenIds
-          });
+        // Pré-sélectionner les enfants de la famille conductrice qui sont disponibles
+        const driverChildrenIds = driver.children
+          ?.filter(child => this.availableChildrenCache.some(available => available.id === child.id))
+          .map(child => child.id) || [];
+        
+        this.tripForm.patchValue({
+          childrenIds: driverChildrenIds
         });
       }
     }
@@ -203,9 +214,11 @@ export class ScheduleEditComponent implements OnInit {
   }
 
   getAvailableChildren(families: Family[]): Child[] {
-    // Cette méthode est utilisée dans le template, on retourne un tableau vide
-    // car on utilise maintenant l'observable availableChildren$
-    return [];
+    // Utiliser le cache si disponible, sinon calculer
+    if (this.availableChildrenCache.length > 0) {
+      return this.availableChildrenCache;
+    }
+    return this.calculateAvailableChildren(families);
   }
 
   onChildSelectionChange(event: any, childId: number): void {
@@ -242,55 +255,51 @@ export class ScheduleEditComponent implements OnInit {
     if (this.tripForm.valid && this.schedule && this.selectedSlot) {
       const formValue = this.tripForm.value;
       const driver = families.find(f => f.id === +formValue.driverId);
-      
-      // Obtenir les enfants sélectionnés depuis les enfants disponibles
-      this.availableChildren$.subscribe(availableChildren => {
-        const children = availableChildren.filter(child =>
-          formValue.childrenIds.includes(child.id)
-        );
+      const children = this.availableChildrenCache.filter(child =>
+        formValue.childrenIds.includes(child.id)
+      );
 
-        if (!driver) return;
+      if (!driver) return;
 
-        // Validation finale de la capacité
-        if (children.length > driver.carCapacity!) {
-          alert(`Erreur : ${children.length} enfants sélectionnés mais la voiture ne peut transporter que ${driver.carCapacity} enfants maximum.`);
-          return;
+      // Validation finale de la capacité
+      if (children.length > driver.carCapacity!) {
+        alert(`Erreur : ${children.length} enfants sélectionnés mais la voiture ne peut transporter que ${driver.carCapacity} enfants maximum.`);
+        return;
+      }
+
+      const trip: Trip = {
+        id: this.editingTrip?.id,
+        weekDay: formValue.weekDay,
+        timeSlot: formValue.timeSlot,
+        driver: driver,
+        children: children
+      };
+
+      // Mettre à jour le planning local
+      const currentSchedule = this.getCurrentSchedule();
+      if (currentSchedule) {
+        if (!currentSchedule.trips) {
+          currentSchedule.trips = [];
         }
 
-        const trip: Trip = {
-          id: this.editingTrip?.id,
-          weekDay: formValue.weekDay,
-          timeSlot: formValue.timeSlot,
-          driver: driver,
-          children: children
-        };
-
-        // Mettre à jour le planning local
-        const currentSchedule = this.getCurrentSchedule();
-        if (currentSchedule) {
-          if (!currentSchedule.trips) {
-            currentSchedule.trips = [];
+        if (this.editingTrip && this.editingTripIndex !== undefined) {
+          // Modifier le trajet existant
+          const tripIndex = currentSchedule.trips.findIndex(t =>
+            t.weekDay === this.selectedSlot!.weekDay &&
+            t.timeSlot === this.selectedSlot!.timeSlot &&
+            t.id === this.editingTrip!.id
+          );
+          if (tripIndex !== -1) {
+            currentSchedule.trips[tripIndex] = trip;
           }
-
-          if (this.editingTrip && this.editingTripIndex !== undefined) {
-            // Modifier le trajet existant
-            const tripIndex = currentSchedule.trips.findIndex(t =>
-              t.weekDay === this.selectedSlot!.weekDay &&
-              t.timeSlot === this.selectedSlot!.timeSlot &&
-              t.id === this.editingTrip!.id
-            );
-            if (tripIndex !== -1) {
-              currentSchedule.trips[tripIndex] = trip;
-            }
-          } else {
-            // Ajouter un nouveau trajet
-            trip.id = undefined; // ID temporaire
-            currentSchedule.trips.push(trip);
-          }
+        } else {
+          // Ajouter un nouveau trajet
+          trip.id = undefined; // ID temporaire
+          currentSchedule.trips.push(trip);
         }
+      }
 
-        this.closeTripModal();
-      });
+      this.closeTripModal();
     }
   }
 
