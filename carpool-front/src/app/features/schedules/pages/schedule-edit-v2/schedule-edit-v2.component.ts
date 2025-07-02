@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, combineLatest, of, BehaviorSubject } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
 import { Family, FullSchedule, TimeSlot, WeekDay, WeekType } from '../../../../modules/openapi';
 import { ScheduleService } from '../../services/schedule.service';
 import { FamilyService } from '../../../families/services/family.service';
@@ -10,7 +9,7 @@ import { ScheduleGridComponent } from './components/schedule-grid/schedule-grid.
 import { WeekSelectorComponent } from './components/week-selector/week-selector.component';
 import { TripModalComponent } from './components/trip-modal/trip-modal.component';
 import { ScheduleHeaderComponent } from './components/schedule-header/schedule-header.component';
-import {SnackbarService} from '../../../../shared/services/snackbar.service';
+import { SnackbarService } from '../../../../shared/services/snackbar.service';
 
 export interface ScheduleEditState {
   schedule: FullSchedule | null;
@@ -158,14 +157,14 @@ export class ScheduleEditV2Component implements OnInit {
           // ✅ PLUS DE REDIRECTION - Rester sur l'interface de modification
           // this.router.navigate(['/schedules', this.scheduleId, 'view']);
 
-          // ✅ Afficher une snackbar verte de succès
+          // ✅ Afficher une snackbar verte de succès avec MatSnackBar
           this.snackbarService.success('Planning sauvegardé avec succès ! 🎉', 4000);
         },
         error: (error) => {
           console.error('Erreur lors de la sauvegarde:', error);
           this.updateState({ isSaving: false });
 
-          // Afficher une snackbar d'erreur
+          // Afficher une snackbar d'erreur avec MatSnackBar
           this.snackbarService.error('Erreur lors de la sauvegarde du planning');
         }
       });
@@ -174,10 +173,5 @@ export class ScheduleEditV2Component implements OnInit {
 
   onCancel(): void {
     this.router.navigate(['/schedules']);
-  }
-
-  // Exposer le service snackbar pour le template
-  get snackbar$() {
-    return this.snackbarService.snackbar$;
   }
 }

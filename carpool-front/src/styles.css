@@ -391,5 +391,137 @@ img {
     0 5px 15px rgba(139, 92, 246, 0.08),
     0 2px 8px rgba(236, 72, 153, 0.06);
 }
+
+/* ===== STYLES POUR ANGULAR MATERIAL SNACKBAR ===== */
+
+/* Styles personnalisés pour les snackbars Material */
+.snackbar-success {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 
+    0 10px 30px rgba(16, 185, 129, 0.3),
+    0 5px 15px rgba(16, 185, 129, 0.2) !important;
+  border: 2px solid rgba(16, 185, 129, 0.5) !important;
+  backdrop-filter: blur(15px) !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  animation: snackbar-slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.snackbar-error {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 
+    0 10px 30px rgba(239, 68, 68, 0.3),
+    0 5px 15px rgba(239, 68, 68, 0.2) !important;
+  border: 2px solid rgba(239, 68, 68, 0.5) !important;
+  backdrop-filter: blur(15px) !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  animation: snackbar-slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.snackbar-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: white !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 
+    0 10px 30px rgba(245, 158, 11, 0.3),
+    0 5px 15px rgba(245, 158, 11, 0.2) !important;
+  border: 2px solid rgba(245, 158, 11, 0.5) !important;
+  backdrop-filter: blur(15px) !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  animation: snackbar-slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.snackbar-info {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: white !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 
+    0 10px 30px rgba(59, 130, 246, 0.3),
+    0 5px 15px rgba(59, 130, 246, 0.2) !important;
+  border: 2px solid rgba(59, 130, 246, 0.5) !important;
+  backdrop-filter: blur(15px) !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  animation: snackbar-slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+/* Animation d'entrée pour les snackbars */
+@keyframes snackbar-slide-in {
+  0% {
+    transform: translateX(100%) scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-5%) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Styles pour le bouton d'action de la snackbar */
+.snackbar-success .mat-mdc-snack-bar-action,
+.snackbar-error .mat-mdc-snack-bar-action,
+.snackbar-warning .mat-mdc-snack-bar-action,
+.snackbar-info .mat-mdc-snack-bar-action {
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 1.2rem !important;
+  padding: 0.5rem !important;
+  border-radius: 50% !important;
+  min-width: auto !important;
+  line-height: 1 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.snackbar-success .mat-mdc-snack-bar-action:hover,
+.snackbar-error .mat-mdc-snack-bar-action:hover,
+.snackbar-warning .mat-mdc-snack-bar-action:hover,
+.snackbar-info .mat-mdc-snack-bar-action:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Conteneur de la snackbar */
+.mat-mdc-snack-bar-container {
+  margin: 1rem !important;
+  max-width: 500px !important;
+  min-width: 300px !important;
+}
+
+/* Responsive pour les snackbars */
+@media (max-width: 768px) {
+  .mat-mdc-snack-bar-container {
+    margin: 0.5rem !important;
+    max-width: calc(100vw - 1rem) !important;
+    min-width: auto !important;
+  }
+
+  .snackbar-success,
+  .snackbar-error,
+  .snackbar-warning,
+  .snackbar-info {
+    font-size: 0.875rem !important;
+    padding: 1rem !important;
+  }
+
+  .snackbar-success .mat-mdc-snack-bar-action,
+  .snackbar-error .mat-mdc-snack-bar-action,
+  .snackbar-warning .mat-mdc-snack-bar-action,
+  .snackbar-info .mat-mdc-snack-bar-action {
+    font-size: 1rem !important;
+  }
+}
+
+/* Angular Material obligatoire */
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
