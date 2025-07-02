@@ -19,6 +19,8 @@ interface ChildSelectionState {
   isSelected: boolean;
   isDisabled: boolean;
   disabledReason?: string;
+  isInOtherTrip: boolean;
+  otherTripInfo?: string;
 }
 
 @Component({
@@ -117,16 +119,14 @@ export class TripModalComponent implements OnInit {
 
     this.childrenSelectionState = allChildren.map(child => {
       const isSelected = selectedChildrenIds.includes(child.id);
-      const isAlreadyAssigned = this.isChildAlreadyAssigned(child);
+      const otherTripInfo = this.getChildOtherTripInfo(child);
+      const isInOtherTrip = otherTripInfo !== null;
       const capacityReached = driver && selectedChildrenIds.length >= driver.carCapacity! && !isSelected;
 
       let isDisabled = false;
       let disabledReason = '';
 
-      if (isAlreadyAssigned && !isSelected) {
-        isDisabled = true;
-        disabledReason = 'Déjà assigné à un autre trajet';
-      } else if (capacityReached) {
+      if (capacityReached && !isInOtherTrip) {
         isDisabled = true;
         disabledReason = 'Capacité atteinte';
       }
@@ -135,9 +135,28 @@ export class TripModalComponent implements OnInit {
         child,
         isSelected,
         isDisabled,
-        disabledReason
+        disabledReason,
+        isInOtherTrip,
+        otherTripInfo: otherTripInfo || undefined
       };
     });
+  }
+
+  private getChildOtherTripInfo(child: Child): string | null {
+    if (!this.modalData) return null;
+
+    const currentTrips = this.getTripsForSlot(this.modalData.weekDay, this.modalData.timeSlot);
+    
+    const otherTrip = currentTrips.find(trip => 
+      trip.id !== this.editingTrip?.id && 
+      trip.children?.some(assignedChild => assignedChild.id === child.id)
+    );
+
+    if (otherTrip) {
+      return `Avec ${otherTrip.driver?.name}`;
+    }
+
+    return null;
   }
 
   private getAllChildren(): Child[] {
@@ -175,8 +194,14 @@ export class TripModalComponent implements OnInit {
     const isChecked = target.checked;
     
     const currentIds = this.tripForm.get('childrenIds')?.value || [];
+    const childState = this.childrenSelectionState.find(state => state.child.id === childId);
     
     if (isChecked) {
+      // Si l'enfant est dans un autre trajet, le supprimer de cet autre trajet
+      if (childState?.isInOtherTrip) {
+        this.removeChildFromOtherTrip(childId);
+      }
+      
       this.tripForm.patchValue({
         childrenIds: [...currentIds, childId]
       });
@@ -187,6 +212,28 @@ export class TripModalComponent implements OnInit {
     }
     
     this.updateChildrenSelectionState();
+  }
+
+  private removeChildFromOtherTrip(childId: number): void {
+    if (!this.modalData || !this.schedule) return;
+
+    const currentSchedule = this.modalData.weekType === WeekType.Even 
+      ? this.schedule.evenSchedule 
+      : this.schedule.oddSchedule;
+
+    if (!currentSchedule?.trips) return;
+
+    // Trouver et modifier le trajet qui contient cet enfant
+    currentSchedule.trips.forEach(trip => {
+      if (trip.id !== this.editingTrip?.id && 
+          trip.weekDay === this.modalData!.weekDay && 
+          trip.timeSlot === this.modalData!.timeSlot &&
+          trip.children?.some(child => child.id === childId)) {
+        
+        // Supprimer l'enfant de ce trajet
+        trip.children = trip.children?.filter(child => child.id !== childId) || [];
+      }
+    });
   }
 
   getRemainingCapacity(): number {
@@ -218,14 +265,6 @@ export class TripModalComponent implements OnInit {
       // Validation finale
       if (children.length > driver.carCapacity!) {
         alert(`Erreur : ${children.length} enfants sélectionnés mais la voiture ne peut transporter que ${driver.carCapacity} enfants maximum.`);
-        return;
-      }
-
-      // Vérifier les enfants déjà assignés
-      const alreadyAssignedChildren = children.filter(child => this.isChildAlreadyAssigned(child));
-      if (alreadyAssignedChildren.length > 0) {
-        const names = alreadyAssignedChildren.map(child => child.name).join(', ');
-        alert(`Les enfants suivants sont déjà assignés à un autre trajet : ${names}`);
         return;
       }
 

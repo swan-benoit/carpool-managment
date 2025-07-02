@@ -58,7 +58,8 @@
         <div class="children-selection">
           <div
             class="child-checkbox"
-            *ngFor="let childState of childrenSelectionState">
+            *ngFor="let childState of childrenSelectionState"
+            [class.child-in-other-trip]="childState.isInOtherTrip">
             <input
               type="checkbox"
               [id]="'child-' + childState.child.id"
@@ -68,6 +69,18 @@
             <label [for]="'child-' + childState.child.id"
                    [class.disabled]="childState.isDisabled">
               {{ childState.child.name }}
+              
+              <!-- Indicateur si l'enfant est dans un autre trajet -->
+              <span *ngIf="childState.isInOtherTrip && !childState.isSelected" class="other-trip-indicator">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                {{ childState.otherTripInfo }}
+              </span>
+              
               <span *ngIf="childState.disabledReason" class="disabled-reason">
                 ({{ childState.disabledReason }})
               </span>
@@ -75,7 +88,12 @@
           </div>
         </div>
 
-        <!-- Message d'aide -->
+        <!-- Message d'aide pour les enfants dans d'autres trajets -->
+        <div class="info-text" *ngIf="childrenSelectionState.some(state => state.isInOtherTrip && !state.isSelected)">
+          💡 Les enfants marqués avec 👥 sont déjà dans un autre trajet. Les cocher les déplacera automatiquement vers ce trajet.
+        </div>
+
+        <!-- Message d'aide pour la capacité -->
         <div class="help-text" *ngIf="getRemainingCapacity() === 0 && tripForm.get('driverId')?.value">
           ⚠️ Capacité maximale atteinte ! Vous ne pouvez pas sélectionner plus d'enfants.
         </div>
