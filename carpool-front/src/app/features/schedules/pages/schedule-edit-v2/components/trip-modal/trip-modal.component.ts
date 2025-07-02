@@ -23,6 +23,12 @@ interface ChildSelectionState {
   otherTripInfo?: string;
 }
 
+interface FamilyOption {
+  family: Family;
+  isDisabled: boolean;
+  disabledReason?: string;
+}
+
 @Component({
   selector: 'app-trip-modal',
   standalone: true,
@@ -41,6 +47,7 @@ export class TripModalComponent implements OnInit {
   tripForm!: FormGroup;
   editingTrip: Trip | null = null;
   childrenSelectionState: ChildSelectionState[] = [];
+  familyOptions: FamilyOption[] = [];
 
   readonly weekDays: WeekDayOption[] = [
     { value: WeekDay.Monday, label: 'Lundi' },
@@ -61,6 +68,7 @@ export class TripModalComponent implements OnInit {
   ngOnInit(): void {
     if (this.modalData) {
       this.setupForm();
+      this.updateFamilyOptions();
       this.updateChildrenSelectionState();
     }
   }
@@ -110,6 +118,33 @@ export class TripModalComponent implements OnInit {
     return currentSchedule?.trips?.filter(trip =>
       trip.weekDay === weekDay && trip.timeSlot === timeSlot
     ) || [];
+  }
+
+  /**
+   * Met à jour les options de familles disponibles pour conduire
+   * Exclut les familles qui conduisent déjà sur ce créneau (sauf en mode édition)
+   */
+  private updateFamilyOptions(): void {
+    if (!this.modalData) {
+      this.familyOptions = [];
+      return;
+    }
+
+    const existingTrips = this.getTripsForSlot(this.modalData.weekDay, this.modalData.timeSlot);
+    const usedFamilyIds = existingTrips
+      .filter(trip => trip.id !== this.editingTrip?.id) // Exclure le trip en cours d'édition
+      .map(trip => trip.driver?.id)
+      .filter(id => id !== undefined);
+
+    this.familyOptions = this.families.map(family => {
+      const isAlreadyDriving = usedFamilyIds.includes(family.id);
+      
+      return {
+        family,
+        isDisabled: isAlreadyDriving,
+        disabledReason: isAlreadyDriving ? 'Conduit déjà sur ce créneau' : undefined
+      };
+    });
   }
 
   private updateChildrenSelectionState(): void {
@@ -271,6 +306,20 @@ export class TripModalComponent implements OnInit {
     return this.getRemainingCapacity() === 0 && !!this.tripForm.get('driverId')?.value;
   }
 
+  /**
+   * Obtient les familles disponibles pour conduire (non désactivées)
+   */
+  getAvailableFamilies(): FamilyOption[] {
+    return this.familyOptions.filter(option => !option.isDisabled);
+  }
+
+  /**
+   * Obtient les familles non disponibles pour conduire (désactivées)
+   */
+  getUnavailableFamilies(): FamilyOption[] {
+    return this.familyOptions.filter(option => option.isDisabled);
+  }
+
   onSubmit(): void {
     if (this.tripForm.valid && this.schedule && this.modalData) {
       const formValue = this.tripForm.value;
@@ -284,6 +333,13 @@ export class TripModalComponent implements OnInit {
       // Validation finale
       if (children.length > driver.carCapacity!) {
         alert(`Erreur : ${children.length} enfants sélectionnés mais la voiture ne peut transporter que ${driver.carCapacity} enfants maximum.`);
+        return;
+      }
+
+      // Vérifier que la famille n'est pas déjà conductrice sur ce créneau (sauf en mode édition)
+      const familyOption = this.familyOptions.find(option => option.family.id === driver.id);
+      if (familyOption?.isDisabled && !this.isEditMode) {
+        alert(`Erreur : La famille "${driver.name}" conduit déjà sur ce créneau.`);
         return;
       }
 

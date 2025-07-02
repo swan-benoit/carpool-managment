@@ -102,6 +102,58 @@
   color: #6b7280;
 }
 
+/* Styles pour les options désactivées dans le select */
+.form-control optgroup {
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-control optgroup[label="Familles disponibles"] {
+  color: #065f46;
+}
+
+.form-control optgroup[label="Familles non disponibles"] {
+  color: #dc2626;
+}
+
+.form-control option.disabled-option {
+  color: #9ca3af;
+  font-style: italic;
+  background: rgba(243, 244, 246, 0.5);
+}
+
+/* Message d'information sur les restrictions de familles */
+.family-restriction-info {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  border-radius: 1rem;
+  color: #92400e;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+.family-restriction-info svg {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+@keyframes gentle-pulse {
+  0%, 100% {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    background: linear-gradient(135deg, #fde68a, #fcd34d);
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+}
+
 .capacity-info {
   margin-bottom: 1rem;
   padding: 1rem;
@@ -341,5 +393,10 @@
   .other-trip-indicator svg {
     width: 10px;
     height: 10px;
+  }
+
+  .family-restriction-info {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
   }
 }

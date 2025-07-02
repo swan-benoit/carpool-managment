@@ -35,10 +35,37 @@
           (change)="onDriverChange()"
           class="form-control">
           <option value="">Sélectionner une famille</option>
-          <option *ngFor="let family of families" [value]="family.id">
-            {{ family.name }} ({{ family.carCapacity }} places)
-          </option>
+          
+          <!-- Familles disponibles -->
+          <optgroup label="Familles disponibles" *ngIf="getAvailableFamilies().length > 0">
+            <option *ngFor="let familyOption of getAvailableFamilies()" [value]="familyOption.family.id">
+              {{ familyOption.family.name }} ({{ familyOption.family.carCapacity }} places)
+            </option>
+          </optgroup>
+          
+          <!-- Familles non disponibles (désactivées) -->
+          <optgroup label="Familles non disponibles" *ngIf="getUnavailableFamilies().length > 0">
+            <option 
+              *ngFor="let familyOption of getUnavailableFamilies()" 
+              [value]="familyOption.family.id"
+              [disabled]="true"
+              class="disabled-option">
+              {{ familyOption.family.name }} - {{ familyOption.disabledReason }}
+            </option>
+          </optgroup>
         </select>
+        
+        <!-- Message d'information sur les familles non disponibles -->
+        <div class="family-restriction-info" *ngIf="getUnavailableFamilies().length > 0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>
+            {{ getUnavailableFamilies().length }} famille(s) déjà assignée(s) sur ce créneau
+          </span>
+        </div>
       </div>
 
       <div class="form-group" *ngIf="tripForm.get('driverId')?.value">
