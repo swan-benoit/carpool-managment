@@ -158,21 +158,21 @@ export class ScheduleEditComponent implements OnInit {
   }
 
   getAvailableChildren(families: Family[]): Child[] {
-    if (!this.selectedSlot) return [];
+    return this.getAllChildren(families);
+  }
 
-    const allChildren = this.getAllChildren(families);
+  isChildAlreadyAssigned(child: Child): boolean {
+    if (!this.selectedSlot) return false;
+
     const currentTrips = this.getCurrentTrips();
-
-    // Exclure les enfants déjà assignés à d'autres trajets pour ce créneau
-    const assignedChildrenIds = currentTrips
-      .filter(trip =>
-        trip.weekDay === this.selectedSlot!.weekDay &&
-        trip.timeSlot === this.selectedSlot!.timeSlot &&
-        trip.id !== this.editingTrip?.id
-      )
-      .flatMap(trip => trip.children?.map(child => child.id) || []);
-
-    return allChildren.filter(child => !assignedChildrenIds.includes(child.id));
+    
+    // Vérifier si l'enfant est assigné à un autre trajet pour ce créneau
+    return currentTrips.some(trip => 
+      trip.weekDay === this.selectedSlot!.weekDay &&
+      trip.timeSlot === this.selectedSlot!.timeSlot &&
+      trip.id !== this.editingTrip?.id && // Exclure le trajet en cours d'édition
+      trip.children?.some(assignedChild => assignedChild.id === child.id)
+    );
   }
 
   onChildSelectionChange(event: any, childId: number): void {
@@ -186,7 +186,17 @@ export class ScheduleEditComponent implements OnInit {
       const driver = families.find(f => f.id === +driverId);
       if (!driver) return;
 
+      const child = this.getAllChildren(families).find(c => c.id === childId);
+      if (!child) return;
+
       if (event.target.checked) {
+        // Vérifier si l'enfant est déjà assigné à un autre trajet
+        if (this.isChildAlreadyAssigned(child)) {
+          event.target.checked = false;
+          alert(`${child.name} est déjà assigné(e) à un autre trajet pour ce créneau.`);
+          return;
+        }
+
         // Vérifier si on peut ajouter cet enfant sans dépasser la capacité
         if (currentIds.length < driver.carCapacity!) {
           this.tripForm.patchValue({
@@ -218,6 +228,14 @@ export class ScheduleEditComponent implements OnInit {
       // Validation finale de la capacité
       if (children.length > driver.carCapacity!) {
         alert(`Erreur : ${children.length} enfants sélectionnés mais la voiture ne peut transporter que ${driver.carCapacity} enfants maximum.`);
+        return;
+      }
+
+      // Validation finale des enfants déjà assignés
+      const alreadyAssignedChildren = children.filter(child => this.isChildAlreadyAssigned(child));
+      if (alreadyAssignedChildren.length > 0) {
+        const names = alreadyAssignedChildren.map(child => child.name).join(', ');
+        alert(`Les enfants suivants sont déjà assignés à un autre trajet : ${names}`);
         return;
       }
 
@@ -320,6 +338,9 @@ export class ScheduleEditComponent implements OnInit {
 
     // Si l'enfant est déjà sélectionné, il peut être désélectionné
     if (isAlreadySelected) return false;
+
+    // Vérifier si l'enfant est déjà assigné à un autre trajet
+    if (this.isChildAlreadyAssigned(child)) return true;
 
     // Sinon, vérifier si on peut encore ajouter des enfants
     return this.getRemainingCapacity(families) <= 0;
