@@ -4,6 +4,7 @@ export * from './family';
 export * from './full-schedule';
 export * from './requirement';
 export * from './schedule';
+export * from './stats';
 export * from './time-slot';
 export * from './trip';
 export * from './week-day';

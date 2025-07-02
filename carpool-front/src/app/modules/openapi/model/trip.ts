@@ -15,6 +15,7 @@ import { Child } from './child';
 
 export interface Trip {
     id?: number;
+    place?: string;
     weekDay?: WeekDay;
     timeSlot?: TimeSlot;
     driver?: Family;

@@ -1,5 +1,4 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 api.base.service.ts
 api.module.ts
@@ -8,6 +7,8 @@ api/family-resource.service.ts
 api/family-resource.serviceInterface.ts
 api/full-schedule-resource.service.ts
 api/full-schedule-resource.serviceInterface.ts
+api/schedule-stat-resource.service.ts
+api/schedule-stat-resource.serviceInterface.ts
 configuration.ts
 encoder.ts
 git_push.sh
@@ -19,6 +20,7 @@ model/full-schedule.ts
 model/models.ts
 model/requirement.ts
 model/schedule.ts
+model/stats.ts
 model/time-slot.ts
 model/trip.ts
 model/week-day.ts

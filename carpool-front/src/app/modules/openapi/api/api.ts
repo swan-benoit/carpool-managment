@@ -4,4 +4,7 @@ export * from './family-resource.serviceInterface';
 export * from './full-schedule-resource.service';
 import { FullScheduleResourceService } from './full-schedule-resource.service';
 export * from './full-schedule-resource.serviceInterface';
-export const APIS = [FamilyResourceService, FullScheduleResourceService];
+export * from './schedule-stat-resource.service';
+import { ScheduleStatResourceService } from './schedule-stat-resource.service';
+export * from './schedule-stat-resource.serviceInterface';
+export const APIS = [FamilyResourceService, FullScheduleResourceService, ScheduleStatResourceService];
