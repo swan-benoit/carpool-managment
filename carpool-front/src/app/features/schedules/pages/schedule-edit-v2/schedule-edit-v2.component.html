@@ -34,6 +34,6 @@
     [families]="(state$ | async)?.families || []"
     [schedule]="(state$ | async)?.schedule || null"
     (close)="onCloseTripModal()"
-    (tripSaved)="onTripSaved()">
+    (tripSaved)="onTripSaved($event)">
   </app-trip-modal>
 </div>

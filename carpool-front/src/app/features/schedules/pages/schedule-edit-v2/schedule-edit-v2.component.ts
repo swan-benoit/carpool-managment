@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, combineLatest, of } from 'rxjs';
+import { Observable, combineLatest, of, BehaviorSubject } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { Family, FullSchedule, TimeSlot, WeekDay, WeekType } from '../../../../modules/openapi';
 import { ScheduleService } from '../../services/schedule.service';
@@ -45,20 +45,22 @@ export class ScheduleEditV2Component implements OnInit {
   tripModalData: TripModalData | null = null;
 
   private scheduleId: number | null = null;
-  private currentState: ScheduleEditState = {
+  private stateSubject = new BehaviorSubject<ScheduleEditState>({
     schedule: null,
     families: [],
     isLoading: true,
     isSaving: false,
     selectedWeekType: WeekType.Even
-  };
+  });
 
   constructor(
     private scheduleService: ScheduleService,
     private familyService: FamilyService,
     private route: ActivatedRoute,
     private router: Router
-  ) {}
+  ) {
+    this.state$ = this.stateSubject.asObservable();
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -74,29 +76,42 @@ export class ScheduleEditV2Component implements OnInit {
   private initializeState(): void {
     if (!this.scheduleId) return;
 
-    this.state$ = combineLatest([
+    combineLatest([
       this.scheduleService.getSchedule(this.scheduleId),
       this.familyService.getFamilies()
-    ]).pipe(
-      map(([schedule, families]) => {
-        this.currentState = {
+    ]).subscribe({
+      next: ([schedule, families]) => {
+        this.updateState({
           schedule,
           families,
           isLoading: false,
           isSaving: false,
           selectedWeekType: WeekType.Even
-        };
-        return this.currentState;
-      })
-    );
+        });
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement:', error);
+        this.updateState({
+          schedule: null,
+          families: [],
+          isLoading: false,
+          isSaving: false,
+          selectedWeekType: WeekType.Even
+        });
+      }
+    });
+  }
+
+  private updateState(newState: Partial<ScheduleEditState>): void {
+    const currentState = this.stateSubject.value;
+    this.stateSubject.next({
+      ...currentState,
+      ...newState
+    });
   }
 
   onWeekTypeChange(weekType: WeekType): void {
-    this.currentState = {
-      ...this.currentState,
-      selectedWeekType: weekType
-    };
-    this.state$ = of(this.currentState);
+    this.updateState({ selectedWeekType: weekType });
   }
 
   onOpenTripModal(data: TripModalData): void {
@@ -109,35 +124,32 @@ export class ScheduleEditV2Component implements OnInit {
     this.tripModalData = null;
   }
 
-  onTripSaved(): void {
+  onTripSaved(updatedSchedule: FullSchedule): void {
+    // Mettre à jour l'état avec le planning modifié
+    this.updateState({ schedule: updatedSchedule });
     this.onCloseTripModal();
-    // Pas besoin de recharger, les données sont déjà mises à jour dans le state
   }
 
   onTripDeleted(): void {
-    // Pas besoin de recharger, les données sont déjà mises à jour dans le state
+    // L'état est déjà mis à jour dans le composant grid
+    // Forcer une mise à jour pour déclencher la détection de changement
+    const currentState = this.stateSubject.value;
+    this.updateState({ schedule: { ...currentState.schedule! } });
   }
 
   onSaveSchedule(): void {
-    if (this.currentState.schedule && this.scheduleId) {
-      this.currentState = {
-        ...this.currentState,
-        isSaving: true
-      };
-      this.state$ = of(this.currentState);
+    const currentState = this.stateSubject.value;
+    if (currentState.schedule && this.scheduleId) {
+      this.updateState({ isSaving: true });
 
-      this.scheduleService.updateSchedule(this.scheduleId, this.currentState.schedule).subscribe({
+      this.scheduleService.updateSchedule(this.scheduleId, currentState.schedule).subscribe({
         next: () => {
           this.router.navigate(['/schedules', this.scheduleId, 'view']);
         },
         error: (error) => {
           console.error('Erreur lors de la sauvegarde:', error);
           alert('Erreur lors de la sauvegarde');
-          this.currentState = {
-            ...this.currentState,
-            isSaving: false
-          };
-          this.state$ = of(this.currentState);
+          this.updateState({ isSaving: false });
         }
       });
     }

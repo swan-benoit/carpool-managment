@@ -34,7 +34,7 @@ export class TripModalComponent implements OnInit {
   @Input() schedule: FullSchedule | null = null;
 
   @Output() close = new EventEmitter<void>();
-  @Output() tripSaved = new EventEmitter<void>();
+  @Output() tripSaved = new EventEmitter<FullSchedule>();
 
   tripForm!: FormGroup;
   editingTrip: Trip | null = null;
@@ -237,10 +237,13 @@ export class TripModalComponent implements OnInit {
         children: children
       };
 
+      // Créer une copie profonde du planning pour éviter les mutations
+      const updatedSchedule: FullSchedule = JSON.parse(JSON.stringify(this.schedule));
+      
       // Mettre à jour le planning local
       const currentSchedule = this.modalData.weekType === WeekType.Even 
-        ? this.schedule.evenSchedule 
-        : this.schedule.oddSchedule;
+        ? updatedSchedule.evenSchedule 
+        : updatedSchedule.oddSchedule;
 
       if (currentSchedule) {
         if (!currentSchedule.trips) {
@@ -259,12 +262,13 @@ export class TripModalComponent implements OnInit {
           }
         } else {
           // Ajouter un nouveau trajet
-          trip.id = undefined;
+          trip.id = Date.now(); // ID temporaire pour éviter les conflits
           currentSchedule.trips.push(trip);
         }
       }
 
-      this.tripSaved.emit();
+      // Émettre le planning mis à jour
+      this.tripSaved.emit(updatedSchedule);
     }
   }
 
