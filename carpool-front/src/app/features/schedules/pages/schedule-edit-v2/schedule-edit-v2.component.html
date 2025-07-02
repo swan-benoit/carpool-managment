@@ -1,0 +1,39 @@
+<div class="schedule-edit-v2-container">
+  <ng-container *ngIf="state$ | async as state">
+    <app-schedule-header
+      [scheduleName]="state.schedule?.name || ''"
+      [isSaving]="state.isSaving"
+      (save)="onSaveSchedule()"
+      (cancel)="onCancel()">
+    </app-schedule-header>
+
+    <div class="schedule-content" *ngIf="!state.isLoading && state.schedule">
+      <app-week-selector
+        [selectedWeekType]="state.selectedWeekType"
+        (weekTypeChange)="onWeekTypeChange($event)">
+      </app-week-selector>
+
+      <app-schedule-grid
+        [schedule]="state.schedule"
+        [families]="state.families"
+        [selectedWeekType]="state.selectedWeekType"
+        (openTripModal)="onOpenTripModal($event)"
+        (tripDeleted)="onTripDeleted()">
+      </app-schedule-grid>
+    </div>
+
+    <div class="loading-state" *ngIf="state.isLoading">
+      <div class="loading-spinner"></div>
+      <p>Chargement du planning...</p>
+    </div>
+  </ng-container>
+
+  <app-trip-modal
+    *ngIf="showTripModal && tripModalData"
+    [modalData]="tripModalData"
+    [families]="(state$ | async)?.families || []"
+    [schedule]="(state$ | async)?.schedule || null"
+    (close)="onCloseTripModal()"
+    (tripSaved)="onTripSaved()">
+  </app-trip-modal>
+</div>

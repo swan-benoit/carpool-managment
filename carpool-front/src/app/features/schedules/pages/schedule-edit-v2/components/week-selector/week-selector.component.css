@@ -1,0 +1,30 @@
+.week-selector {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  justify-content: center;
+}
+
+.week-btn {
+  padding: 1rem 2rem;
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #6b21a8;
+}
+
+.week-btn:hover {
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.05);
+  transform: translateY(-2px);
+}
+
+.week-btn.active {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+}

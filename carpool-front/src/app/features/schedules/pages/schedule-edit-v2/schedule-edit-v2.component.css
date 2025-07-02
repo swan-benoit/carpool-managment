@@ -1,0 +1,58 @@
+.schedule-edit-v2-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.schedule-content {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  border-radius: 2rem;
+  padding: 2.5rem;
+  border: 2px solid rgba(139, 92, 246, 0.1);
+  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.1);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 2rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  border-radius: 2rem;
+  border: 2px solid rgba(139, 92, 246, 0.2);
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(139, 92, 246, 0.2);
+  border-top: 4px solid #8b5cf6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 2rem;
+}
+
+.loading-state p {
+  color: #6b21a8;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .schedule-edit-v2-container {
+    padding: 1rem;
+  }
+
+  .schedule-content {
+    padding: 1.5rem;
+  }
+}

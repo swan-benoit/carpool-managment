@@ -1,0 +1,16 @@
+<div class="week-selector">
+  <button
+    type="button"
+    (click)="onWeekTypeSelect(WeekType.Even)"
+    [class.active]="selectedWeekType === WeekType.Even"
+    class="week-btn">
+    Semaines paires
+  </button>
+  <button
+    type="button"
+    (click)="onWeekTypeSelect(WeekType.Odd)"
+    [class.active]="selectedWeekType === WeekType.Odd"
+    class="week-btn">
+    Semaines impaires
+  </button>
+</div>
