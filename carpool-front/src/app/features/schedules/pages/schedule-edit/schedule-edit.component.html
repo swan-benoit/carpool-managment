@@ -167,6 +167,7 @@
             </span>
           </div>
 
+          <!-- Liste des enfants disponibles uniquement -->
           <div class="children-selection">
             <div
               class="child-checkbox"
@@ -188,8 +189,13 @@
             </div>
           </div>
 
-          <!-- Message d'aide -->
-          <div class="help-text" *ngIf="getRemainingCapacity(families) === 0 && tripForm.get('driverId')?.value">
+          <!-- Message d'information -->
+          <div class="help-text" *ngIf="getAvailableChildren(families).length === 0">
+            ℹ️ Tous les enfants sont déjà assignés à un trajet pour ce créneau.
+          </div>
+
+          <!-- Message d'aide capacité -->
+          <div class="help-text" *ngIf="getRemainingCapacity(families) === 0 && tripForm.get('driverId')?.value && getAvailableChildren(families).length > 0">
             ⚠️ Capacité maximale atteinte ! Vous ne pouvez pas sélectionner plus d'enfants.
           </div>
         </div>

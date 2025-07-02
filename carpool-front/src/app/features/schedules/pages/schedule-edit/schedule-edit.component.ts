@@ -144,8 +144,12 @@ export class ScheduleEditComponent implements OnInit {
     if (driverId) {
       const driver = families.find(f => f.id === +driverId);
       if (driver) {
-        // Pré-sélectionner les enfants de la famille conductrice
-        const driverChildrenIds = driver.children?.map(child => child.id) || [];
+        // Pré-sélectionner les enfants de la famille conductrice qui sont disponibles
+        const availableChildren = this.getAvailableChildren(families);
+        const driverChildrenIds = driver.children
+          ?.filter(child => availableChildren.some(available => available.id === child.id))
+          .map(child => child.id) || [];
+        
         this.tripForm.patchValue({
           childrenIds: driverChildrenIds
         });
@@ -163,15 +167,16 @@ export class ScheduleEditComponent implements OnInit {
     const allChildren = this.getAllChildren(families);
     const currentTrips = this.getCurrentTrips();
 
-    // Exclure les enfants déjà assignés à d'autres trajets pour ce créneau
+    // Obtenir tous les enfants déjà assignés à des trajets pour ce créneau
     const assignedChildrenIds = currentTrips
       .filter(trip =>
         trip.weekDay === this.selectedSlot!.weekDay &&
         trip.timeSlot === this.selectedSlot!.timeSlot &&
-        trip.id !== this.editingTrip?.id
+        trip.id !== this.editingTrip?.id // Exclure le trajet en cours d'édition
       )
       .flatMap(trip => trip.children?.map(child => child.id) || []);
 
+    // Retourner seulement les enfants non assignés
     return allChildren.filter(child => !assignedChildrenIds.includes(child.id));
   }
 
@@ -209,7 +214,8 @@ export class ScheduleEditComponent implements OnInit {
     if (this.tripForm.valid && this.schedule && this.selectedSlot) {
       const formValue = this.tripForm.value;
       const driver = families.find(f => f.id === +formValue.driverId);
-      const children = this.getAllChildren(families).filter(child =>
+      const availableChildren = this.getAvailableChildren(families);
+      const children = availableChildren.filter(child =>
         formValue.childrenIds.includes(child.id)
       );
 
