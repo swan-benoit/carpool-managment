@@ -170,7 +170,10 @@ export class TripModalComponent implements OnInit {
     this.updateChildrenSelectionState();
   }
 
-  onChildSelectionChange(childId: number, isChecked: boolean): void {
+  onChildSelectionChange(childId: number, event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const isChecked = target.checked;
+    
     const currentIds = this.tripForm.get('childrenIds')?.value || [];
     
     if (isChecked) {
@@ -215,6 +218,14 @@ export class TripModalComponent implements OnInit {
       // Validation finale
       if (children.length > driver.carCapacity!) {
         alert(`Erreur : ${children.length} enfants sélectionnés mais la voiture ne peut transporter que ${driver.carCapacity} enfants maximum.`);
+        return;
+      }
+
+      // Vérifier les enfants déjà assignés
+      const alreadyAssignedChildren = children.filter(child => this.isChildAlreadyAssigned(child));
+      if (alreadyAssignedChildren.length > 0) {
+        const names = alreadyAssignedChildren.map(child => child.name).join(', ');
+        alert(`Les enfants suivants sont déjà assignés à un autre trajet : ${names}`);
         return;
       }
 
