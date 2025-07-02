@@ -130,6 +130,30 @@ export class ScheduleEditV2Component implements OnInit {
     });
   }
 
+  /**
+   * ✅ NOUVELLE MÉTHODE : Sauvegarde automatique + rafraîchissement des stats
+   * Utilisée après chaque modification de trajet (ajout/suppression)
+   */
+  private saveAndRefreshStats(): void {
+    const currentState = this.stateSubject.value;
+    if (!currentState.schedule || !this.scheduleId) return;
+
+    // 1️⃣ Sauvegarder le planning
+    this.scheduleService.updateSchedule(this.scheduleId, currentState.schedule).subscribe({
+      next: () => {
+        // 2️⃣ Afficher la snackbar de succès
+        this.snackbarService.success('Trajet sauvegardé avec succès ! 🚗');
+
+        // 3️⃣ Rafraîchir les statistiques après la sauvegarde
+        this.refreshStats();
+      },
+      error: (error) => {
+        console.error('Erreur lors de la sauvegarde automatique:', error);
+        this.snackbarService.error('Erreur lors de la sauvegarde du trajet');
+      }
+    });
+  }
+
   private refreshStats(): void {
     if (!this.scheduleId) return;
 
@@ -158,28 +182,21 @@ export class ScheduleEditV2Component implements OnInit {
   }
 
   onTripSaved(updatedSchedule: FullSchedule): void {
-    // Mettre à jour l'état avec le planning modifié
+    // ✅ CORRECTION : Mettre à jour l'état + sauvegarder automatiquement + rafraîchir les stats
     this.updateState({ schedule: updatedSchedule });
     this.onCloseTripModal();
 
-    // Afficher une snackbar de succès
-    this.snackbarService.success('Trajet ajouté avec succès ! 🚗');
-
-    // Rafraîchir les statistiques
-    this.refreshStats();
+    // ✅ NOUVEAU FLUX : Sauvegarde automatique → Snackbar → Stats
+    this.saveAndRefreshStats();
   }
 
   onTripDeleted(): void {
-    // L'état est déjà mis à jour dans le composant grid
-    // Forcer une mise à jour pour déclencher la détection de changement
+    // ✅ CORRECTION : Sauvegarder automatiquement après suppression
     const currentState = this.stateSubject.value;
     this.updateState({ schedule: { ...currentState.schedule! } });
 
-    // Afficher une snackbar de succès
-    this.snackbarService.success('Trajet supprimé avec succès ! 🗑️');
-
-    // Rafraîchir les statistiques
-    this.refreshStats();
+    // ✅ NOUVEAU FLUX : Sauvegarde automatique → Snackbar → Stats
+    this.saveAndRefreshStats();
   }
 
   onSaveSchedule(): void {
@@ -197,7 +214,7 @@ export class ScheduleEditV2Component implements OnInit {
           // ✅ Afficher une snackbar verte de succès avec MatSnackBar
           this.snackbarService.success('Planning sauvegardé avec succès ! 🎉', 4000);
 
-          // ✅ Rafraîchir les statistiques après sauvegarde
+          // ✅ Rafraîchir les statistiques après sauvegarde manuelle
           this.refreshStats();
         },
         error: (error) => {
