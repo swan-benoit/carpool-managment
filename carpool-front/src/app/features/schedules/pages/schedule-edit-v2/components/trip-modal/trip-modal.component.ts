@@ -252,6 +252,24 @@ export class TripModalComponent implements OnInit {
     return this.families.find(f => f.id === +driverId)?.carCapacity || 0;
   }
 
+  /**
+   * Vérifie s'il y a des enfants dans d'autres trajets qui ne sont pas sélectionnés
+   * Méthode extraite du template pour éviter la logique complexe dans le HTML
+   */
+  hasChildrenInOtherTrips(): boolean {
+    return this.childrenSelectionState.some(state => 
+      state.isInOtherTrip && !state.isSelected
+    );
+  }
+
+  /**
+   * Vérifie si la capacité maximale est atteinte
+   * Méthode extraite du template pour une meilleure lisibilité
+   */
+  isCapacityReached(): boolean {
+    return this.getRemainingCapacity() === 0 && !!this.tripForm.get('driverId')?.value;
+  }
+
   onSubmit(): void {
     if (this.tripForm.valid && this.schedule && this.modalData) {
       const formValue = this.tripForm.value;

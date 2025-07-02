@@ -89,12 +89,12 @@
         </div>
 
         <!-- Message d'aide pour les enfants dans d'autres trajets -->
-        <div class="info-text" *ngIf="childrenSelectionState.some(state => state.isInOtherTrip && !state.isSelected)">
+        <div class="info-text" *ngIf="hasChildrenInOtherTrips()">
           💡 Les enfants marqués avec 👥 sont déjà dans un autre trajet. Les cocher les déplacera automatiquement vers ce trajet.
         </div>
 
         <!-- Message d'aide pour la capacité -->
-        <div class="help-text" *ngIf="getRemainingCapacity() === 0 && tripForm.get('driverId')?.value">
+        <div class="help-text" *ngIf="isCapacityReached()">
           ⚠️ Capacité maximale atteinte ! Vous ne pouvez pas sélectionner plus d'enfants.
         </div>
       </div>
