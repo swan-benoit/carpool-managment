@@ -8,20 +8,20 @@
       <h3>Statistiques du Planning</h3>
       <span class="stats-subtitle">Répartition des trajets par famille</span>
     </div>
-    
+
     <div class="global-metrics">
       <div class="metric-card">
         <div class="metric-value">{{ totalTrips }}</div>
         <div class="metric-label">Trajets total</div>
         <div class="metric-icon">🚗</div>
       </div>
-      
+
       <div class="metric-card">
         <div class="metric-value">{{ averageLoad | number:'1.1-1' }}</div>
         <div class="metric-label">Moyenne/famille</div>
         <div class="metric-icon">📊</div>
       </div>
-      
+
       <div class="metric-card balance-card" [style.border-color]="getBalanceColor()">
         <div class="metric-value" [style.color]="getBalanceColor()">
           {{ balanceScore | number:'1.0-0' }}%
@@ -34,20 +34,20 @@
 
   <div class="stats-content">
     <div class="families-stats">
-      <div class="family-stat" 
+      <div class="family-stat"
            *ngFor="let stat of getSortedStats(); let i = index"
            [class.most-active]="stat === mostActiveFamily"
            [class.least-active]="stat === leastActiveFamily">
-        
+
         <div class="family-info">
           <div class="family-name">
             <span class="family-rank">#{{ i + 1 }}</span>
             {{ stat.family?.name }}
             <span class="family-children" *ngIf="stat.family?.children">
-              ({{ stat.family.children.length }} enfant{{ stat.family.children.length > 1 ? 's' : '' }})
+              ({{ stat.family?.children?.length ?? 0 }} enfant{{ stat.family?.children?.length ?? 0 > 1 ? 's' : '' }})
             </span>
           </div>
-          
+
           <div class="family-metrics">
             <div class="metric">
               <span class="metric-current">{{ stat.meanTripPerWeek | number:'1.1-1' }}</span>
@@ -55,7 +55,7 @@
               <span class="metric-ideal">{{ stat.perfectMeanTripPerWeek | number:'1.1-1' }}</span>
               <span class="metric-unit">trajets/sem</span>
             </div>
-            
+
             <div class="load-status" [style.color]="getLoadColor(stat)">
               {{ getLoadStatus(stat) }}
             </div>
@@ -64,15 +64,14 @@
 
         <div class="family-progress">
           <div class="progress-bar">
-            <div class="progress-fill" 
-                 [style.width.%]="Math.min(100, getLoadPercentage(stat))"
+            <div class="progress-fill"
                  [style.background-color]="getLoadColor(stat)">
             </div>
-            <div class="progress-ideal" 
+            <div class="progress-ideal"
                  [style.left.%]="100">
             </div>
           </div>
-          
+
           <div class="progress-percentage" [style.color]="getLoadColor(stat)">
             {{ getLoadPercentage(stat) | number:'1.0-0' }}%
           </div>
@@ -85,7 +84,7 @@
           </svg>
           Plus active
         </div>
-        
+
         <div class="family-badge least-badge" *ngIf="stat === leastActiveFamily && stats.length > 1">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>

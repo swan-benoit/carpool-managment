@@ -26,25 +26,62 @@ public record ScheduleResult(Schedule odd, Schedule even, List<Family> families)
 
         return (oddTrips.size() + evenTrips.size()) / 2.0;
     }
-
     public Double perfectMeanTripPerWeek(Family family) {
+        // 1. Calcul de la capacité moyenne des voitures
         int meanCarCapacity = families.stream()
-                .mapToInt(f-> f.carCapacity * f.children.size())
+                .mapToInt(f -> f.carCapacity * f.children.size())
                 .sum() / families.stream().mapToInt(f -> f.children.size()).sum();
 
-        long totalChildren = families.stream()
-                .mapToLong(family1 -> family1.children.size())
+        // 2. Calcul du nombre total de "présences enfant" sur les 16 créneaux
+        double totalChildPresences = families.stream()
+                .flatMap(f -> f.children.stream())
+                .mapToDouble(child -> {
+                    // 16 créneaux possibles (4 jours × 2 trajets × 2 semaines)
+                    long absenceCount = child.absenceDays.stream()
+                            .filter(ad -> ad.weekDay != null)
+                            .count();
+                    return 16 - absenceCount;
+                })
                 .sum();
 
-        int tripsPerSlot = (int) Math.ceil(totalChildren / (double) meanCarCapacity);
+        // 3. Calcul des présences pour cette famille spécifique
+        double familyChildPresences = family.children.stream()
+                .mapToDouble(child -> {
+                    long absenceCount = child.absenceDays.stream()
+                            .filter(ad -> ad.weekDay != null)
+                            .count();
+                    return 16 - absenceCount;
+                })
+                .sum();
 
+        if (totalChildPresences == 0) return 0.0;
+
+        // 4. Calcul du nombre de trajets nécessaires
+        int tripsPerSlot = (int) Math.ceil(totalChildPresences / (16 * meanCarCapacity));
         int totalTripsPerWeek = tripsPerSlot * TOTAL_TRIPS_PER_WEEK;
 
-        int familyChildren = family.children.size();
-
-
-        return totalTripsPerWeek * familyChildren / (double) totalChildren;
+        // 5. Répartition proportionnelle
+        return totalTripsPerWeek * (familyChildPresences / totalChildPresences);
     }
+
+//    public Double perfectMeanTripPerWeek(Family family) {
+//        int meanCarCapacity = families.stream()
+//                .mapToInt(f-> f.carCapacity * f.children.size())
+//                .sum() / families.stream().mapToInt(f -> f.children.size()).sum();
+//
+//        long totalChildren = families.stream()
+//                .mapToLong(family1 -> family1.children.size())
+//                .sum();
+//
+//        int tripsPerSlot = (int) Math.ceil(totalChildren / (double) meanCarCapacity);
+//
+//        int totalTripsPerWeek = tripsPerSlot * TOTAL_TRIPS_PER_WEEK;
+//
+//        int familyChildren = family.children.size();
+//
+//
+//        return totalTripsPerWeek * familyChildren / (double) totalChildren;
+//    }
 
     @Override
     public String toString() {
