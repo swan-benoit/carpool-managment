@@ -24,6 +24,23 @@
         <div class="children-summary">
           {{ getTransportedChildrenCount(day.value, slot.value) }}/{{ getTotalChildrenForSlot(day.value, slot.value) }} enfants
         </div>
+        
+        <!-- Liste des enfants manquants -->
+        <div class="missing-children" *ngIf="!isSlotComplete(day.value, slot.value) && getMissingChildren(day.value, slot.value).length > 0">
+          <div class="missing-children-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            Enfants non transportés :
+          </div>
+          <div class="missing-children-list">
+            <span *ngFor="let child of getMissingChildren(day.value, slot.value); let last = last" class="missing-child">
+              {{ child.name }}<span *ngIf="!last">, </span>
+            </span>
+          </div>
+        </div>
       </div>
 
       <div class="trips-container">
