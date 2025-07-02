@@ -7,6 +7,12 @@
       (cancel)="onCancel()">
     </app-schedule-header>
 
+    <!-- ✅ NOUVEAU : Bandeau de statistiques -->
+    <app-stats-banner
+      [stats]="state.stats"
+      [show]="state.showStats">
+    </app-stats-banner>
+
     <div class="schedule-content" *ngIf="!state.isLoading && state.schedule">
       <app-week-selector
         [selectedWeekType]="state.selectedWeekType"
