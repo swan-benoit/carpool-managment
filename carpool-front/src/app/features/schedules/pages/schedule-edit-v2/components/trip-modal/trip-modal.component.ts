@@ -21,6 +21,8 @@ interface ChildSelectionState {
   disabledReason?: string;
   isInOtherTrip: boolean;
   otherTripInfo?: string;
+  isAbsent: boolean; // ✅ NOUVEAU : Indique si l'enfant est absent
+  absenceReason?: string; // ✅ NOUVEAU : Raison de l'absence
 }
 
 interface FamilyOption {
@@ -147,6 +149,30 @@ export class TripModalComponent implements OnInit {
     });
   }
 
+  /**
+   * ✅ NOUVELLE MÉTHODE : Vérifie si un enfant est absent pour le créneau donné
+   */
+  private isChildAbsent(child: Child): boolean {
+    if (!this.modalData || !child.absenceDays) return false;
+
+    return child.absenceDays.some(absence => 
+      absence.weekDay === this.modalData!.weekDay && 
+      absence.weekType === this.modalData!.weekType
+    );
+  }
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Obtient la raison de l'absence d'un enfant
+   */
+  private getAbsenceReason(child: Child): string {
+    if (!this.modalData) return '';
+
+    const weekTypeLabel = this.modalData.weekType === WeekType.Even ? 'paire' : 'impaire';
+    const weekDayLabel = this.weekDays.find(day => day.value === this.modalData!.weekDay)?.label || '';
+    
+    return `Absent le ${weekDayLabel} en semaine ${weekTypeLabel}`;
+  }
+
   private updateChildrenSelectionState(): void {
     const allChildren = this.getAllChildren();
     const selectedChildrenIds = this.tripForm.get('childrenIds')?.value || [];
@@ -158,11 +184,19 @@ export class TripModalComponent implements OnInit {
       const otherTripInfo = this.getChildOtherTripInfo(child);
       const isInOtherTrip = otherTripInfo !== null;
       const capacityReached = driver && selectedChildrenIds.length >= driver.carCapacity! && !isSelected;
+      
+      // ✅ NOUVEAU : Vérifier si l'enfant est absent
+      const isAbsent = this.isChildAbsent(child);
+      const absenceReason = isAbsent ? this.getAbsenceReason(child) : undefined;
 
       let isDisabled = false;
       let disabledReason = '';
 
-      if (capacityReached && !isInOtherTrip) {
+      // ✅ NOUVEAU : Priorité à l'absence sur les autres raisons
+      if (isAbsent) {
+        isDisabled = true;
+        disabledReason = 'Absent ce jour-là';
+      } else if (capacityReached && !isInOtherTrip) {
         isDisabled = true;
         disabledReason = 'Capacité atteinte';
       }
@@ -173,7 +207,9 @@ export class TripModalComponent implements OnInit {
         isDisabled,
         disabledReason,
         isInOtherTrip,
-        otherTripInfo: otherTripInfo || undefined
+        otherTripInfo: otherTripInfo || undefined,
+        isAbsent, // ✅ NOUVEAU
+        absenceReason // ✅ NOUVEAU
       };
     });
   }
@@ -215,8 +251,11 @@ export class TripModalComponent implements OnInit {
     if (driverId) {
       const driver = this.families.find(f => f.id === +driverId);
       if (driver) {
-        // Pré-sélectionner les enfants de la famille conductrice
-        const driverChildrenIds = driver.children?.map(child => child.id) || [];
+        // ✅ MODIFICATION : Pré-sélectionner seulement les enfants NON ABSENTS de la famille conductrice
+        const driverChildrenIds = driver.children
+          ?.filter(child => !this.isChildAbsent(child)) // ✅ Filtrer les enfants absents
+          ?.map(child => child.id) || [];
+        
         this.tripForm.patchValue({
           childrenIds: driverChildrenIds
         });
@@ -231,6 +270,13 @@ export class TripModalComponent implements OnInit {
 
     const currentIds = this.tripForm.get('childrenIds')?.value || [];
     const childState = this.childrenSelectionState.find(state => state.child.id === childId);
+
+    // ✅ NOUVEAU : Empêcher la sélection d'enfants absents
+    if (isChecked && childState?.isAbsent) {
+      target.checked = false;
+      alert(`${childState.child.name} est absent ce jour-là et ne peut pas être sélectionné(e).`);
+      return;
+    }
 
     if (isChecked) {
       // Si l'enfant est dans un autre trajet, le supprimer de cet autre trajet
@@ -299,6 +345,27 @@ export class TripModalComponent implements OnInit {
   }
 
   /**
+   * ✅ NOUVELLE MÉTHODE : Vérifie s'il y a des enfants absents
+   */
+  hasAbsentChildren(): boolean {
+    return this.childrenSelectionState.some(state => state.isAbsent);
+  }
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Obtient la liste des enfants absents
+   */
+  getAbsentChildren(): ChildSelectionState[] {
+    return this.childrenSelectionState.filter(state => state.isAbsent);
+  }
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Obtient la liste des enfants disponibles (non absents)
+   */
+  getAvailableChildren(): ChildSelectionState[] {
+    return this.childrenSelectionState.filter(state => !state.isAbsent);
+  }
+
+  /**
    * Vérifie si la capacité maximale est atteinte
    * Méthode extraite du template pour une meilleure lisibilité
    */
@@ -329,6 +396,14 @@ export class TripModalComponent implements OnInit {
       );
 
       if (!driver) return;
+
+      // ✅ NOUVELLE VALIDATION : Vérifier qu'aucun enfant sélectionné n'est absent
+      const absentSelectedChildren = children.filter(child => this.isChildAbsent(child));
+      if (absentSelectedChildren.length > 0) {
+        const absentNames = absentSelectedChildren.map(child => child.name).join(', ');
+        alert(`Erreur : Les enfants suivants sont absents ce jour-là et ne peuvent pas être transportés : ${absentNames}`);
+        return;
+      }
 
       // Validation finale
       if (children.length > driver.carCapacity!) {

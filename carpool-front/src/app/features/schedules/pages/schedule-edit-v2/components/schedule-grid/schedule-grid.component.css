@@ -45,7 +45,7 @@
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   padding: 1rem;
-  min-height: 280px;
+  min-height: 320px; /* ✅ Augmenté de 280px à 320px pour les enfants absents */
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(139, 92, 246, 0.1);
@@ -119,6 +119,13 @@
   margin-bottom: 0.5rem;
 }
 
+/* ✅ NOUVEAU : Styles pour le résumé des enfants absents */
+.absent-summary {
+  color: #dc2626;
+  font-style: italic;
+  font-weight: 700;
+}
+
 /* Section des enfants manquants */
 .missing-children {
   margin-top: 0.75rem;
@@ -162,6 +169,61 @@
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
+/* ✅ NOUVEAU : Section des enfants absents */
+.absent-children {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(107, 114, 128, 0.08);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  border-radius: 0.75rem;
+  animation: absent-children-pulse 2s ease-in-out infinite;
+}
+
+.absent-children-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #4b5563;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.absent-children-header svg {
+  color: #6b7280;
+  animation: absent-icon-blink 2s ease-in-out infinite;
+}
+
+.absent-children-list {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  line-height: 1.4;
+}
+
+.absent-child {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: rgba(107, 114, 128, 0.1);
+  border-radius: 0.5rem;
+  margin: 0.125rem;
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  position: relative;
+}
+
+.absent-child::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #6b7280;
+  transform: translateY(-50%);
+}
+
 @keyframes missing-children-pulse {
   0%, 100% {
     background: rgba(239, 68, 68, 0.08);
@@ -173,6 +235,17 @@
   }
 }
 
+@keyframes absent-children-pulse {
+  0%, 100% {
+    background: rgba(107, 114, 128, 0.08);
+    border-color: rgba(107, 114, 128, 0.2);
+  }
+  50% {
+    background: rgba(107, 114, 128, 0.12);
+    border-color: rgba(107, 114, 128, 0.3);
+  }
+}
+
 @keyframes warning-blink {
   0%, 100% {
     opacity: 1;
@@ -181,6 +254,17 @@
   50% {
     opacity: 0.7;
     transform: scale(1.1);
+  }
+}
+
+@keyframes absent-icon-blink {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
   }
 }
 
@@ -472,18 +556,21 @@
   }
 
   .trip-cell {
-    min-height: 260px;
+    min-height: 300px; /* ✅ Ajusté pour les écrans moyens */
   }
 
-  .missing-children {
+  .missing-children,
+  .absent-children {
     padding: 0.5rem;
   }
 
-  .missing-children-header {
+  .missing-children-header,
+  .absent-children-header {
     font-size: 0.5rem;
   }
 
-  .missing-children-list {
+  .missing-children-list,
+  .absent-children-list {
     font-size: 0.625rem;
   }
 }
@@ -496,7 +583,7 @@
 
   .trip-cell {
     padding: 0.75rem;
-    min-height: 240px;
+    min-height: 280px; /* ✅ Ajusté pour mobile */
   }
 
   .time-label {
@@ -523,21 +610,25 @@
     font-size: 0.625rem;
   }
 
-  .missing-children {
+  .missing-children,
+  .absent-children {
     padding: 0.5rem;
     margin-top: 0.5rem;
   }
 
-  .missing-children-header {
+  .missing-children-header,
+  .absent-children-header {
     font-size: 0.5rem;
     gap: 0.25rem;
   }
 
-  .missing-children-list {
+  .missing-children-list,
+  .absent-children-list {
     font-size: 0.625rem;
   }
 
-  .missing-child {
+  .missing-child,
+  .absent-child {
     padding: 0.125rem 0.375rem;
     font-size: 0.625rem;
   }

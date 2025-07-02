@@ -82,36 +82,95 @@
           </span>
         </div>
 
+        <!-- ✅ NOUVEAU : Message d'information sur les enfants absents -->
+        <div class="absence-info" *ngIf="hasAbsentChildren()">
+          <div class="absence-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>{{ getAbsentChildren().length }} enfant(s) absent(s) ce jour-là</span>
+          </div>
+          <div class="absent-children-list">
+            <span *ngFor="let childState of getAbsentChildren(); let last = last" class="absent-child">
+              {{ childState.child.name }}<span *ngIf="!last">, </span>
+            </span>
+          </div>
+        </div>
+
+        <!-- ✅ MODIFICATION : Séparer les enfants disponibles et absents -->
         <div class="children-selection">
-          <div
-            class="child-checkbox"
-            *ngFor="let childState of childrenSelectionState"
-            [class.child-in-other-trip]="childState.isInOtherTrip">
-            <input
-              type="checkbox"
-              [id]="'child-' + childState.child.id"
-              [checked]="childState.isSelected"
-              [disabled]="childState.isDisabled"
-              (change)="onChildSelectionChange(childState.child.id!, $event)">
-            <label [for]="'child-' + childState.child.id"
-                   [class.disabled]="childState.isDisabled">
-              {{ childState.child.name }}
-              
-              <!-- Indicateur si l'enfant est dans un autre trajet -->
-              <span *ngIf="childState.isInOtherTrip && !childState.isSelected" class="other-trip-indicator">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                {{ childState.otherTripInfo }}
-              </span>
-              
-              <span *ngIf="childState.disabledReason" class="disabled-reason">
-                ({{ childState.disabledReason }})
-              </span>
-            </label>
+          <!-- Enfants disponibles -->
+          <div class="children-section" *ngIf="getAvailableChildren().length > 0">
+            <div class="section-header">
+              <h4>Enfants disponibles</h4>
+              <span class="children-count">{{ getAvailableChildren().length }} enfant(s)</span>
+            </div>
+            
+            <div class="children-grid">
+              <div
+                class="child-checkbox"
+                *ngFor="let childState of getAvailableChildren()"
+                [class.child-in-other-trip]="childState.isInOtherTrip">
+                <input
+                  type="checkbox"
+                  [id]="'child-' + childState.child.id"
+                  [checked]="childState.isSelected"
+                  [disabled]="childState.isDisabled"
+                  (change)="onChildSelectionChange(childState.child.id!, $event)">
+                <label [for]="'child-' + childState.child.id"
+                       [class.disabled]="childState.isDisabled">
+                  {{ childState.child.name }}
+                  
+                  <!-- Indicateur si l'enfant est dans un autre trajet -->
+                  <span *ngIf="childState.isInOtherTrip && !childState.isSelected" class="other-trip-indicator">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    {{ childState.otherTripInfo }}
+                  </span>
+                  
+                  <span *ngIf="childState.disabledReason" class="disabled-reason">
+                    ({{ childState.disabledReason }})
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ NOUVEAU : Section des enfants absents -->
+          <div class="children-section absent-section" *ngIf="hasAbsentChildren()">
+            <div class="section-header">
+              <h4>Enfants absents</h4>
+              <span class="children-count">{{ getAbsentChildren().length }} enfant(s)</span>
+            </div>
+            
+            <div class="children-grid">
+              <div
+                class="child-checkbox child-absent"
+                *ngFor="let childState of getAbsentChildren()">
+                <input
+                  type="checkbox"
+                  [id]="'absent-child-' + childState.child.id"
+                  [checked]="false"
+                  [disabled]="true">
+                <label [for]="'absent-child-' + childState.child.id" class="disabled">
+                  {{ childState.child.name }}
+                  
+                  <span class="absence-indicator">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                    </svg>
+                    {{ childState.absenceReason }}
+                  </span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 

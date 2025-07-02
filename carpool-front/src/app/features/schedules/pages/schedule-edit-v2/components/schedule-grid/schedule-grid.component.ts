@@ -106,13 +106,14 @@ export class ScheduleGridComponent {
   }
 
   /**
-   * Obtient tous les enfants qui doivent être transportés pour un créneau donné
+   * ✅ NOUVELLE MÉTHODE : Obtient tous les enfants qui doivent être transportés pour un créneau donné
+   * Exclut automatiquement les enfants absents
    */
   private getAllChildrenForSlot(weekDay: WeekDay, timeSlot: TimeSlot): Child[] {
     // Récupérer tous les enfants de toutes les familles
     const allChildren = this.families.flatMap(family => family.children || []);
     
-    // Filtrer les enfants qui ne sont pas absents pour ce créneau
+    // ✅ MODIFICATION : Filtrer les enfants qui ne sont pas absents pour ce créneau
     return allChildren.filter(child => {
       if (!child.absenceDays) return true;
       
@@ -122,12 +123,13 @@ export class ScheduleGridComponent {
         absence.weekType === this.selectedWeekType
       );
       
-      return !isAbsent;
+      return !isAbsent; // ✅ Retourner seulement les enfants NON absents
     });
   }
 
   /**
    * Obtient le nombre total d'enfants qui doivent être transportés pour un créneau
+   * ✅ MODIFICATION : Exclut automatiquement les enfants absents
    */
   getTotalChildrenForSlot(weekDay: WeekDay, timeSlot: TimeSlot): number {
     return this.getAllChildrenForSlot(weekDay, timeSlot).length;
@@ -153,6 +155,7 @@ export class ScheduleGridComponent {
 
   /**
    * Vérifie si tous les enfants sont transportés pour un créneau donné
+   * ✅ MODIFICATION : Prend en compte seulement les enfants non absents
    */
   isSlotComplete(weekDay: WeekDay, timeSlot: TimeSlot): boolean {
     const totalChildren = this.getTotalChildrenForSlot(weekDay, timeSlot);
@@ -163,9 +166,10 @@ export class ScheduleGridComponent {
 
   /**
    * Obtient la liste des enfants non transportés pour un créneau
+   * ✅ MODIFICATION : Exclut automatiquement les enfants absents
    */
   getMissingChildren(weekDay: WeekDay, timeSlot: TimeSlot): Child[] {
-    const allChildren = this.getAllChildrenForSlot(weekDay, timeSlot);
+    const allChildren = this.getAllChildrenForSlot(weekDay, timeSlot); // ✅ Déjà filtrés (non absents)
     const trips = this.getTripsForSlot(weekDay, timeSlot);
     const transportedChildrenIds = new Set<number>();
     
@@ -180,5 +184,37 @@ export class ScheduleGridComponent {
     return allChildren.filter(child => 
       child.id && !transportedChildrenIds.has(child.id)
     );
+  }
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Obtient le nombre d'enfants absents pour un créneau
+   */
+  getAbsentChildrenCount(weekDay: WeekDay, timeSlot: TimeSlot): number {
+    const allChildren = this.families.flatMap(family => family.children || []);
+    
+    return allChildren.filter(child => {
+      if (!child.absenceDays) return false;
+      
+      return child.absenceDays.some(absence => 
+        absence.weekDay === weekDay && 
+        absence.weekType === this.selectedWeekType
+      );
+    }).length;
+  }
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Obtient la liste des enfants absents pour un créneau
+   */
+  getAbsentChildren(weekDay: WeekDay, timeSlot: TimeSlot): Child[] {
+    const allChildren = this.families.flatMap(family => family.children || []);
+    
+    return allChildren.filter(child => {
+      if (!child.absenceDays) return false;
+      
+      return child.absenceDays.some(absence => 
+        absence.weekDay === weekDay && 
+        absence.weekType === this.selectedWeekType
+      );
+    });
   }
 }
