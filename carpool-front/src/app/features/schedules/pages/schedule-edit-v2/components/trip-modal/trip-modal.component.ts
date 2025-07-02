@@ -29,6 +29,8 @@ interface FamilyOption {
   family: Family;
   isDisabled: boolean;
   disabledReason?: string;
+  isUnavailable: boolean; // ✅ NOUVEAU : Indique si la famille a une indisponibilité
+  unavailabilityReason?: string; // ✅ NOUVEAU : Raison de l'indisponibilité
 }
 
 @Component({
@@ -123,8 +125,59 @@ export class TripModalComponent implements OnInit {
   }
 
   /**
+   * ✅ NOUVELLE MÉTHODE : Vérifie si une famille a une indisponibilité pour le créneau donné
+   */
+  private isFamilyUnavailable(family: Family): boolean {
+    if (!this.modalData || !family.requirements || family.requirements.length === 0) {
+      return false;
+    }
+
+    console.log('🔍 Vérification indisponibilité pour:', family.name);
+    console.log('📅 Créneau actuel:', {
+      weekDay: this.modalData.weekDay,
+      timeSlot: this.modalData.timeSlot,
+      weekType: this.modalData.weekType
+    });
+    console.log('🚫 Indisponibilités:', family.requirements);
+
+    const isUnavailable = Array.from(family.requirements).some(requirement => {
+      // ✅ Comparaison directe des valeurs string
+      const weekDayMatch = requirement.weekDay === this.modalData!.weekDay;
+      const timeSlotMatch = requirement.timeSlot === this.modalData!.timeSlot;
+      const weekTypeMatch = requirement.weekType === this.modalData!.weekType;
+      
+      console.log('🔍 Comparaison indisponibilité:', {
+        requirement,
+        weekDayMatch,
+        timeSlotMatch,
+        weekTypeMatch,
+        result: weekDayMatch && timeSlotMatch && weekTypeMatch
+      });
+      
+      return weekDayMatch && timeSlotMatch && weekTypeMatch;
+    });
+
+    console.log('✅ Résultat final pour', family.name, ':', isUnavailable ? 'INDISPONIBLE' : 'DISPONIBLE');
+    return isUnavailable;
+  }
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Obtient la raison de l'indisponibilité d'une famille
+   */
+  private getUnavailabilityReason(family: Family): string {
+    if (!this.modalData) return '';
+
+    const weekTypeLabel = this.modalData.weekType === WeekType.Even ? 'paire' : 'impaire';
+    const weekDayLabel = this.weekDays.find(day => day.value === this.modalData!.weekDay)?.label || '';
+    const timeSlotLabel = this.timeSlots.find(slot => slot.value === this.modalData!.timeSlot)?.label || '';
+    
+    return `Indisponible le ${weekDayLabel} ${timeSlotLabel} en semaine ${weekTypeLabel}`;
+  }
+
+  /**
    * Met à jour les options de familles disponibles pour conduire
    * Exclut les familles qui conduisent déjà sur ce créneau (sauf en mode édition)
+   * ✅ NOUVEAU : Marque les familles indisponibles
    */
   private updateFamilyOptions(): void {
     if (!this.modalData) {
@@ -140,11 +193,26 @@ export class TripModalComponent implements OnInit {
 
     this.familyOptions = this.families.map(family => {
       const isAlreadyDriving = usedFamilyIds.includes(family.id ?? -1);
+      
+      // ✅ NOUVEAU : Vérifier l'indisponibilité
+      const isUnavailable = this.isFamilyUnavailable(family);
+      const unavailabilityReason = isUnavailable ? this.getUnavailabilityReason(family) : undefined;
+
+      // ✅ MODIFICATION : Une famille indisponible peut toujours être sélectionnée (avec avertissement)
+      // mais une famille qui conduit déjà ne peut pas être sélectionnée
+      const isDisabled = isAlreadyDriving;
+      let disabledReason = '';
+      
+      if (isAlreadyDriving) {
+        disabledReason = 'Conduit déjà sur ce créneau';
+      }
 
       return {
         family,
-        isDisabled: isAlreadyDriving,
-        disabledReason: isAlreadyDriving ? 'Conduit déjà sur ce créneau' : undefined
+        isDisabled,
+        disabledReason,
+        isUnavailable, // ✅ NOUVEAU
+        unavailabilityReason // ✅ NOUVEAU
       };
     });
   }
@@ -399,17 +467,53 @@ export class TripModalComponent implements OnInit {
   }
 
   /**
-   * Obtient les familles disponibles pour conduire (non désactivées)
+   * ✅ MODIFICATION : Obtient les familles disponibles pour conduire (non désactivées)
    */
   getAvailableFamilies(): FamilyOption[] {
-    return this.familyOptions.filter(option => !option.isDisabled);
+    return this.familyOptions.filter(option => !option.isDisabled && !option.isUnavailable);
   }
 
   /**
-   * Obtient les familles non disponibles pour conduire (désactivées)
+   * ✅ NOUVELLE MÉTHODE : Obtient les familles indisponibles (avec requirements)
    */
   getUnavailableFamilies(): FamilyOption[] {
+    return this.familyOptions.filter(option => option.isUnavailable && !option.isDisabled);
+  }
+
+  /**
+   * ✅ MODIFICATION : Obtient les familles non disponibles pour conduire (désactivées - conduisent déjà)
+   */
+  getDisabledFamilies(): FamilyOption[] {
     return this.familyOptions.filter(option => option.isDisabled);
+  }
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Vérifie s'il y a des familles indisponibles
+   */
+  hasUnavailableFamilies(): boolean {
+    return this.getUnavailableFamilies().length > 0;
+  }
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Vérifie si la famille sélectionnée est indisponible
+   */
+  isSelectedFamilyUnavailable(): boolean {
+    const driverId = this.tripForm.get('driverId')?.value;
+    if (!driverId) return false;
+    
+    const familyOption = this.familyOptions.find(option => option.family.id === +driverId);
+    return familyOption?.isUnavailable || false;
+  }
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Obtient le message d'avertissement pour la famille sélectionnée
+   */
+  getSelectedFamilyWarning(): string {
+    const driverId = this.tripForm.get('driverId')?.value;
+    if (!driverId) return '';
+    
+    const familyOption = this.familyOptions.find(option => option.family.id === +driverId);
+    return familyOption?.unavailabilityReason || '';
   }
 
   onSubmit(): void {
@@ -428,6 +532,17 @@ export class TripModalComponent implements OnInit {
         const absentNames = absentSelectedChildren.map(child => child.name).join(', ');
         alert(`Erreur : Les enfants suivants sont absents ce jour-là et ne peuvent pas être transportés : ${absentNames}`);
         return;
+      }
+
+      // ✅ NOUVEAU : Avertissement si la famille est indisponible
+      if (this.isSelectedFamilyUnavailable()) {
+        const familyName = driver.name;
+        const reason = this.getSelectedFamilyWarning();
+        const confirmMessage = `⚠️ ATTENTION : La famille "${familyName}" a une indisponibilité pour ce créneau.\n\nRaison : ${reason}\n\nÊtes-vous sûr de vouloir continuer ?`;
+        
+        if (!confirm(confirmMessage)) {
+          return; // L'utilisateur a annulé
+        }
       }
 
       // Validation finale

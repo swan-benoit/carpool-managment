@@ -108,11 +108,15 @@
   color: #374151;
 }
 
-.form-control optgroup[label="Familles disponibles"] {
+.form-control optgroup[label*="✅"] {
   color: #065f46;
 }
 
-.form-control optgroup[label="Familles non disponibles"] {
+.form-control optgroup[label*="⚠️"] {
+  color: #d97706;
+}
+
+.form-control optgroup[label*="🚫"] {
   color: #dc2626;
 }
 
@@ -120,6 +124,86 @@
   color: #9ca3af;
   font-style: italic;
   background: rgba(243, 244, 246, 0.5);
+}
+
+/* ✅ NOUVEAU : Styles pour les options indisponibles */
+.form-control option.unavailable-option {
+  color: #d97706;
+  font-weight: 600;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+/* ✅ NOUVEAU : Avertissement pour famille indisponible sélectionnée */
+.family-unavailable-warning {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  border: 3px solid rgba(239, 68, 68, 0.4);
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  animation: warning-pulse 2s ease-in-out infinite;
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2);
+}
+
+.family-unavailable-warning svg {
+  color: #ef4444;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  animation: warning-icon-pulse 1.5s ease-in-out infinite;
+}
+
+.warning-content {
+  flex: 1;
+}
+
+.warning-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #dc2626;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.warning-message {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #b91c1c;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.warning-note {
+  font-size: 0.75rem;
+  color: #7f1d1d;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+@keyframes warning-pulse {
+  0%, 100% {
+    background: linear-gradient(135deg, #fef2f2, #fecaca);
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    background: linear-gradient(135deg, #fecaca, #fca5a5);
+    border-color: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 12px 35px rgba(239, 68, 68, 0.3);
+  }
+}
+
+@keyframes warning-icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
 }
 
 /* Message d'information sur les restrictions de familles */
@@ -141,6 +225,85 @@
 .family-restriction-info svg {
   color: #f59e0b;
   flex-shrink: 0;
+}
+
+/* ✅ NOUVEAU : Message d'information sur les familles indisponibles */
+.family-unavailability-info {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  border-radius: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  animation: unavailability-pulse 2s ease-in-out infinite;
+}
+
+.family-unavailability-info svg {
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  animation: unavailability-icon-blink 2s ease-in-out infinite;
+}
+
+.unavailability-content {
+  flex: 1;
+}
+
+.unavailability-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.unavailable-families-list {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #a16207;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.unavailable-family {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: rgba(245, 158, 11, 0.15);
+  border-radius: 0.5rem;
+  margin: 0.125rem;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.unavailability-note {
+  font-size: 0.75rem;
+  color: #78716c;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+@keyframes unavailability-pulse {
+  0%, 100% {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    background: linear-gradient(135deg, #fde68a, #fcd34d);
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+}
+
+@keyframes unavailability-icon-blink {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
 }
 
 @keyframes gentle-pulse {
@@ -605,6 +768,30 @@
   .family-restriction-info {
     font-size: 0.75rem;
     padding: 0.5rem 0.75rem;
+  }
+
+  .family-unavailability-info {
+    padding: 0.75rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .family-unavailable-warning {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .warning-title {
+    font-size: 0.875rem;
+  }
+
+  .warning-message {
+    font-size: 0.75rem;
+  }
+
+  .warning-note {
+    font-size: 0.625rem;
   }
 
   .absence-info {

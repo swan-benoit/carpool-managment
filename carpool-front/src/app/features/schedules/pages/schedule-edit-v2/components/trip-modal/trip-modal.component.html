@@ -37,16 +37,26 @@
           <option value="">Sélectionner une famille</option>
           
           <!-- Familles disponibles -->
-          <optgroup label="Familles disponibles" *ngIf="getAvailableFamilies().length > 0">
+          <optgroup label="✅ Familles disponibles" *ngIf="getAvailableFamilies().length > 0">
             <option *ngFor="let familyOption of getAvailableFamilies()" [value]="familyOption.family.id">
               {{ familyOption.family.name }} ({{ familyOption.family.carCapacity }} places)
             </option>
           </optgroup>
           
-          <!-- Familles non disponibles (désactivées) -->
-          <optgroup label="Familles non disponibles" *ngIf="getUnavailableFamilies().length > 0">
+          <!-- ✅ NOUVEAU : Familles indisponibles (avec requirements) -->
+          <optgroup label="⚠️ Familles indisponibles" *ngIf="getUnavailableFamilies().length > 0">
             <option 
               *ngFor="let familyOption of getUnavailableFamilies()" 
+              [value]="familyOption.family.id"
+              class="unavailable-option">
+              {{ familyOption.family.name }} ({{ familyOption.family.carCapacity }} places) - INDISPONIBLE
+            </option>
+          </optgroup>
+          
+          <!-- Familles non disponibles (conduisent déjà) -->
+          <optgroup label="🚫 Familles déjà assignées" *ngIf="getDisabledFamilies().length > 0">
+            <option 
+              *ngFor="let familyOption of getDisabledFamilies()" 
               [value]="familyOption.family.id"
               [disabled]="true"
               class="disabled-option">
@@ -55,16 +65,52 @@
           </optgroup>
         </select>
         
+        <!-- ✅ NOUVEAU : Avertissement pour famille indisponible sélectionnée -->
+        <div class="family-unavailable-warning" *ngIf="isSelectedFamilyUnavailable()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <div class="warning-content">
+            <div class="warning-title">⚠️ FAMILLE INDISPONIBLE</div>
+            <div class="warning-message">{{ getSelectedFamilyWarning() }}</div>
+            <div class="warning-note">Vous pouvez continuer mais cette famille a signalé une indisponibilité.</div>
+          </div>
+        </div>
+        
         <!-- Message d'information sur les familles non disponibles -->
-        <div class="family-restriction-info" *ngIf="getUnavailableFamilies().length > 0">
+        <div class="family-restriction-info" *ngIf="getDisabledFamilies().length > 0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
           <span>
-            {{ getUnavailableFamilies().length }} famille(s) déjà assignée(s) sur ce créneau
+            {{ getDisabledFamilies().length }} famille(s) déjà assignée(s) sur ce créneau
           </span>
+        </div>
+
+        <!-- ✅ NOUVEAU : Message d'information sur les familles indisponibles -->
+        <div class="family-unavailability-info" *ngIf="hasUnavailableFamilies()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <div class="unavailability-content">
+            <span class="unavailability-title">
+              {{ getUnavailableFamilies().length }} famille(s) indisponible(s) pour ce créneau
+            </span>
+            <div class="unavailable-families-list">
+              <span *ngFor="let familyOption of getUnavailableFamilies(); let last = last" class="unavailable-family">
+                {{ familyOption.family.name }}<span *ngIf="!last">, </span>
+              </span>
+            </div>
+            <div class="unavailability-note">
+              Ces familles peuvent être sélectionnées mais ont signalé une indisponibilité.
+            </div>
+          </div>
         </div>
       </div>
 
