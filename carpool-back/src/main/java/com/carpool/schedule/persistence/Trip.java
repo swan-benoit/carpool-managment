@@ -13,6 +13,7 @@ public class Trip extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
+    public String place;
     public WeekDay weekDay;
     public TimeSlot timeSlot;
 
