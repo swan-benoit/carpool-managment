@@ -90,6 +90,7 @@ export class TripModalComponent implements OnInit {
       });
     } else {
       // Mode création
+      this.editingTrip = null; // Important: pas de trip en édition
       this.tripForm.patchValue({
         weekDay: this.modalData.weekDay,
         timeSlot: this.modalData.timeSlot,
@@ -287,9 +288,10 @@ export class TripModalComponent implements OnInit {
       }
 
       const trip: Trip = {
-        // IMPORTANT: L'ID doit être undefined pour les nouveaux trajets
-        // Le backend se chargera de générer l'ID approprié
-        id: this.editingTrip?.id, // undefined pour les nouveaux trajets, ID existant pour les modifications
+        // ✅ CORRECTION IMPORTANTE : 
+        // - Pour les nouveaux trajets (mode création) : id = undefined
+        // - Pour les trajets existants (mode édition) : id = ID existant
+        id: this.isEditMode ? this.editingTrip!.id : undefined,
         weekDay: formValue.weekDay,
         timeSlot: formValue.timeSlot,
         driver: driver,
@@ -309,8 +311,8 @@ export class TripModalComponent implements OnInit {
           currentSchedule.trips = [];
         }
 
-        if (this.editingTrip && this.modalData.tripIndex !== undefined) {
-          // Modifier le trajet existant
+        if (this.isEditMode && this.modalData.tripIndex !== undefined) {
+          // ✅ Mode édition : modifier le trajet existant
           const tripIndex = currentSchedule.trips.findIndex(t =>
             t.weekDay === this.modalData!.weekDay &&
             t.timeSlot === this.modalData!.timeSlot &&
@@ -320,8 +322,8 @@ export class TripModalComponent implements OnInit {
             currentSchedule.trips[tripIndex] = trip;
           }
         } else {
-          // Ajouter un nouveau trajet
-          // L'ID reste undefined - le backend générera l'ID lors de la sauvegarde
+          // ✅ Mode création : ajouter un nouveau trajet avec id = undefined
+          // Le backend générera automatiquement l'ID lors de la sauvegarde
           currentSchedule.trips.push(trip);
         }
       }
