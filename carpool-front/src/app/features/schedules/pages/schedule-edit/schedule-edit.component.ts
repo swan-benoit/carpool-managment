@@ -181,7 +181,6 @@ export class ScheduleEditComponent implements OnInit {
 
     if (!driverId) return;
 
-    // Récupérer la famille conductrice pour vérifier la capacité
     this.families$.subscribe(families => {
       const driver = families.find(f => f.id === +driverId);
       if (!driver) return;
@@ -197,13 +196,12 @@ export class ScheduleEditComponent implements OnInit {
           return;
         }
 
-        // Vérifier si on peut ajouter cet enfant sans dépasser la capacité
+        // Vérifier la capacité
         if (currentIds.length < driver.carCapacity!) {
           this.tripForm.patchValue({
             childrenIds: [...currentIds, childId]
           });
         } else {
-          // Décocher la case si la capacité est dépassée
           event.target.checked = false;
           alert(`Capacité maximale atteinte ! Cette voiture ne peut transporter que ${driver.carCapacity} enfants.`);
         }
@@ -225,13 +223,13 @@ export class ScheduleEditComponent implements OnInit {
 
       if (!driver) return;
 
-      // Validation finale de la capacité
+      // Validation finale
       if (children.length > driver.carCapacity!) {
         alert(`Erreur : ${children.length} enfants sélectionnés mais la voiture ne peut transporter que ${driver.carCapacity} enfants maximum.`);
         return;
       }
 
-      // Validation finale des enfants déjà assignés
+      // Vérifier les enfants déjà assignés
       const alreadyAssignedChildren = children.filter(child => this.isChildAlreadyAssigned(child));
       if (alreadyAssignedChildren.length > 0) {
         const names = alreadyAssignedChildren.map(child => child.name).join(', ');
@@ -266,7 +264,7 @@ export class ScheduleEditComponent implements OnInit {
           }
         } else {
           // Ajouter un nouveau trajet
-          trip.id = undefined; // ID temporaire
+          trip.id = undefined;
           currentSchedule.trips.push(trip);
         }
       }
@@ -313,8 +311,6 @@ export class ScheduleEditComponent implements OnInit {
   }
 
   getRemainingCapacity(families: Family[]): number {
-    if (!this.selectedSlot) return 0;
-
     const driverId = this.tripForm.get('driverId')?.value;
     if (!driverId) return 0;
 
