@@ -30,7 +30,8 @@
         <!-- Trajets existants -->
         <div class="trip-item"
              *ngFor="let trip of getTripsForSlot(day.value, slot.value); let i = index"
-             [class.trip-full]="isTripFull(trip)">
+             [class.trip-full]="isTripFull(trip)"
+             [class.trip-near-capacity]="isNearCapacity(trip)">
           <div class="trip-content">
             <!-- Indicateur de covoiturage plein -->
             <div class="trip-status" *ngIf="isTripFull(trip)">
@@ -42,6 +43,18 @@
                 COMPLET
               </span>
             </div>
+
+            <!-- Indicateur de capacité proche -->
+            <div class="trip-status" *ngIf="isNearCapacity(trip) && !isTripFull(trip)">
+              <span class="near-capacity-indicator">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                PRESQUE PLEIN
+              </span>
+            </div>
             
             <div class="driver-info">
               <strong>{{ trip.driver?.name }}</strong>
@@ -49,7 +62,8 @@
             <div class="children-info" *ngIf="trip.children && trip.children.length > 0">
               <span class="children-count" 
                     [class.count-full]="isTripFull(trip)"
-                    [class.count-warning]="isNearCapacity(trip)">
+                    [class.count-warning]="isNearCapacity(trip) && !isTripFull(trip)"
+                    [class.count-normal]="!isNearCapacity(trip)">
                 {{ trip.children.length }}/{{ trip.driver?.carCapacity }} enfants
               </span>
               <div class="children-list">

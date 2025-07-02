@@ -144,12 +144,25 @@
 
 /* Styles pour les trajets pleins */
 .trip-item.trip-full {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.08);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
+}
+
+.trip-item.trip-full:hover {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.12);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.25);
+}
+
+/* Styles pour les trajets proches de la capacité */
+.trip-item.trip-near-capacity {
   border-color: rgba(245, 158, 11, 0.4);
   background: rgba(245, 158, 11, 0.08);
   box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
 }
 
-.trip-item.trip-full:hover {
+.trip-item.trip-near-capacity:hover {
   border-color: rgba(245, 158, 11, 0.6);
   background: rgba(245, 158, 11, 0.12);
   box-shadow: 0 6px 20px rgba(245, 158, 11, 0.25);
@@ -167,6 +180,22 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-radius: 1rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: pulse-glow-red 2s ease-in-out infinite;
+}
+
+.near-capacity-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
   border-radius: 1rem;
@@ -175,15 +204,27 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: pulse-glow-orange 2s ease-in-out infinite;
 }
 
-.full-indicator svg {
+.full-indicator svg,
+.near-capacity-indicator svg {
   width: 12px;
   height: 12px;
 }
 
-@keyframes pulse-glow {
+@keyframes pulse-glow-red {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.6);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulse-glow-orange {
   0%, 100% {
     box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
     transform: scale(1);
@@ -226,28 +267,45 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #065f46;
   padding: 0.25rem 0.75rem;
   border-radius: 0.75rem;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.2);
   transition: all 0.3s ease;
+  border: 1px solid;
 }
 
 /* Styles pour les compteurs selon la capacité */
+.children-count.count-normal {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #065f46;
+}
+
 .children-count.count-warning {
   background: rgba(245, 158, 11, 0.15);
   border-color: rgba(245, 158, 11, 0.3);
   color: #92400e;
   font-weight: 700;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
 }
 
 .children-count.count-full {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  border-color: rgba(245, 158, 11, 0.5);
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-color: rgba(239, 68, 68, 0.5);
   color: white;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  animation: pulse-count 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-count {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+  }
 }
 
 .children-list {
@@ -341,7 +399,8 @@
     font-size: 1rem;
   }
 
-  .full-indicator {
+  .full-indicator,
+  .near-capacity-indicator {
     font-size: 0.5rem;
     padding: 0.2rem 0.5rem;
   }
@@ -386,13 +445,15 @@
     font-size: 0.625rem;
   }
 
-  .full-indicator {
+  .full-indicator,
+  .near-capacity-indicator {
     font-size: 0.5rem;
     padding: 0.15rem 0.4rem;
     gap: 0.15rem;
   }
 
-  .full-indicator svg {
+  .full-indicator svg,
+  .near-capacity-indicator svg {
     width: 10px;
     height: 10px;
   }
