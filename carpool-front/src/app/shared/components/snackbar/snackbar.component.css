@@ -1,0 +1,183 @@
+.snackbar {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  min-width: 300px;
+  max-width: 500px;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(15px);
+  transform: translateX(120%);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 9999;
+  border: 2px solid;
+  position: relative;
+  overflow: hidden;
+}
+
+.snackbar.show {
+  transform: translateX(0);
+}
+
+.snackbar-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 
+    0 10px 30px rgba(16, 185, 129, 0.3),
+    0 5px 15px rgba(16, 185, 129, 0.2);
+}
+
+.snackbar-error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 
+    0 10px 30px rgba(239, 68, 68, 0.3),
+    0 5px 15px rgba(239, 68, 68, 0.2);
+}
+
+.snackbar-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 
+    0 10px 30px rgba(245, 158, 11, 0.3),
+    0 5px 15px rgba(245, 158, 11, 0.2);
+}
+
+.snackbar-info {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 
+    0 10px 30px rgba(59, 130, 246, 0.3),
+    0 5px 15px rgba(59, 130, 246, 0.2);
+}
+
+.snackbar-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.snackbar-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  animation: icon-bounce 0.6s ease-out;
+}
+
+.snackbar-message {
+  flex: 1;
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.snackbar-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 0 0 1.5rem 1.5rem;
+  animation: progress-bar 3s linear forwards;
+}
+
+/* Effet de brillance */
+.snackbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s ease-in-out;
+}
+
+@keyframes icon-bounce {
+  0% {
+    transform: scale(0.3) rotate(-10deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes progress-bar {
+  0% {
+    width: 100%;
+    opacity: 1;
+  }
+  100% {
+    width: 0%;
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Animation d'entrée avec rebond */
+.snackbar.show {
+  animation: slide-in-bounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slide-in-bounce {
+  0% {
+    transform: translateX(120%) scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-10%) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .snackbar {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    min-width: auto;
+    max-width: none;
+    padding: 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .snackbar-icon {
+    font-size: 1.25rem;
+  }
+
+  .snackbar-content {
+    gap: 0.75rem;
+  }
+}
+
+/* Effet de survol pour fermer manuellement */
+.snackbar:hover {
+  transform: translateX(0) scale(1.02);
+  cursor: pointer;
+}
+
+.snackbar:hover .snackbar-progress {
+  animation-play-state: paused;
+}

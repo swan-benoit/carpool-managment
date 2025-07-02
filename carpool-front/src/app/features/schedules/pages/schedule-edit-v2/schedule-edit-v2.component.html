@@ -36,4 +36,13 @@
     (close)="onCloseTripModal()"
     (tripSaved)="onTripSaved($event)">
   </app-trip-modal>
+
+  <!-- ✅ Snackbar pour les notifications -->
+  <ng-container *ngIf="snackbar$ | async as snackbarState">
+    <app-snackbar
+      [data]="snackbarState.data"
+      [show]="snackbarState.show">
+    </app-snackbar>
+  </ng-container>
 </div>
+```
