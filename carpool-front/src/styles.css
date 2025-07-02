@@ -391,3 +391,5 @@ img {
     0 5px 15px rgba(139, 92, 246, 0.08),
     0 2px 8px rgba(236, 72, 153, 0.06);
 }
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

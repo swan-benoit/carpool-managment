@@ -6,12 +6,11 @@ import { map, switchMap } from 'rxjs/operators';
 import { Family, FullSchedule, TimeSlot, WeekDay, WeekType } from '../../../../modules/openapi';
 import { ScheduleService } from '../../services/schedule.service';
 import { FamilyService } from '../../../families/services/family.service';
-import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { ScheduleGridComponent } from './components/schedule-grid/schedule-grid.component';
 import { WeekSelectorComponent } from './components/week-selector/week-selector.component';
 import { TripModalComponent } from './components/trip-modal/trip-modal.component';
 import { ScheduleHeaderComponent } from './components/schedule-header/schedule-header.component';
-import { SnackbarComponent } from '../../../../shared/components/snackbar/snackbar.component';
+import {SnackbarService} from '../../../../shared/services/snackbar.service';
 
 export interface ScheduleEditState {
   schedule: FullSchedule | null;
@@ -37,7 +36,6 @@ export interface TripModalData {
     WeekSelectorComponent,
     ScheduleGridComponent,
     TripModalComponent,
-    SnackbarComponent
   ],
   templateUrl: './schedule-edit-v2.component.html',
   styleUrl: './schedule-edit-v2.component.css'
@@ -133,7 +131,7 @@ export class ScheduleEditV2Component implements OnInit {
     // Mettre à jour l'état avec le planning modifié
     this.updateState({ schedule: updatedSchedule });
     this.onCloseTripModal();
-    
+
     // Afficher une snackbar de succès
     this.snackbarService.success('Trajet ajouté avec succès ! 🚗');
   }
@@ -143,7 +141,7 @@ export class ScheduleEditV2Component implements OnInit {
     // Forcer une mise à jour pour déclencher la détection de changement
     const currentState = this.stateSubject.value;
     this.updateState({ schedule: { ...currentState.schedule! } });
-    
+
     // Afficher une snackbar de succès
     this.snackbarService.success('Trajet supprimé avec succès ! 🗑️');
   }
@@ -156,17 +154,17 @@ export class ScheduleEditV2Component implements OnInit {
       this.scheduleService.updateSchedule(this.scheduleId, currentState.schedule).subscribe({
         next: () => {
           this.updateState({ isSaving: false });
-          
+
           // ✅ PLUS DE REDIRECTION - Rester sur l'interface de modification
           // this.router.navigate(['/schedules', this.scheduleId, 'view']);
-          
+
           // ✅ Afficher une snackbar verte de succès
           this.snackbarService.success('Planning sauvegardé avec succès ! 🎉', 4000);
         },
         error: (error) => {
           console.error('Erreur lors de la sauvegarde:', error);
           this.updateState({ isSaving: false });
-          
+
           // Afficher une snackbar d'erreur
           this.snackbarService.error('Erreur lors de la sauvegarde du planning');
         }

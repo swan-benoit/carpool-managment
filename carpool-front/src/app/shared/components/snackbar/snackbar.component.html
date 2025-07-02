@@ -1,9 +1,9 @@
-<div class="snackbar" 
-     [class.show]="show" 
-     [class.snackbar-success]="data?.type === 'success'"
-     [class.snackbar-error]="data?.type === 'error'"
-     [class.snackbar-warning]="data?.type === 'warning'"
-     [class.snackbar-info]="data?.type === 'info'"
+<div class="snackbar"
+     [class.show]="show"
+     [class.snackbar-success]="data.type === 'success'"
+     [class.snackbar-error]="data.type === 'error'"
+     [class.snackbar-warning]="data.type === 'warning'"
+     [class.snackbar-info]="data.type === 'info'"
      *ngIf="data">
   <div class="snackbar-content">
     <span class="snackbar-icon">{{ getIcon() }}</span>

@@ -17,7 +17,7 @@ public class Trip extends PanacheEntityBase {
     public WeekDay weekDay;
     public TimeSlot timeSlot;
 
-    @OneToOne
+    @ManyToOne
     public Family driver;
 
     @ManyToMany
