@@ -137,8 +137,8 @@ export class TripModalComponent implements OnInit {
       .filter(id => id !== undefined);
 
     this.familyOptions = this.families.map(family => {
-      const isAlreadyDriving = usedFamilyIds.includes(family.id);
-      
+      const isAlreadyDriving = usedFamilyIds.includes(family.id ?? -1);
+
       return {
         family,
         isDisabled: isAlreadyDriving,
