@@ -14,18 +14,38 @@
     </app-stats-banner>
 
     <div class="schedule-content" *ngIf="!state.isLoading && state.schedule">
-      <app-week-selector
-        [selectedWeekType]="state.selectedWeekType"
-        (weekTypeChange)="onWeekTypeChange($event)">
-      </app-week-selector>
+      <!-- Plannings côte à côte -->
+      <div class="schedules-container">
+        <!-- Planning semaines paires -->
+        <div class="schedule-section">
+          <div class="schedule-section-header">
+            <h2>Semaines paires</h2>
+            <div class="week-indicator even-week">PAIR</div>
+          </div>
+          <app-schedule-grid
+            [schedule]="state.schedule"
+            [families]="state.families"
+            [selectedWeekType]="'EVEN'"
+            (openTripModal)="onOpenTripModal($event)"
+            (tripDeleted)="onTripDeleted()">
+          </app-schedule-grid>
+        </div>
 
-      <app-schedule-grid
-        [schedule]="state.schedule"
-        [families]="state.families"
-        [selectedWeekType]="state.selectedWeekType"
-        (openTripModal)="onOpenTripModal($event)"
-        (tripDeleted)="onTripDeleted()">
-      </app-schedule-grid>
+        <!-- Planning semaines impaires -->
+        <div class="schedule-section">
+          <div class="schedule-section-header">
+            <h2>Semaines impaires</h2>
+            <div class="week-indicator odd-week">IMPAIR</div>
+          </div>
+          <app-schedule-grid
+            [schedule]="state.schedule"
+            [families]="state.families"
+            [selectedWeekType]="'ODD'"
+            (openTripModal)="onOpenTripModal($event)"
+            (tripDeleted)="onTripDeleted()">
+          </app-schedule-grid>
+        </div>
+      </div>
     </div>
 
     <div class="loading-state" *ngIf="state.isLoading">
