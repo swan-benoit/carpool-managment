@@ -14,7 +14,7 @@
     <!-- Informations de base -->
     <div class="form-section">
       <h2>Informations de base</h2>
-      
+
       <div class="form-group">
         <label for="name">Nom de la famille *</label>
         <input
@@ -146,7 +146,7 @@
     <div class="form-section">
       <h2>Indisponibilités de la famille</h2>
       <p class="section-description">
-        Cochez les créneaux où cette famille ne peut pas conduire. 
+        Cochez les créneaux où cette famille ne peut pas conduire.
         Ces indisponibilités seront signalées lors de la création des plannings.
       </p>
 
@@ -160,19 +160,19 @@
             </svg>
             Semaines Paires
           </h3>
-          
+
           <div class="days-grid">
             <div class="day-column" *ngFor="let day of weekDays">
               <h4 class="day-header">{{ day.label }}</h4>
-              
+
               <div class="time-slots">
                 <div class="time-slot-checkbox" *ngFor="let slot of timeSlots">
-                  <input 
+                  <input
                     type="checkbox"
                     [id]="getSlotKey(day.value, slot.value, 'EVEN')"
                     [formControlName]="getSlotKey(day.value, slot.value, 'EVEN')"
                     class="slot-checkbox">
-                  <label 
+                  <label
                     [for]="getSlotKey(day.value, slot.value, 'EVEN')"
                     class="slot-label">
                     <span class="slot-time">{{ slot.label }}</span>
@@ -208,19 +208,19 @@
             </svg>
             Semaines Impaires
           </h3>
-          
+
           <div class="days-grid">
             <div class="day-column" *ngFor="let day of weekDays">
               <h4 class="day-header">{{ day.label }}</h4>
-              
+
               <div class="time-slots">
                 <div class="time-slot-checkbox" *ngFor="let slot of timeSlots">
-                  <input 
+                  <input
                     type="checkbox"
                     [id]="getSlotKey(day.value, slot.value, 'ODD')"
                     [formControlName]="getSlotKey(day.value, slot.value, 'ODD')"
                     class="slot-checkbox">
-                  <label 
+                  <label
                     [for]="getSlotKey(day.value, slot.value, 'ODD')"
                     class="slot-label">
                     <span class="slot-time">{{ slot.label }}</span>
@@ -248,7 +248,7 @@
         </div>
       </div>
 
-      <div class="unavailability-help">
+      <span class="unavailability-help">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -257,8 +257,8 @@
         <span>
           Les créneaux cochés correspondent aux moments où cette famille ne peut pas conduire.
           Ces indisponibilités seront prises en compte lors de la création des plannings.
-        </div>
-      </div>
+        </span>
+      </span>
     </div>
 
     <!-- Actions -->

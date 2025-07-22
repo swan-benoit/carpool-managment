@@ -1,5 +1,5 @@
 .family-form-container {
-  max-width: 800px;
+  max-width: fit-content;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -644,46 +644,46 @@
   .form-actions {
     flex-direction: column;
   }
-  
+
   .days-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
-  
+
   .day-column {
     padding: 1rem;
   }
-  
+
   .day-header {
     font-size: 0.875rem;
     padding: 0.5rem;
   }
-  
+
   .slot-label {
     padding: 0.75rem;
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .slot-time {
     font-size: 0.75rem;
   }
-  
+
   .slot-icon {
     width: 1.5rem;
     height: 1.5rem;
   }
-  
+
   .slot-icon svg {
     width: 12px;
     height: 12px;
   }
-  
+
   .week-title {
     font-size: 1rem;
     padding: 0.75rem 1rem;
   }
-  
+
   .unavailability-help {
     padding: 1rem;
     font-size: 0.75rem;
