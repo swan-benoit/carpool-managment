@@ -469,26 +469,26 @@
 
 /* Accessibilité */
 @media (prefers-reduced-motion: reduce) {
-  .stats-banner,
-  .metric-card,
-  .family-stat,
-  .progress-fill {
-    transition: none;
-  }
+  /*.stats-banner,*/
+  /*.metric-card,*/
+  /*.family-stat,*/
+  /*.progress-fill {*/
+  /*  transition: none;*/
+  /*}*/
 
-  .stats-banner::before,
-  .progress-fill::after {
-    animation: none;
-  }
+  /*.stats-banner::before,*/
+  /*.progress-fill::after {*/
+  /*  animation: none;*/
+  /*}*/
 
-  @keyframes chart-pulse,
-  @keyframes metric-float,
-  @keyframes progress-shimmer,
-  @keyframes badge-glow {
-    0%, 100% {
-      transform: none;
-      opacity: 1;
-      box-shadow: initial;
-    }
-  }
+  /*@keyframes chart-pulse,*/
+  /*@keyframes metric-float,*/
+  /*@keyframes progress-shimmer,*/
+  /*@keyframes badge-glow {*/
+  /*  0%, 100% {*/
+  /*    transform: none;*/
+  /*    opacity: 1;*/
+  /*    box-shadow: initial;*/
+  /*  }*/
+  /*}*/
 }
