@@ -13,6 +13,12 @@
       [show]="state.showStats">
     </app-stats-banner>
 
+    <!-- ✅ NOUVEAU : Contrôles de copie entre semaines -->
+    <app-week-copy-controls
+      [schedule]="state.schedule"
+      (copyWeek)="onCopyWeek($event)">
+    </app-week-copy-controls>
+
     <div class="schedule-content" *ngIf="!state.isLoading && state.schedule">
       <!-- Plannings côte à côte -->
       <div class="schedules-container">

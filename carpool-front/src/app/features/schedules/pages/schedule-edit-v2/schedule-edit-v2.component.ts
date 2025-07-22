@@ -12,6 +12,7 @@ import { TripModalComponent } from './components/trip-modal/trip-modal.component
 import { ScheduleHeaderComponent } from './components/schedule-header/schedule-header.component';
 import { StatsBannerComponent } from './components/stats-banner/stats-banner.component';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
+import { WeekCopyControlsComponent, WeekCopyEvent } from './components/week-copy-controls/week-copy-controls.component';
 
 export interface ScheduleEditState {
   schedule: FullSchedule | null;
@@ -40,6 +41,7 @@ export interface TripModalData {
     ScheduleGridComponent,
     TripModalComponent,
     StatsBannerComponent,
+    WeekCopyControlsComponent,
   ],
   templateUrl: './schedule-edit-v2.component.html',
   styleUrl: './schedule-edit-v2.component.css'
@@ -230,5 +232,54 @@ export class ScheduleEditV2Component implements OnInit {
 
   onCancel(): void {
     this.router.navigate(['/schedules']);
+  }
+
+  onCopyWeek(event: WeekCopyEvent): void {
+    const currentState = this.stateSubject.value;
+    if (!currentState.schedule) return;
+
+    // Créer une copie profonde du planning
+    const updatedSchedule: FullSchedule = JSON.parse(JSON.stringify(currentState.schedule));
+
+    if (event.from === WeekType.Even && event.to === WeekType.Odd) {
+      // Copier semaine paire → impaire
+      if (updatedSchedule.evenSchedule?.trips) {
+        // Créer une copie des trajets en supprimant les IDs pour forcer la création de nouveaux trajets
+        const copiedTrips = updatedSchedule.evenSchedule.trips.map(trip => ({
+          ...trip,
+          id: undefined // Supprimer l'ID pour créer un nouveau trajet
+        }));
+
+        if (!updatedSchedule.oddSchedule) {
+          updatedSchedule.oddSchedule = { trips: [] };
+        }
+        updatedSchedule.oddSchedule.trips = copiedTrips;
+      }
+    } else if (event.from === WeekType.Odd && event.to === WeekType.Even) {
+      // Copier semaine impaire → paire
+      if (updatedSchedule.oddSchedule?.trips) {
+        // Créer une copie des trajets en supprimant les IDs pour forcer la création de nouveaux trajets
+        const copiedTrips = updatedSchedule.oddSchedule.trips.map(trip => ({
+          ...trip,
+          id: undefined // Supprimer l'ID pour créer un nouveau trajet
+        }));
+
+        if (!updatedSchedule.evenSchedule) {
+          updatedSchedule.evenSchedule = { trips: [] };
+        }
+        updatedSchedule.evenSchedule.trips = copiedTrips;
+      }
+    }
+
+    // Mettre à jour l'état et sauvegarder automatiquement
+    this.updateState({ schedule: updatedSchedule });
+    
+    // Afficher un message de succès
+    const fromLabel = event.from === WeekType.Even ? 'paire' : 'impaire';
+    const toLabel = event.to === WeekType.Even ? 'paire' : 'impaire';
+    this.snackbarService.success(`Planning copié de la semaine ${fromLabel} vers la semaine ${toLabel} ! 📋`);
+    
+    // Sauvegarder et rafraîchir les stats
+    this.saveAndRefreshStats();
   }
 }
