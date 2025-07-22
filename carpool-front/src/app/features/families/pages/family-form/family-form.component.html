@@ -144,55 +144,119 @@
 
     <!-- Indisponibilités -->
     <div class="form-section">
-      <div class="section-header">
-        <h2>Indisponibilités de la famille</h2>
-        <button type="button" (click)="addUnavailability()" class="btn btn-primary btn-sm">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Ajouter une indisponibilité
-        </button>
-      </div>
+      <h2>Indisponibilités de la famille</h2>
+      <p class="section-description">
+        Cochez les créneaux où cette famille ne peut pas conduire. 
+        Ces indisponibilités seront signalées lors de la création des plannings.
+      </p>
 
-      <div class="unavailabilities-list" formArrayName="requirements">
-        <div class="unavailability-item" *ngFor="let unavailability of unavailabilities.controls; let i = index" [formGroupName]="i">
-          <div class="unavailability-fields">
-            <div class="form-group">
-              <label [for]="'unavailTimeSlot' + i">Créneau</label>
-              <select [id]="'unavailTimeSlot' + i" formControlName="timeSlot" class="form-control">
-                <option value="">Sélectionner un créneau</option>
-                <option *ngFor="let slot of timeSlots" [value]="slot.value">{{ slot.label }}</option>
-              </select>
+      <div class="unavailability-grid" formGroupName="unavailabilitySlots">
+        <!-- Semaines Paires -->
+        <div class="week-section">
+          <h3 class="week-title even-week">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3v18h18"></path>
+              <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+            </svg>
+            Semaines Paires
+          </h3>
+          
+          <div class="days-grid">
+            <div class="day-column" *ngFor="let day of weekDays">
+              <h4 class="day-header">{{ day.label }}</h4>
+              
+              <div class="time-slots">
+                <div class="time-slot-checkbox" *ngFor="let slot of timeSlots">
+                  <input 
+                    type="checkbox"
+                    [id]="getSlotKey(day.value, slot.value, 'EVEN')"
+                    [formControlName]="getSlotKey(day.value, slot.value, 'EVEN')"
+                    class="slot-checkbox">
+                  <label 
+                    [for]="getSlotKey(day.value, slot.value, 'EVEN')"
+                    class="slot-label">
+                    <span class="slot-time">{{ slot.label }}</span>
+                    <span class="slot-icon">
+                      <svg *ngIf="slot.value === 'MORNING'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                      </svg>
+                      <svg *ngIf="slot.value === 'EVENING'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                      </svg>
+                    </span>
+                  </label>
+                </div>
+              </div>
             </div>
-
-            <div class="form-group">
-              <label [for]="'unavailWeekDay' + i">Jour</label>
-              <select [id]="'unavailWeekDay' + i" formControlName="weekDay" class="form-control">
-                <option value="">Sélectionner un jour</option>
-                <option *ngFor="let day of weekDays" [value]="day.value">{{ day.label }}</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label [for]="'unavailWeekType' + i">Type de semaine</label>
-              <select [id]="'unavailWeekType' + i" formControlName="weekType" class="form-control">
-                <option value="">Sélectionner un type</option>
-                <option *ngFor="let type of weekTypes" [value]="type.value">{{ type.label }}</option>
-              </select>
-            </div>
-
-            <button type="button" (click)="removeUnavailability(i)" class="btn btn-danger btn-sm">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3,6 5,6 21,6"></polyline>
-                <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2,2h4a2,2,0,0,1,2,2V6"></path>
-              </svg>
-            </button>
           </div>
         </div>
 
-        <div class="empty-unavailabilities" *ngIf="unavailabilities.length === 0">
-          <p>Aucune indisponibilité définie. Les indisponibilités permettent de spécifier quand la famille ne peut pas conduire.</p>
+        <!-- Semaines Impaires -->
+        <div class="week-section">
+          <h3 class="week-title odd-week">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3v18h18"></path>
+              <path d="M7 8l5.1 5.2 2.8-2.7L18 14.3"></path>
+            </svg>
+            Semaines Impaires
+          </h3>
+          
+          <div class="days-grid">
+            <div class="day-column" *ngFor="let day of weekDays">
+              <h4 class="day-header">{{ day.label }}</h4>
+              
+              <div class="time-slots">
+                <div class="time-slot-checkbox" *ngFor="let slot of timeSlots">
+                  <input 
+                    type="checkbox"
+                    [id]="getSlotKey(day.value, slot.value, 'ODD')"
+                    [formControlName]="getSlotKey(day.value, slot.value, 'ODD')"
+                    class="slot-checkbox">
+                  <label 
+                    [for]="getSlotKey(day.value, slot.value, 'ODD')"
+                    class="slot-label">
+                    <span class="slot-time">{{ slot.label }}</span>
+                    <span class="slot-icon">
+                      <svg *ngIf="slot.value === 'MORNING'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                      </svg>
+                      <svg *ngIf="slot.value === 'EVENING'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                      </svg>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="unavailability-help">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <span>
+          Les créneaux cochés correspondent aux moments où cette famille ne peut pas conduire.
+          Ces indisponibilités seront prises en compte lors de la création des plannings.
         </div>
       </div>
     </div>
