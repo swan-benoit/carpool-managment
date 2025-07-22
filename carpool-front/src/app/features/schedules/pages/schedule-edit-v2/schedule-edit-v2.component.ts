@@ -37,7 +37,6 @@ export interface TripModalData {
   imports: [
     CommonModule,
     ScheduleHeaderComponent,
-    WeekSelectorComponent,
     ScheduleGridComponent,
     TripModalComponent,
     StatsBannerComponent,
@@ -102,7 +101,7 @@ export class ScheduleEditV2Component implements OnInit {
           selectedWeekType: WeekType.Even,
           showStats: false
         });
-        
+
         // Afficher les stats après un court délai pour l'animation
         setTimeout(() => {
           this.updateState({ showStats: true });
@@ -273,12 +272,12 @@ export class ScheduleEditV2Component implements OnInit {
 
     // Mettre à jour l'état et sauvegarder automatiquement
     this.updateState({ schedule: updatedSchedule });
-    
+
     // Afficher un message de succès
     const fromLabel = event.from === WeekType.Even ? 'paire' : 'impaire';
     const toLabel = event.to === WeekType.Even ? 'paire' : 'impaire';
     this.snackbarService.success(`Planning copié de la semaine ${fromLabel} vers la semaine ${toLabel} ! 📋`);
-    
+
     // Sauvegarder et rafraîchir les stats
     this.saveAndRefreshStats();
   }
