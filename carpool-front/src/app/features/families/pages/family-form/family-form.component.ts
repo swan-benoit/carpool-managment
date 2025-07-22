@@ -17,6 +17,27 @@ export class FamilyFormComponent implements OnInit {
   isEditMode = false;
   familyId?: number;
   isLoading = false;
+  
+  // Tous les créneaux possibles pour les indisponibilités
+  allTimeSlots = [
+    { weekDay: WeekDay.Monday, timeSlot: TimeSlot.Morning, weekType: WeekType.Even, label: 'Lundi Matin - Semaine Paire' },
+    { weekDay: WeekDay.Monday, timeSlot: TimeSlot.Evening, weekType: WeekType.Even, label: 'Lundi Soir - Semaine Paire' },
+    { weekDay: WeekDay.Tuesday, timeSlot: TimeSlot.Morning, weekType: WeekType.Even, label: 'Mardi Matin - Semaine Paire' },
+    { weekDay: WeekDay.Tuesday, timeSlot: TimeSlot.Evening, weekType: WeekType.Even, label: 'Mardi Soir - Semaine Paire' },
+    { weekDay: WeekDay.Thursday, timeSlot: TimeSlot.Morning, weekType: WeekType.Even, label: 'Jeudi Matin - Semaine Paire' },
+    { weekDay: WeekDay.Thursday, timeSlot: TimeSlot.Evening, weekType: WeekType.Even, label: 'Jeudi Soir - Semaine Paire' },
+    { weekDay: WeekDay.Friday, timeSlot: TimeSlot.Morning, weekType: WeekType.Even, label: 'Vendredi Matin - Semaine Paire' },
+    { weekDay: WeekDay.Friday, timeSlot: TimeSlot.Evening, weekType: WeekType.Even, label: 'Vendredi Soir - Semaine Paire' },
+    
+    { weekDay: WeekDay.Monday, timeSlot: TimeSlot.Morning, weekType: WeekType.Odd, label: 'Lundi Matin - Semaine Impaire' },
+    { weekDay: WeekDay.Monday, timeSlot: TimeSlot.Evening, weekType: WeekType.Odd, label: 'Lundi Soir - Semaine Impaire' },
+    { weekDay: WeekDay.Tuesday, timeSlot: TimeSlot.Morning, weekType: WeekType.Odd, label: 'Mardi Matin - Semaine Impaire' },
+    { weekDay: WeekDay.Tuesday, timeSlot: TimeSlot.Evening, weekType: WeekType.Odd, label: 'Mardi Soir - Semaine Impaire' },
+    { weekDay: WeekDay.Thursday, timeSlot: TimeSlot.Morning, weekType: WeekType.Odd, label: 'Jeudi Matin - Semaine Impaire' },
+    { weekDay: WeekDay.Thursday, timeSlot: TimeSlot.Evening, weekType: WeekType.Odd, label: 'Jeudi Soir - Semaine Impaire' },
+    { weekDay: WeekDay.Friday, timeSlot: TimeSlot.Morning, weekType: WeekType.Odd, label: 'Vendredi Matin - Semaine Impaire' },
+    { weekDay: WeekDay.Friday, timeSlot: TimeSlot.Evening, weekType: WeekType.Odd, label: 'Vendredi Soir - Semaine Impaire' }
+  ];
 
   weekDays = [
     { value: WeekDay.Monday, label: 'Lundi' },
@@ -58,16 +79,34 @@ export class FamilyFormComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(2)]],
       carCapacity: [4, [Validators.required, Validators.min(1), Validators.max(20)]],
       children: this.fb.array([]),
-      requirements: this.fb.array([])
+      unavailabilitySlots: this.fb.group({})
     });
+    
+    // Initialiser les cases à cocher pour les indisponibilités
+    this.initUnavailabilityCheckboxes();
   }
 
   get children(): FormArray {
     return this.familyForm.get('children') as FormArray;
   }
 
-  get unavailabilities(): FormArray {
-    return this.familyForm.get('requirements') as FormArray;
+  get unavailabilitySlots(): FormGroup {
+    return this.familyForm.get('unavailabilitySlots') as FormGroup;
+  }
+  
+  initUnavailabilityCheckboxes(): void {
+    const unavailabilityGroup = this.fb.group({});
+    
+    this.allTimeSlots.forEach(slot => {
+      const key = this.getSlotKey(slot.weekDay, slot.timeSlot, slot.weekType);
+      unavailabilityGroup.addControl(key, this.fb.control(false));
+    });
+    
+    this.familyForm.setControl('unavailabilitySlots', unavailabilityGroup);
+  }
+  
+  getSlotKey(weekDay: WeekDay, timeSlot: TimeSlot, weekType: WeekType): string {
+    return `${weekDay}_${timeSlot}_${weekType}`;
   }
 
   loadFamily(): void {
@@ -100,10 +139,13 @@ export class FamilyFormComponent implements OnInit {
       });
     }
 
-    // Populate unavailabilities
+    // Populate unavailabilities - convertir en cases à cocher
     if (family.requirements) {
-      Array.from(family.requirements).forEach(unavailability => {
-        this.addUnavailability(unavailability);
+      Array.from(family.requirements).forEach(requirement => {
+        if (requirement.weekDay && requirement.timeSlot && requirement.weekType) {
+          const key = this.getSlotKey(requirement.weekDay, requirement.timeSlot, requirement.weekType);
+          this.unavailabilitySlots.get(key)?.setValue(true);
+        }
       });
     }
   }
@@ -125,23 +167,6 @@ export class FamilyFormComponent implements OnInit {
     return childForm;
   }
 
-  createAbsenceDayFormGroup(absenceDay?: AbsenceDays): FormGroup {
-    return this.fb.group({
-      id: [absenceDay?.id || null],
-      weekDay: [absenceDay?.weekDay || '', Validators.required],
-      weekType: [absenceDay?.weekType || '', Validators.required]
-    });
-  }
-
-  createUnavailabilityFormGroup(unavailability?: Requirement): FormGroup {
-    return this.fb.group({
-      id: [unavailability?.id || null],
-      timeSlot: [unavailability?.timeSlot || '', Validators.required],
-      weekDay: [unavailability?.weekDay || '', Validators.required],
-      weekType: [unavailability?.weekType || '', Validators.required]
-    });
-  }
-
   addChild(child?: Child): void {
     this.children.push(this.createChildFormGroup(child));
   }
@@ -150,12 +175,12 @@ export class FamilyFormComponent implements OnInit {
     this.children.removeAt(index);
   }
 
-  addUnavailability(unavailability?: Requirement): void {
-    this.unavailabilities.push(this.createUnavailabilityFormGroup(unavailability));
-  }
-
-  removeUnavailability(index: number): void {
-    this.unavailabilities.removeAt(index);
+  createAbsenceDayFormGroup(absenceDay?: AbsenceDays): FormGroup {
+    return this.fb.group({
+      id: [absenceDay?.id || null],
+      weekDay: [absenceDay?.weekDay || '', Validators.required],
+      weekType: [absenceDay?.weekType || '', Validators.required]
+    });
   }
 
   getChildAbsenceDays(childIndex: number): FormArray {
@@ -177,6 +202,18 @@ export class FamilyFormComponent implements OnInit {
       this.isLoading = true;
       const formValue = this.familyForm.value;
 
+      // Convertir les cases à cocher en requirements
+      const requirements: Requirement[] = [];
+      Object.keys(formValue.unavailabilitySlots).forEach(key => {
+        if (formValue.unavailabilitySlots[key]) {
+          const [weekDay, timeSlot, weekType] = key.split('_');
+          requirements.push({
+            timeSlot: timeSlot as TimeSlot,
+            weekDay: weekDay as WeekDay,
+            weekType: weekType as WeekType
+          });
+        }
+      });
       const family: Family = {
         id: this.familyId,
         name: formValue.name,
@@ -189,7 +226,7 @@ export class FamilyFormComponent implements OnInit {
             absenceDays: child.absenceDays
           });
         }),
-        requirements: formValue.requirements
+        requirements: requirements
       };
 
       const operation = this.isEditMode
@@ -231,5 +268,32 @@ export class FamilyFormComponent implements OnInit {
 
   cancel(): void {
     this.router.navigate(['/families']);
+  }
+  
+  // Méthodes utilitaires pour l'affichage
+  getSlotsByWeekType(weekType: WeekType) {
+    return this.allTimeSlots.filter(slot => slot.weekType === weekType);
+  }
+  
+  getSlotsByDay(slots: any[], weekDay: WeekDay) {
+    return slots.filter(slot => slot.weekDay === weekDay);
+  }
+  
+  getWeekTypeLabel(weekType: WeekType): string {
+    return weekType === WeekType.Even ? 'Semaines Paires' : 'Semaines Impaires';
+  }
+  
+  getWeekDayLabel(weekDay: WeekDay): string {
+    switch (weekDay) {
+      case WeekDay.Monday: return 'Lundi';
+      case WeekDay.Tuesday: return 'Mardi';
+      case WeekDay.Thursday: return 'Jeudi';
+      case WeekDay.Friday: return 'Vendredi';
+      default: return '';
+    }
+  }
+  
+  getTimeSlotLabel(timeSlot: TimeSlot): string {
+    return timeSlot === TimeSlot.Morning ? 'Matin' : 'Soir';
   }
 }
