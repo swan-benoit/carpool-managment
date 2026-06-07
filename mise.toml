@@ -1,0 +1,12 @@
+[tools]
+java = "zulu-21"
+
+[tasks.back-test-template]
+description = "Run workbook template generator tests"
+dir = "carpool-back"
+run = "mvn -Dtest=WorkbookTemplateGeneratorTest,WorkbookTemplateCliTest test"
+
+[tasks.back-generate-template]
+description = "Generate workbook template XLSX"
+dir = "carpool-back"
+run = "mvn -DskipTests exec:java -Dexec.mainClass=com.carpool.workbook.template.WorkbookTemplateCli"
