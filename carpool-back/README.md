@@ -27,6 +27,20 @@ Be aware that it’s not an _über-jar_ as the dependencies are copied into the 
 
 The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
 
+## Workbook stats CLI
+
+From the repository root, compute stats from a workbook with:
+
+```shell script
+npm run stats:workbook -- /path/to/requirements.xlsx
+```
+
+Text view:
+
+```shell script
+mise run back-workbook-stats -- /path/to/requirements.xlsx --format text
+```
+
 If you want to build an _über-jar_, execute the following command:
 
 ```shell script

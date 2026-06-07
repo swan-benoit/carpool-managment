@@ -2,6 +2,7 @@ package com.carpool.schedule.calculator;
 
 
 import com.carpool.family.*;
+import com.carpool.schedule.FamilyPlanningStats;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -41,6 +42,7 @@ public record Trip(WeekDay weekDay, TimeSlot timeSlot, WeekType weekType, Cars c
     public boolean complete() {
         return families.stream()
                 .flatMap(family -> family.children.stream())
+                .filter(child -> FamilyPlanningStats.isPresent(child, weekType, weekDay, timeSlot))
                 .allMatch(child -> cars.Assignments().stream()
                         .anyMatch(car -> car.children().contains(child)));
     }

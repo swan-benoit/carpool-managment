@@ -14,6 +14,10 @@ public class ScheduleService {
         for (WeekType weekType : WeekType.values()) {
             for (WeekDay weekDay : WeekDay.values()) {
                 for (TimeSlot timeSlot : TimeSlot.values()) {
+                    if (!scheduleResult.hasChildrenToTransport(weekType, weekDay, timeSlot)) {
+                        continue;
+                    }
+
                     List<Family> potentialDriver = scheduleResult.driverOrderByCurrentTripMean();
                     for (Family driver : potentialDriver) {
                         List<Child> children = scheduleResult.childrenCandidates(weekType, weekDay, timeSlot, driver);

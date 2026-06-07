@@ -12,6 +12,10 @@ description = "Generate workbook template XLSX"
 dir = "carpool-back"
 run = "mvn -DskipTests exec:java -Dexec.mainClass=com.carpool.workbook.template.WorkbookTemplateCli"
 
+[tasks.back-workbook-stats]
+description = "Compute stats from a workbook XLSX"
+run = "sh ./scripts/workbook-stats.sh"
+
 [tasks.mcp-workbook]
 description = "Start workbook MCP server (stdio)"
 run = "node mcp/workbook-server.mjs"

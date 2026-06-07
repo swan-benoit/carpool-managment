@@ -15,9 +15,9 @@
 
 ## 3. Define slot-level absence model
 
-- [ ] Define the conceptual evolution of child absences to include `timeSlot`.
-- [ ] Define how slot-level absences map to the current Java domain.
-- [ ] Define what remains unchanged in the existing `Family` and `Child` model.
+- [x] Define the conceptual evolution of child absences to include `timeSlot`.
+- [x] Define how slot-level absences map to the current Java domain.
+- [x] Define what remains unchanged in the existing `Family` and `Child` model.
 
 ## 4. Define MCP-mediated prefill
 
@@ -28,18 +28,18 @@
 
 ## 5. Define normalization inputs
 
-- [ ] Define which workbook fields are consumed by metrics computation.
-- [ ] Define which workbook fields are preserved for future planning generation.
-- [ ] Define which workbook fields remain informational only.
+- [x] Define which workbook fields are consumed by metrics computation.
+- [x] Define which workbook fields are preserved for future planning generation.
+- [x] Define which workbook fields remain informational only.
 
 ## 6. Define metrics scope
 
-- [ ] Confirm that initial metrics ignore family preferences.
-- [ ] Confirm that preferences are still captured during the first input pass.
-- [ ] Define how slot-level child absences affect target metrics.
-- [ ] Define workbook-to-Java metrics flow and confirm Excel is not the source of truth for business formulas.
+- [x] Confirm that initial metrics ignore family preferences.
+- [x] Confirm that preferences are still captured during the first input pass.
+- [x] Define how slot-level child absences affect target metrics.
+- [x] Define workbook-to-Java metrics flow and confirm Excel is not the source of truth for business formulas.
 
 ## 7. Prepare future planning generation
 
-- [ ] Define the preserved preference data contract for later planning generation.
+- [x] Define the preserved preference data contract for later planning generation.
 - [ ] Define the boundary between current metrics work and future planning optimization.

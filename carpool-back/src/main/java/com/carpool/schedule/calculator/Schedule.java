@@ -2,6 +2,7 @@ package com.carpool.schedule.calculator;
 
 
 import com.carpool.family.*;
+import com.carpool.schedule.FamilyPlanningStats;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +15,7 @@ public record Schedule(WeekType weekType, List<Trip> trips, List<Family> familie
     public boolean isFull() {
         return stream(WeekDay.values())
                 .allMatch(day -> stream(TimeSlot.values())
-                        .allMatch(slot -> tripExist(day, slot) && allChildrenCanGoToSchool(day, slot))
+                        .allMatch(slot -> !hasChildrenToTransport(day, slot) || (tripExist(day, slot) && allChildrenCanGoToSchool(day, slot)))
                 );
     }
 
@@ -38,7 +39,18 @@ public record Schedule(WeekType weekType, List<Trip> trips, List<Family> familie
     public List<Trip> trips(Long FamilyId) {
         return trips().stream()
                 .filter(trip -> trip.cars().Assignments().stream()
-                        .anyMatch(car -> car.driverFamily().id.equals(FamilyId)))
+                        .anyMatch(car -> FamilyId != null && FamilyId.equals(car.driverFamily().id)))
+                .toList();
+    }
+
+    public List<Trip> trips(Family family) {
+        if (family.id != null) {
+            return trips(family.id);
+        }
+
+        return trips().stream()
+                .filter(trip -> trip.cars().Assignments().stream()
+                        .anyMatch(car -> car.driverFamily() == family))
                 .toList();
     }
 
@@ -65,12 +77,15 @@ public record Schedule(WeekType weekType, List<Trip> trips, List<Family> familie
     }
 
     public List<Child> childrenCandidates(WeekDay weekDay, TimeSlot timeSlot, Family driver) {
-        int leftCapacity = driver.carCapacity - driver.children.size();
+        List<Child> driverChildren = driver.children.stream()
+                .filter(child -> FamilyPlanningStats.isPresent(child, weekType, weekDay, timeSlot))
+                .toList();
+        int leftCapacity = Math.max(0, driver.carCapacity - driverChildren.size());
 
         return Stream.concat(
-                driver.children.stream(),
+                driverChildren.stream(),
                 toAssignChildren(weekDay, timeSlot).stream()
-                        .filter(child -> !driver.children.contains(child))
+                        .filter(child -> !driverChildren.contains(child))
                         .limit(leftCapacity)
         ).toList();
 
@@ -82,6 +97,7 @@ public record Schedule(WeekType weekType, List<Trip> trips, List<Family> familie
         List<Child> allChildren = families.stream().flatMap(family -> family.children.stream()).toList();
 
         return allChildren.stream()
+                .filter(child -> FamilyPlanningStats.isPresent(child, weekType, weekDay, timeSlot))
                 .filter(child -> !assignedChildren.contains(child))
                 .toList();
     }
@@ -147,5 +163,11 @@ public record Schedule(WeekType weekType, List<Trip> trips, List<Family> familie
         return tripForSlot(weekDay, timeSlot)
                 .map(Trip::complete)
                 .orElse(false);
+    }
+
+    public boolean hasChildrenToTransport(WeekDay weekDay, TimeSlot timeSlot) {
+        return families.stream()
+                .flatMap(family -> family.children.stream())
+                .anyMatch(child -> FamilyPlanningStats.isPresent(child, weekType, weekDay, timeSlot));
     }
 }

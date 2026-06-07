@@ -1,7 +1,8 @@
 {
   "scripts": {
     "mcp:workbook": "node mcp/workbook-server.mjs",
-    "test:mcp": "node --test mcp/workbook-tools.test.mjs"
+    "test:mcp": "node --test mcp/workbook-tools.test.mjs",
+    "stats:workbook": "sh ./scripts/workbook-stats.sh"
   },
   "dependencies": {
     "@fission-ai/openspec": "^1.4.1",

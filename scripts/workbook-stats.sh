@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$#" -lt 1 ]; then
+  printf '%s\n' "Usage: mise run back-workbook-stats -- <path-to-workbook.xlsx> [--format json|text]" >&2
+  exit 1
+fi
+
+stdout_file="$(mktemp /tmp/opencode/workbook-stats-stdout.XXXXXX)"
+stderr_file="$(mktemp /tmp/opencode/workbook-stats-stderr.XXXXXX)"
+
+cleanup() {
+  rm -f "$stdout_file" "$stderr_file"
+}
+
+trap cleanup EXIT INT TERM
+
+if sh "./carpool-back/mvnw" -f "./carpool-back/pom.xml" -q exec:java \
+  -Dexec.mainClass=com.carpool.workbook.normalization.WorkbookStatsCli \
+  -Dexec.args="$*" \
+  >"$stdout_file" 2>"$stderr_file"
+then
+  if ! grep -v 'Log4j API could not find a logging provider\|Skipped invalid entry /xl/theme/theme1.xml' "$stdout_file"
+  then
+    cat "$stdout_file" >&2
+    exit 1
+  fi
+else
+  cat "$stderr_file" >&2
+  exit 1
+fi

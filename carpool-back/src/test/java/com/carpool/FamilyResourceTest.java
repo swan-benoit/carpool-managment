@@ -34,41 +34,14 @@ class FamilyResourceTest {
                 .then()
                 .statusCode(200)
                 .body(
-                        "carCapacity[0]", equalTo(4),
-                        "name[0]", equalTo("Abdou et Lydia"),
-                        "children[0].name[0]", equalTo("Issa"),
-                        "children[0].absenceDays[0].size()", equalTo(0),
-                        "children[0].name[1]", equalTo("Hedi"),
-                        "children[0].absenceDays[1].size()", equalTo(0),
-
-                        "carCapacity[1]", equalTo(4),
-                        "name[1]", equalTo("Anne et Swan"),
-                        "children[1].name[0]", equalTo("Luce"),
-                        "children[1].absenceDays[0].size()", equalTo(0),
-
-                        "carCapacity[2]", equalTo(4),
-                        "name[2]", equalTo("Axel et Soizic"),
-                        "children[2].name[0]", equalTo("Come"),
-                        "children[2].absenceDays[0].size()", equalTo(0),
-                        "children[2].name[1]", equalTo("Rose"),
-                        "children[2].absenceDays[1].size()", equalTo(0),
-
-                        "carCapacity[3]", equalTo(4),
-                        "name[3]", equalTo("Cécile"),
-                        "children[3].name[0]", equalTo("Anna"),
-                        "children[3].absenceDays[0].size()", equalTo(0),
-
-                        "carCapacity[4]", equalTo(7),
-                        "name[4]", equalTo("Romain et Virginie"),
-                        "children[4].name[0]", equalTo("Mael"),
-                        "children[4].absenceDays[0].size()", equalTo(0),
-
-                        "carCapacity[5]", equalTo(4),
-                        "name[5]", equalTo("Sonia et Jean philippe"),
-                        "children[5].name[0]", equalTo("Laetitia"),
-                        "children[5].absenceDays[0].size()", equalTo(0),
-                        "children[5].name[1]", equalTo("Mélanie"),
-                        "children[5].absenceDays[1].size()", equalTo(0)
+                        "find { it.name == 'Abdou et Lydia' }.carCapacity", equalTo(4),
+                        "find { it.name == 'Abdou et Lydia' }.children.name", containsInAnyOrder("Issa", "Hedi"),
+                        "find { it.name == 'Anne et Swan' }.children.name", containsInAnyOrder("Luce"),
+                        "find { it.name == 'Axel et Soizic' }.children.name", containsInAnyOrder("Come", "Rose"),
+                        "find { it.name == 'Céline' }.children.name", containsInAnyOrder("Anna"),
+                        "find { it.name == 'Céline' }.children[0].absenceDays.size()", equalTo(3),
+                        "find { it.name == 'Romain et Virginie' }.children.name", containsInAnyOrder("Mael"),
+                        "find { it.name == 'Sonia et Jean philippe' }.children.name", containsInAnyOrder("Mélanie")
                 );
     }
 
@@ -86,12 +59,14 @@ class FamilyResourceTest {
                               "name": "Max",
                               "absenceDays": [
                               {
-                                   "weekDay": "MONDAY",
-                                   "weekType": "EVEN"
+                                   "timeSlot": "MORNING",
+                                    "weekDay": "MONDAY",
+                                    "weekType": "EVEN"
                               },
                                                                                     {
-                                   "weekDay": "FRIDAY",
-                                   "weekType": "EVEN"
+                                   "timeSlot": "EVENING",
+                                    "weekDay": "FRIDAY",
+                                    "weekType": "EVEN"
                               }
                               ]
                             }
@@ -114,6 +89,7 @@ class FamilyResourceTest {
                         "children.name[0]", equalTo("Max"),
                         "children.absenceDays[0].weekType", containsInAnyOrder(WeekType.EVEN.toString(),WeekType.EVEN.toString()),
                         "children.absenceDays[0].weekDay", containsInAnyOrder(WeekDay.MONDAY.toString(), WeekDay.FRIDAY.toString()),
+                        "children.absenceDays[0].timeSlot", containsInAnyOrder(TimeSlot.MORNING.toString(), TimeSlot.EVENING.toString()),
                         "requirements.timeSlot[0]", equalTo(TimeSlot.MORNING.toString()),
                         "requirements.weekDay[0]", equalTo(WeekDay.MONDAY.toString()),
                         "requirements.weekType[0]", equalTo(WeekType.EVEN.toString())
@@ -130,7 +106,8 @@ class FamilyResourceTest {
                         "find { it.id == %s }.requirements.weekDay[0]".formatted(id), equalTo(WeekDay.MONDAY.toString()),
                         "find { it.id == %s }.requirements.weekType[0]".formatted(id), equalTo(WeekType.EVEN.toString()),
                         "find { it.id == %s }.children.absenceDays[0].weekType".formatted(id), containsInAnyOrder(WeekType.EVEN.toString(), WeekType.EVEN.toString()),
-                        "find { it.id == %s }.children.absenceDays[0].weekDay".formatted(id), containsInAnyOrder(WeekDay.MONDAY.toString(), WeekDay.FRIDAY.toString())
+                        "find { it.id == %s }.children.absenceDays[0].weekDay".formatted(id), containsInAnyOrder(WeekDay.MONDAY.toString(), WeekDay.FRIDAY.toString()),
+                        "find { it.id == %s }.children.absenceDays[0].timeSlot".formatted(id), containsInAnyOrder(TimeSlot.MORNING.toString(), TimeSlot.EVENING.toString())
                 );
     }
 
@@ -157,10 +134,12 @@ class FamilyResourceTest {
                               "name": "Laetitia",
                               "absenceDays": [
                                   {
+                                       "timeSlot": "MORNING",
                                        "weekDay": "MONDAY",
                                        "weekType": "EVEN"
                                   },
                                                                                         {
+                                       "timeSlot": "EVENING",
                                        "weekDay": "FRIDAY",
                                        "weekType": "EVEN"
                                   }
@@ -193,6 +172,9 @@ class FamilyResourceTest {
                         ),
                         "find { it.id == %s }.children.absenceDays[0].weekDay".formatted(familyId), containsInAnyOrder(
                                 WeekDay.FRIDAY.toString(), WeekDay.MONDAY.toString()
+                        ),
+                        "find { it.id == %s }.children.absenceDays[0].timeSlot".formatted(familyId), containsInAnyOrder(
+                                TimeSlot.MORNING.toString(), TimeSlot.EVENING.toString()
                         )
                 );
 

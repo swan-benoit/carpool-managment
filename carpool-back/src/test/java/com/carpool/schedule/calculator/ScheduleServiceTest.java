@@ -1,7 +1,12 @@
 package com.carpool.schedule.calculator;
 
 import com.carpool.family.Child;
+import com.carpool.family.AbsenceDays;
 import com.carpool.family.Family;
+import com.carpool.family.TimeSlot;
+import com.carpool.family.WeekDay;
+import com.carpool.family.WeekType;
+import com.carpool.schedule.FamilyPlanningStats;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -108,6 +113,23 @@ class ScheduleServiceTest {
     }
 
     @Test
+    void ignores_absent_slot_when_generating_schedule_and_stats() {
+        var scheduleService = new ScheduleService();
+        Family family = mael_family();
+        AbsenceDays absence = new AbsenceDays();
+        absence.weekType = WeekType.EVEN;
+        absence.weekDay = WeekDay.MONDAY;
+        absence.timeSlot = TimeSlot.MORNING;
+        family.children.getFirst().absenceDays.add(absence);
+
+        var schedule = scheduleService.generateSchedule(List.of(family));
+
+        assertThat(schedule.isFull()).isTrue();
+        assertThat(schedule.perfectMeanTripPerWeek(family)).isEqualTo(7.5);
+        assertThat(schedule.meanTripPerWeek(family)).isEqualTo(7.5);
+    }
+
+    @Test
     void generate_schedule_for_3_family_with_2_child() {
         var scheduleService = new ScheduleService();
         var schedule = scheduleService.generateSchedule(List.of(
@@ -133,6 +155,23 @@ class ScheduleServiceTest {
     }
 
     @Test
+    void perfect_trip_targets_sum_to_required_weekly_trips() {
+        List<Family> families = List.of(
+                mael_family(),
+                luce_family(),
+                come_rose_family(),
+                hedi_issa_family()
+        );
+
+        double totalPerfectTrips = families.stream()
+                .mapToDouble(family -> FamilyPlanningStats.perfectMeanTripPerWeek(family, families))
+                .sum();
+
+        assertThat(totalPerfectTrips).isEqualTo(FamilyPlanningStats.totalRequiredTripsPerWeek(families));
+        assertThat(totalPerfectTrips).isEqualTo(8.0);
+    }
+
+    @Test
     public void generate_schedule_for_4_family_with_2_child() {
         var scheduleService = new ScheduleService();
         var schedule = scheduleService.generateSchedule(List.of(
@@ -142,10 +181,10 @@ class ScheduleServiceTest {
                 hedi_issa_family()
         ));
 
-        assertThat(schedule.perfectMeanTripPerWeek(mael_family())).isEqualTo(2.6666666666666665);
-        assertThat(schedule.perfectMeanTripPerWeek(luce_family())).isEqualTo(2.6666666666666665);
-        assertThat(schedule.perfectMeanTripPerWeek(come_rose_family())).isEqualTo(5.333333333333333);
-        assertThat(schedule.perfectMeanTripPerWeek(hedi_issa_family())).isEqualTo(5.333333333333333);
+        assertThat(schedule.perfectMeanTripPerWeek(mael_family())).isEqualTo(1.3333333333333333);
+        assertThat(schedule.perfectMeanTripPerWeek(luce_family())).isEqualTo(1.3333333333333333);
+        assertThat(schedule.perfectMeanTripPerWeek(come_rose_family())).isEqualTo(2.6666666666666665);
+        assertThat(schedule.perfectMeanTripPerWeek(hedi_issa_family())).isEqualTo(2.6666666666666665);
 
         assertThat(schedule.isFull()).isTrue();
 

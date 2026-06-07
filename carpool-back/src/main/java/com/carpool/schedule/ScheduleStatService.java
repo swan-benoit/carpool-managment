@@ -36,25 +36,6 @@ public class ScheduleStatService {
     }
 
     public Double perfectMeanTripPerWeek(Family family, List<Family> families, FullSchedule schedule) {
-        // 2. Calcul du nombre total de "présences enfant" sur tous les créneaux
-        double totalAvailableSlots = families.stream()
-                .flatMap(f -> f.children.stream())
-                .mapToDouble(child -> {
-                    // 16 créneaux possibles (4 jours × 2 trajets × 2 semaines)
-                    // Moins les créneaux où l'enfant est absent
-                    return 16 - child.absenceDays.size();
-                })
-                .sum();
-
-        double familyAvailableSlots = family.children.stream()
-                .mapToDouble(child -> 16 - child.absenceDays.size())
-                .sum();
-
-        if (totalAvailableSlots == 0) return 0.0;
-
-        var totalTrips = schedule.evenSchedule.trips.size() + schedule.oddSchedule.trips.size();
-        int totalTripsPerWeek = totalTrips / 2;
-
-        return totalTripsPerWeek * (familyAvailableSlots / totalAvailableSlots);
+        return FamilyPlanningStats.perfectMeanTripPerWeek(family, families);
     }
 }

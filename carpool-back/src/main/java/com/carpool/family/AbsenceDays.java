@@ -12,6 +12,7 @@ public class AbsenceDays extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
+    public TimeSlot timeSlot;
     public WeekDay weekDay;
     public WeekType weekType;
 }
