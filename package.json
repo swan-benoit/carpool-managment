@@ -1,5 +1,12 @@
 {
+  "scripts": {
+    "mcp:workbook": "node mcp/workbook-server.mjs",
+    "test:mcp": "node --test mcp/workbook-tools.test.mjs"
+  },
   "dependencies": {
-    "@fission-ai/openspec": "^1.4.1"
+    "@fission-ai/openspec": "^1.4.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "exceljs": "^4.4.0",
+    "zod": "^4.4.3"
   }
 }

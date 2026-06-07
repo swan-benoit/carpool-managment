@@ -1,0 +1,28 @@
+[INFO] 2026-06-07T13:31:17.271Z handleHookRunStop started
+[INFO] 2026-06-07T13:31:17.272Z Hook input received
+[INFO] 2026-06-07T13:31:17.272Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Session ID: d0296ac1-10e3-4281-b484-436da8f6edd7
+[INFO] 2026-06-07T13:31:17.272Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-06-07T13:31:17.272Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-06-07T13:31:17.273Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Checking session file at: /home/swan/.a5c/state/d0296ac1-10e3-4281-b484-436da8f6edd7.md
+[INFO] 2026-06-07T13:31:17.277Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] No run associated with session — allowing exit
+[INFO] 2026-06-07T13:33:46.673Z handleHookRunStop started
+[INFO] 2026-06-07T13:33:46.677Z Hook input received
+[INFO] 2026-06-07T13:33:46.677Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Session ID: d0296ac1-10e3-4281-b484-436da8f6edd7
+[INFO] 2026-06-07T13:33:46.677Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-06-07T13:33:46.677Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-06-07T13:33:46.677Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Checking session file at: /home/swan/.a5c/state/d0296ac1-10e3-4281-b484-436da8f6edd7.md
+[INFO] 2026-06-07T13:33:46.678Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] No active loop found for session d0296ac1-10e3-4281-b484-436da8f6edd7 — allowing exit
+[INFO] 2026-06-07T13:35:24.404Z handleHookRunStop started
+[INFO] 2026-06-07T13:35:24.406Z Hook input received
+[INFO] 2026-06-07T13:35:24.406Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Session ID: d0296ac1-10e3-4281-b484-436da8f6edd7
+[INFO] 2026-06-07T13:35:24.406Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-06-07T13:35:24.406Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-06-07T13:35:24.406Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Checking session file at: /home/swan/.a5c/state/d0296ac1-10e3-4281-b484-436da8f6edd7.md
+[INFO] 2026-06-07T13:35:24.406Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] No active loop found for session d0296ac1-10e3-4281-b484-436da8f6edd7 — allowing exit
+[INFO] 2026-06-07T13:36:27.088Z handleHookRunStop started
+[INFO] 2026-06-07T13:36:27.090Z Hook input received
+[INFO] 2026-06-07T13:36:27.090Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Session ID: d0296ac1-10e3-4281-b484-436da8f6edd7
+[INFO] 2026-06-07T13:36:27.090Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-06-07T13:36:27.090Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-06-07T13:36:27.091Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] Checking session file at: /home/swan/.a5c/state/d0296ac1-10e3-4281-b484-436da8f6edd7.md
+[INFO] 2026-06-07T13:36:27.091Z [session=d0296ac1-10e3-4281-b484-436da8f6edd7] No active loop found for session d0296ac1-10e3-4281-b484-436da8f6edd7 — allowing exit
