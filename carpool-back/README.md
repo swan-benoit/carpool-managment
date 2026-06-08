@@ -41,6 +41,12 @@ Text view:
 mise run back-workbook-stats -- /path/to/requirements.xlsx --format text
 ```
 
+Include generated planning score:
+
+```shell script
+mise run back-workbook-stats -- /path/to/requirements.xlsx --include-planning-score
+```
+
 If you want to build an _über-jar_, execute the following command:
 
 ```shell script
