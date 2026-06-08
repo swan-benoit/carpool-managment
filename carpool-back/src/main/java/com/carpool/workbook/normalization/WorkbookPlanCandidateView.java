@@ -6,6 +6,7 @@ public record WorkbookPlanCandidateView(
         int rank,
         WorkbookPlanningMetadata planningMetadata,
         PlanningScore planningScore,
-        WorkbookPlanningView planning
+        WorkbookPlanningView planning,
+        Double minimumDistanceToHigherRanked
 ) {
 }

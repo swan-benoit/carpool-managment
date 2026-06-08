@@ -29,9 +29,14 @@ public class WorkbookStatsCli {
     private static final String TEXT_FORMAT = "text";
     private static final String GREEDY_PLANNER = "greedy";
     private static final String BRUTE_FORCE_PLANNER = "brute-force";
+    private static final String UNLIMITED = "unlimited";
 
     public static void main(String[] args) throws IOException {
         Arguments parsedArguments = parseArguments(args);
+        Long effectiveSeed = parsedArguments.seed();
+        if (BRUTE_FORCE_PLANNER.equals(parsedArguments.planner()) && effectiveSeed == null) {
+            effectiveSeed = System.currentTimeMillis();
+        }
 
         Path workbookPath = Path.of(parsedArguments.workbookPath());
         WorkbookFamilyReader reader = new WorkbookFamilyReader();
@@ -56,22 +61,36 @@ public class WorkbookStatsCli {
         if (parsedArguments.includePlanningScore()) {
             if (BRUTE_FORCE_PLANNER.equals(parsedArguments.planner())) {
                 BruteForceSchedulePlanner.SearchSummary searchSummary = new BruteForceSchedulePlanner()
-                        .generateTopSchedules(normalizedFamilies, parsedArguments.maxStates(), parsedArguments.top());
-                planCandidates = toPlanCandidateViews(searchSummary, parsedArguments.includePlanningOutput());
-                if (!searchSummary.candidates().isEmpty()) {
-                    BruteForceSchedulePlanner.SearchCandidate best = searchSummary.candidates().getFirst();
+                        .generateTopSchedules(normalizedFamilies, parsedArguments.maxStates(), parsedArguments.top(), parsedArguments.maxSeconds(), effectiveSeed, parsedArguments.restarts(), parsedArguments.maxFamilyTrips());
+                List<BruteForceSchedulePlanner.SearchCandidate> boundedCandidates = searchSummary.candidates().stream()
+                        .filter(candidate -> respectsFamilyTripCaps(candidate.planningScore(), parsedArguments.maxFamilyTrips()))
+                        .toList();
+                BruteForceSchedulePlanner.SearchSummary boundedSummary = new BruteForceSchedulePlanner.SearchSummary(
+                        boundedCandidates,
+                        searchSummary.exploredStates(),
+                        searchSummary.searchCompleted()
+                );
+                planCandidates = toPlanCandidateViews(boundedSummary, parsedArguments.includePlanningOutput(), parsedArguments.maxSeconds(), effectiveSeed, parsedArguments.restarts());
+                if (!boundedSummary.candidates().isEmpty()) {
+                    BruteForceSchedulePlanner.SearchCandidate best = boundedSummary.candidates().getFirst();
                     planning = parsedArguments.includePlanningOutput() ? toPlanningView(best.scheduleResult()) : null;
                     planningScore = best.planningScore();
-                    planningMetadata = new WorkbookPlanningMetadata(BRUTE_FORCE_PLANNER, searchSummary.exploredStates(), searchSummary.searchCompleted(), parsedArguments.maxSeconds());
+                    planningMetadata = new WorkbookPlanningMetadata(BRUTE_FORCE_PLANNER, boundedSummary.exploredStates(), boundedSummary.searchCompleted(), parsedArguments.maxSeconds(), effectiveSeed, parsedArguments.restarts(), parsedArguments.maxFamilyTrips());
                 } else {
-                    planningMetadata = new WorkbookPlanningMetadata(BRUTE_FORCE_PLANNER, searchSummary.exploredStates(), searchSummary.searchCompleted(), parsedArguments.maxSeconds());
+                    planningMetadata = new WorkbookPlanningMetadata(BRUTE_FORCE_PLANNER, boundedSummary.exploredStates(), boundedSummary.searchCompleted(), parsedArguments.maxSeconds(), effectiveSeed, parsedArguments.restarts(), parsedArguments.maxFamilyTrips());
                 }
             } else {
-                ScheduleResult scheduleResult = new ScheduleService().generateSchedule(families);
+                ScheduleResult scheduleResult = new ScheduleService().generateSchedule(families, parsedArguments.maxFamilyTrips());
                 planning = parsedArguments.includePlanningOutput() ? toPlanningView(scheduleResult) : null;
                 planningScore = new PlanningScorer().score(scheduleResult, normalizedFamilies);
-                planningMetadata = new WorkbookPlanningMetadata(GREEDY_PLANNER, null, true, null);
-                planCandidates = List.of(new WorkbookPlanCandidateView(1, planningMetadata, planningScore, planning));
+                planningMetadata = new WorkbookPlanningMetadata(GREEDY_PLANNER, null, true, null, null, 1, parsedArguments.maxFamilyTrips());
+                if (respectsFamilyTripCaps(planningScore, parsedArguments.maxFamilyTrips())) {
+                    planCandidates = List.of(new WorkbookPlanCandidateView(1, planningMetadata, planningScore, planning, null));
+                } else {
+                    planningScore = null;
+                    planning = null;
+                    planCandidates = List.of();
+                }
             }
         }
         WorkbookPerfectStatsResponse response = new WorkbookPerfectStatsResponse(
@@ -98,10 +117,14 @@ public class WorkbookStatsCli {
         String format = JSON_FORMAT;
         boolean includePlanningScore = false;
         boolean includePlanningOutput = false;
+        boolean exhaustive = false;
         String planner = GREEDY_PLANNER;
         long maxStates = BruteForceSchedulePlanner.DEFAULT_MAX_EXPLORED_STATES;
         double maxSeconds = BruteForceSchedulePlanner.DEFAULT_MAX_SECONDS;
+        Long seed = null;
+        int restarts = BruteForceSchedulePlanner.DEFAULT_RESTARTS;
         int top = 1;
+        Map<String, Double> maxFamilyTrips = new HashMap<>();
 
         for (int index = 0; index < args.length; index++) {
             String argument = args[index];
@@ -120,6 +143,10 @@ public class WorkbookStatsCli {
                 includePlanningOutput = true;
                 continue;
             }
+            if ("--exhaustive".equals(argument)) {
+                exhaustive = true;
+                continue;
+            }
             if ("--planner".equals(argument)) {
                 if (index + 1 >= args.length) {
                     throw new IllegalArgumentException("Missing value after --planner");
@@ -127,18 +154,45 @@ public class WorkbookStatsCli {
                 planner = args[++index].toLowerCase(Locale.ROOT);
                 continue;
             }
+            if ("--seed".equals(argument)) {
+                if (index + 1 >= args.length) {
+                    throw new IllegalArgumentException("Missing value after --seed");
+                }
+                seed = Long.parseLong(args[++index]);
+                continue;
+            }
+            if ("--restarts".equals(argument)) {
+                if (index + 1 >= args.length) {
+                    throw new IllegalArgumentException("Missing value after --restarts");
+                }
+                restarts = Integer.parseInt(args[++index]);
+                continue;
+            }
+            if ("--max-family-trips".equals(argument)) {
+                if (index + 1 >= args.length) {
+                    throw new IllegalArgumentException("Missing value after --max-family-trips");
+                }
+                parseFamilyTripLimit(args[++index], maxFamilyTrips);
+                continue;
+            }
             if ("--max-states".equals(argument)) {
                 if (index + 1 >= args.length) {
                     throw new IllegalArgumentException("Missing value after --max-states");
                 }
-                maxStates = Long.parseLong(args[++index]);
+                String value = args[++index];
+                maxStates = UNLIMITED.equalsIgnoreCase(value)
+                        ? BruteForceSchedulePlanner.UNLIMITED_MAX_EXPLORED_STATES
+                        : Long.parseLong(value);
                 continue;
             }
             if ("--max-seconds".equals(argument)) {
                 if (index + 1 >= args.length) {
                     throw new IllegalArgumentException("Missing value after --max-seconds");
                 }
-                maxSeconds = Double.parseDouble(args[++index]);
+                String value = args[++index];
+                maxSeconds = UNLIMITED.equalsIgnoreCase(value)
+                        ? BruteForceSchedulePlanner.UNLIMITED_MAX_SECONDS
+                        : Double.parseDouble(value);
                 continue;
             }
             if ("--top".equals(argument)) {
@@ -163,11 +217,21 @@ public class WorkbookStatsCli {
         if (top <= 0) {
             throw new IllegalArgumentException("--top must be greater than 0");
         }
-        if (maxSeconds <= 0.0) {
+        if (restarts <= 0) {
+            throw new IllegalArgumentException("--restarts must be greater than 0");
+        }
+        if (!Double.isInfinite(maxSeconds) && maxSeconds <= 0.0) {
             throw new IllegalArgumentException("--max-seconds must be greater than 0");
         }
+        if (maxStates <= 0) {
+            throw new IllegalArgumentException("--max-states must be greater than 0");
+        }
+        if (exhaustive) {
+            maxStates = BruteForceSchedulePlanner.UNLIMITED_MAX_EXPLORED_STATES;
+            maxSeconds = BruteForceSchedulePlanner.UNLIMITED_MAX_SECONDS;
+        }
 
-        return new Arguments(positionalArgs.getFirst(), format, includePlanningScore, includePlanningOutput, planner, maxStates, maxSeconds, top);
+        return new Arguments(positionalArgs.getFirst(), format, includePlanningScore, includePlanningOutput, planner, maxStates, maxSeconds, seed, restarts, top, exhaustive, Map.copyOf(maxFamilyTrips));
     }
 
     private static String formatText(WorkbookPerfectStatsResponse response) {
@@ -207,12 +271,37 @@ public class WorkbookStatsCli {
                             .append(response.planningMetadata().exploredStates())
                             .append('\n');
                 }
+                if (response.planningMetadata().seed() != null) {
+                    builder.append("- seed: ")
+                            .append(response.planningMetadata().seed())
+                            .append('\n');
+                }
+                if (response.planningMetadata().restarts() != null) {
+                    builder.append("- restarts: ")
+                            .append(response.planningMetadata().restarts())
+                            .append('\n');
+                }
+                if (!response.planningMetadata().maxFamilyTrips().isEmpty()) {
+                    builder.append("- max family trips: ")
+                            .append(response.planningMetadata().maxFamilyTrips())
+                            .append('\n');
+                }
+                if (response.planningMetadata().maxSeconds() != null) {
+                    builder.append("- max seconds: ")
+                            .append(formatLimitSeconds(response.planningMetadata().maxSeconds()))
+                            .append('\n');
+                }
                 builder.append("- search completed: ")
                         .append(response.planningMetadata().searchCompleted())
                         .append('\n');
             }
             builder.append("- total score: ")
                     .append(response.planningScore().totalScore())
+                    .append(" (preferences: ")
+                    .append(response.planningScore().totalScore() - response.planningScore().redundantDrivers() * -10)
+                    .append(", redundant penalty: ")
+                    .append(response.planningScore().redundantDrivers() * -10)
+                    .append(')')
                     .append('\n');
             builder.append("- complete: ")
                     .append(response.planningScore().complete())
@@ -228,6 +317,9 @@ public class WorkbookStatsCli {
                     .append('\n');
             builder.append("- missing required transport slots: ")
                     .append(response.planningScore().missingRequiredTransportSlots())
+                    .append('\n');
+            builder.append("- redundant drivers: ")
+                    .append(response.planningScore().redundantDrivers())
                     .append('\n');
             builder.append("- impossible assignments: ")
                     .append(response.planningScore().impossibleAssignments())
@@ -299,14 +391,16 @@ public class WorkbookStatsCli {
             for (WorkbookPlanCandidateView candidate : response.planCandidates()) {
                 builder.append("#")
                         .append(candidate.rank())
-                        .append(" | planner: ")
-                        .append(candidate.planningMetadata().planner())
                         .append(" | total score: ")
                         .append(candidate.planningScore().totalScore())
+                        .append(" | redundant drivers: ")
+                        .append(candidate.planningScore().redundantDrivers())
                         .append(" | justice min: ")
                         .append(formatNumber(candidate.planningScore().justice().minimumJusticeScore()))
                         .append(" | justice avg: ")
                         .append(formatNumber(candidate.planningScore().justice().averageJusticeScore()))
+                        .append(" | diversity: ")
+                        .append(candidate.minimumDistanceToHigherRanked() == null ? "n/a" : formatNumber(candidate.minimumDistanceToHigherRanked()))
                         .append('\n');
                 appendJusticeTable(builder, candidate.planningScore());
                 if (candidate.planning() != null) {
@@ -321,16 +415,33 @@ public class WorkbookStatsCli {
 
     private static List<WorkbookPlanCandidateView> toPlanCandidateViews(
             BruteForceSchedulePlanner.SearchSummary searchSummary,
-            boolean includePlanningOutput
+            boolean includePlanningOutput,
+            double maxSeconds,
+            long seed,
+            int restarts
     ) {
         List<WorkbookPlanCandidateView> candidates = new ArrayList<>();
         int rank = 1;
         for (BruteForceSchedulePlanner.SearchCandidate candidate : searchSummary.candidates()) {
+            Double minDistanceToHigherRanked = candidates.stream()
+                    .mapToDouble(existing -> BruteForceSchedulePlanner.planningDistance(
+                            candidate.scheduleResult(),
+                            searchSummary.candidates().get(existing.rank() - 1).scheduleResult()))
+                    .min()
+                    .isPresent()
+                    ? candidates.stream()
+                            .mapToDouble(existing -> BruteForceSchedulePlanner.planningDistance(
+                                    candidate.scheduleResult(),
+                                    searchSummary.candidates().get(existing.rank() - 1).scheduleResult()))
+                            .min()
+                            .orElse(1.0)
+                    : null;
             candidates.add(new WorkbookPlanCandidateView(
                     rank++,
-                    new WorkbookPlanningMetadata(BRUTE_FORCE_PLANNER, searchSummary.exploredStates(), searchSummary.searchCompleted(), null),
+                    new WorkbookPlanningMetadata(BRUTE_FORCE_PLANNER, searchSummary.exploredStates(), searchSummary.searchCompleted(), maxSeconds, seed, restarts, Map.of()),
                     candidate.planningScore(),
-                    includePlanningOutput ? toPlanningView(candidate.scheduleResult()) : null
+                    includePlanningOutput ? toPlanningView(candidate.scheduleResult()) : null,
+                    minDistanceToHigherRanked
             ));
         }
         return candidates;
@@ -432,6 +543,36 @@ public class WorkbookStatsCli {
         return String.format(Locale.US, "%.3f", value);
     }
 
-    private record Arguments(String workbookPath, String format, boolean includePlanningScore, boolean includePlanningOutput, String planner, long maxStates, double maxSeconds, int top) {
+    private static String formatLimitSeconds(double value) {
+        return Double.isInfinite(value) ? UNLIMITED : formatNumber(value);
+    }
+
+    private static void parseFamilyTripLimit(String raw, Map<String, Double> maxFamilyTrips) {
+        int separatorIndex = raw.lastIndexOf('=');
+        if (separatorIndex <= 0 || separatorIndex == raw.length() - 1) {
+            throw new IllegalArgumentException("Expected --max-family-trips <Family Name>=<limit>");
+        }
+        String familyName = raw.substring(0, separatorIndex).trim();
+        double limit = Double.parseDouble(raw.substring(separatorIndex + 1).trim());
+        if (familyName.isEmpty() || limit <= 0.0) {
+            throw new IllegalArgumentException("Expected --max-family-trips <Family Name>=<positive limit>");
+        }
+        maxFamilyTrips.put(familyName, limit);
+    }
+
+    private static boolean respectsFamilyTripCaps(PlanningScore planningScore, Map<String, Double> maxFamilyTrips) {
+        if (planningScore == null || maxFamilyTrips.isEmpty()) {
+            return true;
+        }
+        for (FamilyJusticeScore familyJustice : planningScore.justice().families()) {
+            Double maxTrips = maxFamilyTrips.get(familyJustice.familyName());
+            if (maxTrips != null && familyJustice.actualMeanTripPerWeek() > maxTrips + 1.0e-9) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private record Arguments(String workbookPath, String format, boolean includePlanningScore, boolean includePlanningOutput, String planner, long maxStates, double maxSeconds, Long seed, int restarts, int top, boolean exhaustive, Map<String, Double> maxFamilyTrips) {
     }
 }

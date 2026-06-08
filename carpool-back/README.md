@@ -55,6 +55,14 @@ Use brute-force planner for small workbooks:
 mise run back-workbook-plan -- /path/to/requirements.xlsx --planner brute-force --max-seconds 10 --top 5 --format text
 ```
 
+If you omit `--seed`, the tool chooses one and prints it in the output so you can replay the same search later.
+
+Run exhaustive search explicitly:
+
+```shell script
+mise run back-workbook-plan -- /path/to/requirements.xlsx --planner brute-force --exhaustive --top 5 --format text
+```
+
 If you want to build an _über-jar_, execute the following command:
 
 ```shell script

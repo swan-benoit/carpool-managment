@@ -48,7 +48,6 @@ class WorkbookStatsCliTest {
         assertThat(output).contains("Planning score:");
         assertThat(output).contains("- planner:");
         assertThat(output).contains("- search completed:");
-        assertThat(output).contains("Planning:");
         assertThat(output).contains("Even week:");
         assertThat(output).contains("Odd week:");
         assertThat(output).contains("- justice perfect:");

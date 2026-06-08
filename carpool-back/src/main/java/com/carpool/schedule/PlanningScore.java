@@ -14,6 +14,7 @@ public record PlanningScore(
         int missingRequiredTransportSlots,
         double completionRatio,
         PlanningJusticeScore justice,
-        List<FamilyPlanningScore> families
+        List<FamilyPlanningScore> families,
+        int redundantDrivers
 ) {
 }

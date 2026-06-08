@@ -16,9 +16,15 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
+exec_args=""
+for arg in "$@"; do
+  escaped_arg=$(printf "%s" "$arg" | sed "s/'/'\\''/g")
+  exec_args="$exec_args '$escaped_arg'"
+done
+
 if sh "./carpool-back/mvnw" -f "./carpool-back/pom.xml" -q exec:java \
   -Dexec.mainClass=com.carpool.workbook.normalization.WorkbookStatsCli \
-  -Dexec.args="$*" \
+  -Dexec.args="$exec_args" \
   >"$stdout_file" 2>"$stderr_file"
 then
   if ! grep -v 'Log4j API could not find a logging provider\|Skipped invalid entry /xl/theme/theme1.xml' "$stdout_file"

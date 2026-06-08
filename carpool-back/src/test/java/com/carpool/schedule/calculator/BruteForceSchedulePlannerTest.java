@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,12 +61,15 @@ class BruteForceSchedulePlannerTest {
         NormalizedWorkbookFamily familyA = normalizedFamilyWithAbsence("Famille A", "Alice", WeekType.EVEN, WeekDay.MONDAY, TimeSlot.MORNING);
         NormalizedWorkbookFamily familyB = normalizedFamily("Famille B", "Bob", "OK");
         List<BruteForceSchedulePlanner.SlotRef> orderedSlots = BruteForceSchedulePlanner.orderedSlots(
-                List.of(familyA.family(), familyB.family())
+                List.of(familyA.family(), familyB.family()),
+                0L
         );
 
-        assertThat(orderedSlots.getFirst().weekType()).isEqualTo(WeekType.EVEN);
-        assertThat(orderedSlots.getFirst().weekDay()).isEqualTo(WeekDay.MONDAY);
-        assertThat(orderedSlots.getFirst().timeSlot()).isEqualTo(TimeSlot.EVENING);
+        assertThat(orderedSlots.getFirst().presentChildren()).isEqualTo(2);
+        assertThat(orderedSlots.getFirst().requiredTrips()).isEqualTo(1);
+        assertThat(orderedSlots.getLast().weekType()).isEqualTo(WeekType.EVEN);
+        assertThat(orderedSlots.getLast().weekDay()).isEqualTo(WeekDay.MONDAY);
+        assertThat(orderedSlots.getLast().timeSlot()).isEqualTo(TimeSlot.MORNING);
     }
 
     @Test
@@ -107,6 +111,25 @@ class BruteForceSchedulePlannerTest {
         );
 
         assertThat(BruteForceSchedulePlanner.planningSignature(left)).isEqualTo(BruteForceSchedulePlanner.planningSignature(right));
+    }
+
+    @Test
+    void respects_family_trip_cap() {
+        NormalizedWorkbookFamily familyA = normalizedFamily("Famille A", "Alice", "OK");
+        NormalizedWorkbookFamily familyB = normalizedFamily("Famille B", "Bob", "OK");
+        List<NormalizedWorkbookFamily> families = List.of(familyA, familyB);
+
+        BruteForceSchedulePlanner.SearchSummary summary = new BruteForceSchedulePlanner(new PlanningScorer())
+                .generateTopSchedules(families, 500_000, 1, 10.0, 0L, 1, Map.of("Famille A", 3.0));
+
+        assertThat(summary.candidates()).isNotEmpty();
+        PlanningScore score = summary.candidates().getFirst().planningScore();
+        assertThat(score.complete()).isTrue();
+        assertThat(score.justice().families().stream()
+                .filter(family -> family.familyName().equals("Famille A"))
+                .findFirst()
+                .orElseThrow()
+                .actualMeanTripPerWeek()).isLessThanOrEqualTo(3.0);
     }
 
     private NormalizedWorkbookFamily normalizedFamily(String familyName, String childName, String mondayEvenPreference) {

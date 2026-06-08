@@ -12,6 +12,7 @@ import com.carpool.schedule.calculator.Trip;
 import com.carpool.workbook.normalization.NormalizedWorkbookFamily;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -20,6 +21,8 @@ import java.util.Set;
 
 @ApplicationScoped
 public class PlanningScorer {
+
+    static final int REDUNDANT_DRIVER_PENALTY = -10;
 
     public PlanningScore score(ScheduleResult scheduleResult, List<NormalizedWorkbookFamily> families) {
         Map<String, Map<SlotKey, PreferenceValue>> preferencesByFamily = preferencesByFamily(families);
@@ -36,8 +39,10 @@ public class PlanningScorer {
                 .toList();
         PlanningJusticeScore justice = computeJustice(scheduleResult, familyScores);
 
+        int redundantDrivers = computeRedundantDrivers(scheduleResult);
+        int familyTotal = familyScores.stream().mapToInt(FamilyPlanningScore::totalScore).sum();
         return new PlanningScore(
-                familyScores.stream().mapToInt(FamilyPlanningScore::totalScore).sum(),
+                familyTotal + redundantDrivers * REDUNDANT_DRIVER_PENALTY,
                 familyScores.stream().mapToInt(FamilyPlanningScore::impossibleAssignments).sum(),
                 familyScores.stream().mapToInt(FamilyPlanningScore::avoidAssignments).sum(),
                 familyScores.stream().mapToInt(FamilyPlanningScore::preferredAssignments).sum(),
@@ -48,8 +53,37 @@ public class PlanningScorer {
                 completeness.missingRequiredTransportSlots(),
                 completeness.completionRatio(),
                 justice,
-                familyScores
+                familyScores,
+                redundantDrivers
         );
+    }
+
+    private int computeRedundantDrivers(ScheduleResult scheduleResult) {
+        int redundant = 0;
+        for (Schedule schedule : List.of(scheduleResult.even(), scheduleResult.odd())) {
+            for (Trip trip : schedule.trips()) {
+                List<Assignment> assignments = trip.cars().Assignments().stream()
+                        .filter(a -> !a.children().isEmpty())
+                        .toList();
+                if (assignments.size() <= 1) continue;
+
+                int childrenCount = assignments.stream().mapToInt(a -> a.children().size()).sum();
+                List<Integer> capacities = assignments.stream()
+                        .map(a -> a.driverFamily().carCapacity)
+                        .sorted(Comparator.reverseOrder())
+                        .toList();
+
+                int minimumDrivers = 0;
+                int remaining = childrenCount;
+                for (int capacity : capacities) {
+                    minimumDrivers++;
+                    remaining -= capacity;
+                    if (remaining <= 0) break;
+                }
+                redundant += Math.max(0, assignments.size() - minimumDrivers);
+            }
+        }
+        return redundant;
     }
 
     private PlanningJusticeScore computeJustice(ScheduleResult scheduleResult, List<FamilyPlanningScore> familyScores) {
