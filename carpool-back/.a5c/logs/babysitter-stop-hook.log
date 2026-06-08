@@ -1,0 +1,35 @@
+[INFO] 2026-06-08T08:33:37.746Z handleHookRunStop started
+[INFO] 2026-06-08T08:33:37.753Z Hook input received
+[INFO] 2026-06-08T08:33:37.753Z [session=63ca9891-4904-4afa-8953-7699198e9020] Session ID: 63ca9891-4904-4afa-8953-7699198e9020
+[INFO] 2026-06-08T08:33:37.753Z [session=63ca9891-4904-4afa-8953-7699198e9020] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-06-08T08:33:37.753Z [session=63ca9891-4904-4afa-8953-7699198e9020] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-06-08T08:33:37.753Z [session=63ca9891-4904-4afa-8953-7699198e9020] Checking session file at: /home/swan/.a5c/state/63ca9891-4904-4afa-8953-7699198e9020.md
+[INFO] 2026-06-08T08:33:37.758Z [session=63ca9891-4904-4afa-8953-7699198e9020] No run associated with session — allowing exit
+[INFO] 2026-06-08T08:37:43.806Z handleHookRunStop started
+[INFO] 2026-06-08T08:37:43.807Z Hook input received
+[INFO] 2026-06-08T08:37:43.807Z [session=63ca9891-4904-4afa-8953-7699198e9020] Session ID: 63ca9891-4904-4afa-8953-7699198e9020
+[INFO] 2026-06-08T08:37:43.807Z [session=63ca9891-4904-4afa-8953-7699198e9020] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-06-08T08:37:43.807Z [session=63ca9891-4904-4afa-8953-7699198e9020] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-06-08T08:37:43.808Z [session=63ca9891-4904-4afa-8953-7699198e9020] Checking session file at: /home/swan/.a5c/state/63ca9891-4904-4afa-8953-7699198e9020.md
+[INFO] 2026-06-08T08:37:43.808Z [session=63ca9891-4904-4afa-8953-7699198e9020] No active loop found for session 63ca9891-4904-4afa-8953-7699198e9020 — allowing exit
+[INFO] 2026-06-08T08:43:49.600Z handleHookRunStop started
+[INFO] 2026-06-08T08:43:49.607Z Hook input received
+[INFO] 2026-06-08T08:43:49.607Z [session=63ca9891-4904-4afa-8953-7699198e9020] Session ID: 63ca9891-4904-4afa-8953-7699198e9020
+[INFO] 2026-06-08T08:43:49.607Z [session=63ca9891-4904-4afa-8953-7699198e9020] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-06-08T08:43:49.607Z [session=63ca9891-4904-4afa-8953-7699198e9020] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-06-08T08:43:49.607Z [session=63ca9891-4904-4afa-8953-7699198e9020] Checking session file at: /home/swan/.a5c/state/63ca9891-4904-4afa-8953-7699198e9020.md
+[INFO] 2026-06-08T08:43:49.609Z [session=63ca9891-4904-4afa-8953-7699198e9020] No active loop found for session 63ca9891-4904-4afa-8953-7699198e9020 — allowing exit
+[INFO] 2026-06-08T08:48:43.829Z handleHookRunStop started
+[INFO] 2026-06-08T08:48:43.831Z Hook input received
+[INFO] 2026-06-08T08:48:43.831Z [session=63ca9891-4904-4afa-8953-7699198e9020] Session ID: 63ca9891-4904-4afa-8953-7699198e9020
+[INFO] 2026-06-08T08:48:43.831Z [session=63ca9891-4904-4afa-8953-7699198e9020] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-06-08T08:48:43.831Z [session=63ca9891-4904-4afa-8953-7699198e9020] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-06-08T08:48:43.831Z [session=63ca9891-4904-4afa-8953-7699198e9020] Checking session file at: /home/swan/.a5c/state/63ca9891-4904-4afa-8953-7699198e9020.md
+[INFO] 2026-06-08T08:48:43.832Z [session=63ca9891-4904-4afa-8953-7699198e9020] No active loop found for session 63ca9891-4904-4afa-8953-7699198e9020 — allowing exit
+[INFO] 2026-06-08T08:52:14.465Z handleHookRunStop started
+[INFO] 2026-06-08T08:52:14.468Z Hook input received
+[INFO] 2026-06-08T08:52:14.468Z [session=63ca9891-4904-4afa-8953-7699198e9020] Session ID: 63ca9891-4904-4afa-8953-7699198e9020
+[INFO] 2026-06-08T08:52:14.468Z [session=63ca9891-4904-4afa-8953-7699198e9020] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-06-08T08:52:14.468Z [session=63ca9891-4904-4afa-8953-7699198e9020] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-06-08T08:52:14.468Z [session=63ca9891-4904-4afa-8953-7699198e9020] Checking session file at: /home/swan/.a5c/state/63ca9891-4904-4afa-8953-7699198e9020.md
+[INFO] 2026-06-08T08:52:14.468Z [session=63ca9891-4904-4afa-8953-7699198e9020] No active loop found for session 63ca9891-4904-4afa-8953-7699198e9020 — allowing exit

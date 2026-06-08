@@ -1,6 +1,8 @@
 package com.carpool.workbook.normalization;
 
 import com.carpool.family.Family;
+import com.carpool.schedule.FamilyJusticeScore;
+import com.carpool.schedule.FamilyPlanningScore;
 import com.carpool.schedule.FamilyPlanningStats;
 import com.carpool.schedule.PlanningScore;
 import com.carpool.schedule.PlanningScorer;
@@ -15,8 +17,11 @@ import jakarta.json.bind.JsonbBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class WorkbookStatsCli {
 
@@ -287,15 +292,7 @@ public class WorkbookStatsCli {
                     .append('\n'));
         }
 
-        if (response.planning() != null) {
-            builder.append('\n');
-            builder.append("Planning:")
-                    .append('\n');
-            appendWeek(builder, "Even week", response.planning().evenWeek());
-            appendWeek(builder, "Odd week", response.planning().oddWeek());
-        }
-
-        if (response.planCandidates() != null && response.planCandidates().size() > 1) {
+        if (response.planCandidates() != null && !response.planCandidates().isEmpty()) {
             builder.append('\n');
             builder.append("Planning candidates:")
                     .append('\n');
@@ -311,6 +308,11 @@ public class WorkbookStatsCli {
                         .append(" | justice avg: ")
                         .append(formatNumber(candidate.planningScore().justice().averageJusticeScore()))
                         .append('\n');
+                appendJusticeTable(builder, candidate.planningScore());
+                if (candidate.planning() != null) {
+                    appendWeek(builder, "Even week", candidate.planning().evenWeek());
+                    appendWeek(builder, "Odd week", candidate.planning().oddWeek());
+                }
             }
         }
 
@@ -365,6 +367,8 @@ public class WorkbookStatsCli {
 
     private static List<WorkbookTripView> toTripViews(List<Trip> trips) {
         return trips.stream()
+                .sorted(Comparator.comparingInt((Trip t) -> t.weekDay().ordinal())
+                        .thenComparingInt(t -> t.timeSlot().ordinal()))
                 .map(trip -> new WorkbookTripView(
                         trip.weekDay().name(),
                         trip.timeSlot().name(),
@@ -376,6 +380,52 @@ public class WorkbookStatsCli {
                                 .toList()
                 ))
                 .toList();
+    }
+
+    private static void appendJusticeTable(StringBuilder builder, PlanningScore planningScore) {
+        Map<String, FamilyPlanningScore> planningByFamily = new HashMap<>();
+        for (FamilyPlanningScore fps : planningScore.families()) {
+            planningByFamily.put(fps.familyName(), fps);
+        }
+
+        List<FamilyJusticeScore> justiceScores = planningScore.justice().families();
+        String[] headers = {"Famille", "Réel/sem", "Idéal/sem", "Écart", "Justice", "Impos.", "Éviter"};
+        String[][] rows = new String[justiceScores.size()][7];
+        for (int i = 0; i < justiceScores.size(); i++) {
+            FamilyJusticeScore js = justiceScores.get(i);
+            FamilyPlanningScore ps = planningByFamily.get(js.familyName());
+            rows[i][0] = js.familyName();
+            rows[i][1] = formatNumber(js.actualMeanTripPerWeek());
+            rows[i][2] = formatNumber(js.perfectMeanTripPerWeek());
+            rows[i][3] = formatNumber(js.tripDeviation());
+            rows[i][4] = formatNumber(js.justiceScore());
+            rows[i][5] = ps != null ? String.valueOf(ps.impossibleAssignments()) : "0";
+            rows[i][6] = ps != null ? String.valueOf(ps.avoidAssignments()) : "0";
+        }
+
+        int[] widths = new int[7];
+        for (int c = 0; c < 7; c++) widths[c] = headers[c].length();
+        for (String[] row : rows) {
+            for (int c = 0; c < 7; c++) widths[c] = Math.max(widths[c], row[c].length());
+        }
+
+        StringBuilder sep = new StringBuilder("+");
+        for (int w : widths) sep.append("-".repeat(w + 2)).append("+");
+        String separator = sep.toString();
+
+        builder.append(separator).append('\n').append("|");
+        for (int c = 0; c < 7; c++) builder.append(" ").append(padRight(headers[c], widths[c])).append(" |");
+        builder.append('\n').append(separator).append('\n');
+        for (String[] row : rows) {
+            builder.append("|");
+            for (int c = 0; c < 7; c++) builder.append(" ").append(padRight(row[c], widths[c])).append(" |");
+            builder.append('\n');
+        }
+        builder.append(separator).append('\n');
+    }
+
+    private static String padRight(String s, int width) {
+        return s.length() >= width ? s : s + " ".repeat(width - s.length());
     }
 
     private static String formatNumber(double value) {
