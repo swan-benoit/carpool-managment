@@ -6,6 +6,9 @@ public record FamilyPlanningScore(
         int impossibleAssignments,
         int avoidAssignments,
         int preferredAssignments,
-        int okAssignments
+        int okAssignments,
+        int requiredTransportSlots,
+        int assignedTransportSlots,
+        int missingTransportSlots
 ) {
 }

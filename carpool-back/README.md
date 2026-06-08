@@ -41,10 +41,18 @@ Text view:
 mise run back-workbook-stats -- /path/to/requirements.xlsx --format text
 ```
 
-Include generated planning score:
+## Workbook planning CLI
+
+Generate and score planning from a workbook with:
 
 ```shell script
-mise run back-workbook-stats -- /path/to/requirements.xlsx --include-planning-score
+mise run back-workbook-plan -- /path/to/requirements.xlsx --format text
+```
+
+Use brute-force planner for small workbooks:
+
+```shell script
+mise run back-workbook-plan -- /path/to/requirements.xlsx --planner brute-force --max-seconds 10 --top 5 --format text
 ```
 
 If you want to build an _über-jar_, execute the following command:

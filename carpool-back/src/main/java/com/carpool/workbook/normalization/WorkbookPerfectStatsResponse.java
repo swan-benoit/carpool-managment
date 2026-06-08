@@ -8,6 +8,9 @@ public record WorkbookPerfectStatsResponse(
         Double totalRequiredTripsPerWeek,
         Double totalPerfectMeanTripPerWeek,
         List<WorkbookPerfectStat> families,
-        PlanningScore planningScore
+        PlanningScore planningScore,
+        WorkbookPlanningMetadata planningMetadata,
+        WorkbookPlanningView planning,
+        List<WorkbookPlanCandidateView> planCandidates
 ) {
 }

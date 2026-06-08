@@ -170,4 +170,8 @@ public record Schedule(WeekType weekType, List<Trip> trips, List<Family> familie
                 .flatMap(family -> family.children.stream())
                 .anyMatch(child -> FamilyPlanningStats.isPresent(child, weekType, weekDay, timeSlot));
     }
+
+    public int unassignedChildrenCount(WeekDay weekDay, TimeSlot timeSlot) {
+        return toAssignChildren(weekDay, timeSlot).size();
+    }
 }

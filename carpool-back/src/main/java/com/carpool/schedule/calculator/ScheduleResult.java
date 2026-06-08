@@ -101,4 +101,11 @@ public record ScheduleResult(Schedule odd, Schedule even, List<Family> families)
             case ODD -> odd.hasChildrenToTransport(weekDay, timeSlot);
         };
     }
+
+    public int unassignedChildrenCount(WeekType weekType, WeekDay weekDay, TimeSlot timeSlot) {
+        return switch (weekType) {
+            case EVEN -> even.unassignedChildrenCount(weekDay, timeSlot);
+            case ODD -> odd.unassignedChildrenCount(weekDay, timeSlot);
+        };
+    }
 }

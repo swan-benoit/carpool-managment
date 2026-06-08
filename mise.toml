@@ -16,6 +16,10 @@ run = "mvn -DskipTests exec:java -Dexec.mainClass=com.carpool.workbook.template.
 description = "Compute stats from a workbook XLSX"
 run = "sh ./scripts/workbook-stats.sh"
 
+[tasks.back-workbook-plan]
+description = "Generate and score planning from a workbook XLSX"
+run = "sh ./scripts/workbook-plan.sh"
+
 [tasks.mcp-workbook]
 description = "Start workbook MCP server (stdio)"
 run = "node mcp/workbook-server.mjs"
