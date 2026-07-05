@@ -27,6 +27,7 @@ public class WorkbookStatsCli {
 
     private static final String JSON_FORMAT = "json";
     private static final String TEXT_FORMAT = "text";
+    private static final String XLSX_FORMAT = "xlsx";
     private static final String GREEDY_PLANNER = "greedy";
     private static final String BRUTE_FORCE_PLANNER = "brute-force";
     private static final String UNLIMITED = "unlimited";
@@ -61,7 +62,7 @@ public class WorkbookStatsCli {
         if (parsedArguments.includePlanningScore()) {
             if (BRUTE_FORCE_PLANNER.equals(parsedArguments.planner())) {
                 BruteForceSchedulePlanner.SearchSummary searchSummary = new BruteForceSchedulePlanner()
-                        .generateTopSchedules(normalizedFamilies, parsedArguments.maxStates(), parsedArguments.top(), parsedArguments.maxSeconds(), effectiveSeed, parsedArguments.restarts(), parsedArguments.maxFamilyTrips());
+                        .generateTopSchedules(normalizedFamilies, parsedArguments.maxStates(), parsedArguments.top(), parsedArguments.maxSeconds(), effectiveSeed, parsedArguments.restarts(), parsedArguments.maxFamilyTrips(), parsedArguments.scoreTolerance(), parsedArguments.minDistance());
                 List<BruteForceSchedulePlanner.SearchCandidate> boundedCandidates = searchSummary.candidates().stream()
                         .filter(candidate -> respectsFamilyTripCaps(candidate.planningScore(), parsedArguments.maxFamilyTrips()))
                         .toList();
@@ -108,6 +109,13 @@ public class WorkbookStatsCli {
             return;
         }
 
+        if (XLSX_FORMAT.equals(parsedArguments.format())) {
+            Path outputPath = Path.of(parsedArguments.outputPath());
+            new WorkbookXlsxWriter().write(response, normalizedFamilies, workbookPath, outputPath);
+            System.out.println("Planning exported to: " + outputPath.toAbsolutePath());
+            return;
+        }
+
         Jsonb jsonb = JsonbBuilder.create();
         System.out.println(jsonb.toJson(response));
     }
@@ -115,6 +123,7 @@ public class WorkbookStatsCli {
     private static Arguments parseArguments(String[] args) {
         List<String> positionalArgs = new ArrayList<>();
         String format = JSON_FORMAT;
+        String outputPath = null;
         boolean includePlanningScore = false;
         boolean includePlanningOutput = false;
         boolean exhaustive = false;
@@ -124,6 +133,8 @@ public class WorkbookStatsCli {
         Long seed = null;
         int restarts = BruteForceSchedulePlanner.DEFAULT_RESTARTS;
         int top = 1;
+        int scoreTolerance = BruteForceSchedulePlanner.DEFAULT_SCORE_TOLERANCE;
+        double minDistance = BruteForceSchedulePlanner.DEFAULT_MIN_DISTANCE;
         Map<String, Double> maxFamilyTrips = new HashMap<>();
 
         for (int index = 0; index < args.length; index++) {
@@ -133,6 +144,13 @@ public class WorkbookStatsCli {
                     throw new IllegalArgumentException("Missing value after --format");
                 }
                 format = args[++index].toLowerCase(Locale.ROOT);
+                continue;
+            }
+            if ("--output".equals(argument)) {
+                if (index + 1 >= args.length) {
+                    throw new IllegalArgumentException("Missing value after --output");
+                }
+                outputPath = args[++index];
                 continue;
             }
             if ("--include-planning-score".equals(argument)) {
@@ -202,14 +220,31 @@ public class WorkbookStatsCli {
                 top = Integer.parseInt(args[++index]);
                 continue;
             }
+            if ("--score-tolerance".equals(argument)) {
+                if (index + 1 >= args.length) {
+                    throw new IllegalArgumentException("Missing value after --score-tolerance");
+                }
+                scoreTolerance = Integer.parseInt(args[++index]);
+                continue;
+            }
+            if ("--min-distance".equals(argument)) {
+                if (index + 1 >= args.length) {
+                    throw new IllegalArgumentException("Missing value after --min-distance");
+                }
+                minDistance = Double.parseDouble(args[++index]);
+                continue;
+            }
             positionalArgs.add(argument);
         }
 
         if (positionalArgs.isEmpty()) {
             throw new IllegalArgumentException("Workbook path argument is required");
         }
-        if (!JSON_FORMAT.equals(format) && !TEXT_FORMAT.equals(format)) {
-            throw new IllegalArgumentException("Unsupported format: %s. Expected json or text".formatted(format));
+        if (!JSON_FORMAT.equals(format) && !TEXT_FORMAT.equals(format) && !XLSX_FORMAT.equals(format)) {
+            throw new IllegalArgumentException("Unsupported format: %s. Expected json, text or xlsx".formatted(format));
+        }
+        if (XLSX_FORMAT.equals(format) && outputPath == null) {
+            throw new IllegalArgumentException("--output is required when --format xlsx is used");
         }
         if (!GREEDY_PLANNER.equals(planner) && !BRUTE_FORCE_PLANNER.equals(planner)) {
             throw new IllegalArgumentException("Unsupported planner: %s. Expected greedy or brute-force".formatted(planner));
@@ -219,6 +254,12 @@ public class WorkbookStatsCli {
         }
         if (restarts <= 0) {
             throw new IllegalArgumentException("--restarts must be greater than 0");
+        }
+        if (scoreTolerance < 0) {
+            throw new IllegalArgumentException("--score-tolerance must be greater than or equal to 0");
+        }
+        if (minDistance < 0.0 || minDistance > 1.0) {
+            throw new IllegalArgumentException("--min-distance must be between 0.0 and 1.0");
         }
         if (!Double.isInfinite(maxSeconds) && maxSeconds <= 0.0) {
             throw new IllegalArgumentException("--max-seconds must be greater than 0");
@@ -231,7 +272,7 @@ public class WorkbookStatsCli {
             maxSeconds = BruteForceSchedulePlanner.UNLIMITED_MAX_SECONDS;
         }
 
-        return new Arguments(positionalArgs.getFirst(), format, includePlanningScore, includePlanningOutput, planner, maxStates, maxSeconds, seed, restarts, top, exhaustive, Map.copyOf(maxFamilyTrips));
+        return new Arguments(positionalArgs.getFirst(), format, outputPath, includePlanningScore, includePlanningOutput, planner, maxStates, maxSeconds, seed, restarts, top, exhaustive, Map.copyOf(maxFamilyTrips), scoreTolerance, minDistance);
     }
 
     private static String formatText(WorkbookPerfectStatsResponse response) {
@@ -573,6 +614,6 @@ public class WorkbookStatsCli {
         return true;
     }
 
-    private record Arguments(String workbookPath, String format, boolean includePlanningScore, boolean includePlanningOutput, String planner, long maxStates, double maxSeconds, Long seed, int restarts, int top, boolean exhaustive, Map<String, Double> maxFamilyTrips) {
+    private record Arguments(String workbookPath, String format, String outputPath, boolean includePlanningScore, boolean includePlanningOutput, String planner, long maxStates, double maxSeconds, Long seed, int restarts, int top, boolean exhaustive, Map<String, Double> maxFamilyTrips, int scoreTolerance, double minDistance) {
     }
 }

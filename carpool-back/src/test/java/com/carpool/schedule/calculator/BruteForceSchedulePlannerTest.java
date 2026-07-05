@@ -132,6 +132,128 @@ class BruteForceSchedulePlannerTest {
                 .actualMeanTripPerWeek()).isLessThanOrEqualTo(3.0);
     }
 
+    @Test
+    void keeps_best_first_and_returns_distinct_candidates() {
+        List<NormalizedWorkbookFamily> families = List.of(
+                openFamily("Famille A", "Alice"),
+                openFamily("Famille B", "Bob"),
+                openFamily("Famille C", "Chloe")
+        );
+        PlanningScorer scorer = new PlanningScorer();
+
+        BruteForceSchedulePlanner.SearchSummary summary = new BruteForceSchedulePlanner(scorer)
+                .generateTopSchedules(families, 500_000, 5, 10.0, 7L, 4, Map.of(), 15, 0.05);
+
+        assertThat(summary.candidates()).isNotEmpty();
+        assertThat(summary.candidates()).allSatisfy(candidate -> assertThat(candidate.planningScore().complete()).isTrue());
+
+        // Rank 1 is the best-scored complete planning found.
+        PlanningScore bestFound = summary.candidates().stream()
+                .map(BruteForceSchedulePlanner.SearchCandidate::planningScore)
+                .max(BruteForceSchedulePlannerTest::compareForTest)
+                .orElseThrow();
+        assertThat(compareForTest(summary.candidates().getFirst().planningScore(), bestFound)).isEqualTo(0);
+
+        // No duplicate planning signatures.
+        assertThat(signatures(summary).stream().distinct().count())
+                .isEqualTo(summary.candidates().size());
+    }
+
+    @Test
+    void surfaces_distinct_stat_profiles() {
+        List<NormalizedWorkbookFamily> families = List.of(
+                openFamily("Famille A", "Alice"),
+                openFamily("Famille B", "Bob"),
+                openFamily("Famille C", "Chloe")
+        );
+
+        BruteForceSchedulePlanner.SearchSummary summary = new BruteForceSchedulePlanner(new PlanningScorer())
+                .generateTopSchedules(families, 500_000, 5, 10.0, 7L, 4, Map.of(), 15, 0.05);
+
+        // Perturbation must surface candidates with genuinely different stat profiles,
+        // not just reshuffled clones of the same justice/avoid/preferred outcome.
+        long distinctProfiles = summary.candidates().stream()
+                .map(candidate -> profileKey(candidate.planningScore()))
+                .distinct()
+                .count();
+        assertThat(distinctProfiles).isGreaterThan(1);
+    }
+
+    @Test
+    void same_seed_and_parameters_are_deterministic() {
+        List<NormalizedWorkbookFamily> families = List.of(
+                openFamily("Famille A", "Alice"),
+                openFamily("Famille B", "Bob"),
+                openFamily("Famille C", "Chloe")
+        );
+
+        List<String> first = signatures(new BruteForceSchedulePlanner(new PlanningScorer())
+                .generateTopSchedules(families, 500_000, 5, 10.0, 42L, 4, Map.of(), 15, 0.05));
+        List<String> second = signatures(new BruteForceSchedulePlanner(new PlanningScorer())
+                .generateTopSchedules(families, 500_000, 5, 10.0, 42L, 4, Map.of(), 15, 0.05));
+
+        assertThat(first).isEqualTo(second);
+    }
+
+    @Test
+    void returns_fewer_when_few_distinct_profiles_exist() {
+        NormalizedWorkbookFamily familyA = normalizedFamily("Famille A", "Alice", "IMPOSSIBLE");
+        NormalizedWorkbookFamily familyB = normalizedFamily("Famille B", "Bob", "PREFERE");
+        List<NormalizedWorkbookFamily> families = List.of(familyA, familyB);
+
+        BruteForceSchedulePlanner.SearchSummary summary = new BruteForceSchedulePlanner(new PlanningScorer())
+                .generateTopSchedules(families, 500_000, 5, 10.0, 0L, 1, Map.of(), 15, 0.9);
+
+        assertThat(summary.candidates()).isNotEmpty();
+        assertThat(summary.candidates()).hasSizeLessThanOrEqualTo(5);
+        assertThat(signatures(summary).stream().distinct().count()).isEqualTo(summary.candidates().size());
+    }
+
+    private static List<String> signatures(BruteForceSchedulePlanner.SearchSummary summary) {
+        return summary.candidates().stream()
+                .map(candidate -> BruteForceSchedulePlanner.planningSignature(candidate.scheduleResult()))
+                .toList();
+    }
+
+    private static String profileKey(PlanningScore score) {
+        return score.avoidAssignments()
+                + "|" + score.preferredAssignments()
+                + "|" + Math.round(score.justice().minimumJusticeScore() * 1000.0)
+                + "|" + Math.round(score.justice().averageJusticeScore() * 1000.0)
+                + "|" + score.redundantDrivers();
+    }
+
+    private static int compareForTest(PlanningScore left, PlanningScore right) {
+        if (left.complete() != right.complete()) {
+            return left.complete() ? 1 : -1;
+        }
+        if (Double.compare(left.justice().minimumJusticeScore(), right.justice().minimumJusticeScore()) != 0) {
+            return Double.compare(left.justice().minimumJusticeScore(), right.justice().minimumJusticeScore());
+        }
+        if (Double.compare(left.justice().averageJusticeScore(), right.justice().averageJusticeScore()) != 0) {
+            return Double.compare(left.justice().averageJusticeScore(), right.justice().averageJusticeScore());
+        }
+        return Integer.compare(left.totalScore(), right.totalScore());
+    }
+
+    private NormalizedWorkbookFamily openFamily(String familyName, String childName) {
+        Child child = new Child();
+        child.id = (long) childName.hashCode();
+        child.name = childName;
+
+        Family family = new Family();
+        family.id = (long) familyName.hashCode();
+        family.name = familyName;
+        family.carCapacity = 2;
+        family.children = List.of(child);
+
+        return new NormalizedWorkbookFamily(
+                family,
+                List.of(),
+                NormalizedWorkbookFamily.FamilyNotes.empty()
+        );
+    }
+
     private NormalizedWorkbookFamily normalizedFamily(String familyName, String childName, String mondayEvenPreference) {
         Child child = new Child();
         child.id = (long) childName.hashCode();

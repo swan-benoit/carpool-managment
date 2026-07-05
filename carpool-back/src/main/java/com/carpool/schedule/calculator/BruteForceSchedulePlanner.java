@@ -13,9 +13,12 @@ import com.carpool.workbook.normalization.NormalizedWorkbookFamily;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class BruteForceSchedulePlanner {
@@ -25,7 +28,13 @@ public class BruteForceSchedulePlanner {
     public static final long UNLIMITED_MAX_EXPLORED_STATES = Long.MAX_VALUE;
     public static final double UNLIMITED_MAX_SECONDS = Double.POSITIVE_INFINITY;
     public static final int DEFAULT_RESTARTS = 1;
+    public static final int DEFAULT_SCORE_TOLERANCE = 15;
+    public static final double DEFAULT_MIN_DISTANCE = 0.05;
     private static final int CANDIDATE_POOL_FACTOR = 20;
+    private static final double RATIO_BUCKET = 0.25;
+    private static final int PERTURB_ROUNDS = 2;
+    private static final int PERTURB_SEED_LIMIT = 12;
+    private static final int PERTURB_CAP = 4000;
 
     private final PlanningScorer planningScorer;
 
@@ -81,6 +90,20 @@ public class BruteForceSchedulePlanner {
             int restarts,
             Map<String, Double> maxFamilyTrips
     ) {
+        return generateTopSchedules(normalizedFamilies, maxExploredStates, topCount, maxSeconds, seed, restarts, maxFamilyTrips, DEFAULT_SCORE_TOLERANCE, DEFAULT_MIN_DISTANCE);
+    }
+
+    public SearchSummary generateTopSchedules(
+            List<NormalizedWorkbookFamily> normalizedFamilies,
+            long maxExploredStates,
+            int topCount,
+            double maxSeconds,
+            long seed,
+            int restarts,
+            Map<String, Double> maxFamilyTrips,
+            int scoreTolerance,
+            double minDistance
+    ) {
         List<Family> families = normalizedFamilies.stream().map(NormalizedWorkbookFamily::family).toList();
         int candidatePoolSize = Math.max(1, topCount) * CANDIDATE_POOL_FACTOR;
         List<SearchCandidate> mergedCandidates = new ArrayList<>();
@@ -113,7 +136,8 @@ public class BruteForceSchedulePlanner {
                     maxFamilyTrips,
                     seed + restartIndex,
                     restartIndex + 1,
-                    Math.max(1, restarts)
+                    Math.max(1, restarts),
+                    scoreTolerance
             );
             exploreSchedule(ScheduleResult.empty(families), normalizedFamilies, 0, searchState);
             exploredStates += searchState.exploredStates;
@@ -128,7 +152,12 @@ public class BruteForceSchedulePlanner {
                     + " finished=" + searchState.searchCompleted);
         }
 
-        List<SearchCandidate> selectedCandidates = selectDiverseCandidates(mergedCandidates, Math.max(1, topCount));
+        // The search converges to score-optimal clones, so widen the pool by perturbing the
+        // best plannings (swapping who drives each car, EVITER drivers included) to surface
+        // plannings with genuinely different stat profiles (justice, avoid, preferred).
+        List<SearchCandidate> diversePool = expandByPerturbation(
+                mergedCandidates, normalizedFamilies, buildPreferenceMap(normalizedFamilies), maxFamilyTrips);
+        List<SearchCandidate> selectedCandidates = selectStatDiverseCandidates(diversePool, Math.max(1, topCount), minDistance);
 
         return new SearchSummary(
                 List.copyOf(selectedCandidates),
@@ -191,7 +220,7 @@ public class BruteForceSchedulePlanner {
             return;
         }
 
-        if (searchState.bestScore != null && shouldPruneByOptimisticScore(current, normalizedFamilies, slotIndex, searchState.bestScore)) {
+        if (searchState.bestScore != null && shouldPruneByOptimisticScore(current, normalizedFamilies, slotIndex, searchState.bestScore, searchState.scoreTolerance)) {
             return;
         }
 
@@ -206,9 +235,9 @@ public class BruteForceSchedulePlanner {
                 .filter(driver -> canAssignMoreTrips(current.meanTripPerWeek(driver), driver, searchState.maxFamilyTrips))
                 .sorted(Comparator
                         .comparingInt((Family f) -> preferenceGroupForSlot(f, slotKey, searchState.preferenceMap))
-                        .thenComparingDouble(f -> current.meanTripPerWeek(f) / Math.max(0.001, current.perfectMeanTripPerWeek(f)))
-                        .thenComparingInt(f -> preferenceRankForSlot(f, slotKey, searchState.preferenceMap))
-                        .thenComparingDouble(f -> searchState.randomOrderFor(f.name, slotKey)))
+                        .thenComparingDouble(f -> bucketedTripRatio(current.meanTripPerWeek(f) / Math.max(0.001, current.perfectMeanTripPerWeek(f))))
+                        .thenComparingDouble(f -> searchState.randomOrderFor(f.name, slotKey))
+                        .thenComparingInt(f -> preferenceRankForSlot(f, slotKey, searchState.preferenceMap)))
                 .toList();
 
         boolean branched = false;
@@ -267,7 +296,7 @@ public class BruteForceSchedulePlanner {
         }
     }
 
-    private void addMergedCandidate(SearchCandidate candidate, List<SearchCandidate> mergedCandidates, int topCount) {
+    private void addMergedCandidate(SearchCandidate candidate, List<SearchCandidate> mergedCandidates, int poolSize) {
         String candidateKey = planningSignature(candidate.scheduleResult());
         boolean alreadyPresent = mergedCandidates.stream()
                 .anyMatch(existing -> planningSignature(existing.scheduleResult()).equals(candidateKey));
@@ -277,28 +306,188 @@ public class BruteForceSchedulePlanner {
 
         mergedCandidates.add(candidate);
         mergedCandidates.sort((left, right) -> compareScores(right.planningScore(), left.planningScore()));
-        if (mergedCandidates.size() > topCount) {
-            mergedCandidates.removeLast();
+        if (mergedCandidates.size() > poolSize) {
+            evictMostRedundant(mergedCandidates);
         }
     }
 
-    private List<SearchCandidate> selectDiverseCandidates(List<SearchCandidate> candidatePool, int topCount) {
-        if (candidatePool.isEmpty()) {
-            return List.of();
+    // Keeps the best-scored candidate (index 0) and drops, among the rest, the one
+    // most redundant with the pool (smallest nearest-neighbour distance, ties broken
+    // by lowest score) so the retained pool stays spread out rather than clustered.
+    private void evictMostRedundant(List<SearchCandidate> mergedCandidates) {
+        int evictIndex = -1;
+        double smallestNearest = Double.POSITIVE_INFINITY;
+        for (int index = 1; index < mergedCandidates.size(); index++) {
+            double nearest = nearestNeighbourDistance(mergedCandidates, index);
+            if (nearest < smallestNearest
+                    || (Double.compare(nearest, smallestNearest) == 0
+                        && evictIndex >= 0
+                        && compareScores(mergedCandidates.get(index).planningScore(), mergedCandidates.get(evictIndex).planningScore()) < 0)) {
+                smallestNearest = nearest;
+                evictIndex = index;
+            }
+        }
+        if (evictIndex < 0) {
+            evictIndex = mergedCandidates.size() - 1;
+        }
+        mergedCandidates.remove(evictIndex);
+    }
+
+    private double nearestNeighbourDistance(List<SearchCandidate> candidates, int index) {
+        ScheduleResult target = candidates.get(index).scheduleResult();
+        double nearest = Double.POSITIVE_INFINITY;
+        for (int other = 0; other < candidates.size(); other++) {
+            if (other == index) {
+                continue;
+            }
+            nearest = Math.min(nearest, planningDistance(target, candidates.get(other).scheduleResult()));
+        }
+        return nearest;
+    }
+
+    // Widens the candidate set by perturbing the best plannings: each move swaps the driver of
+    // one car to another eligible family (EVITER drivers allowed), which shifts trip balance and
+    // preference satisfaction, producing plannings with genuinely different stat profiles.
+    private List<SearchCandidate> expandByPerturbation(
+            List<SearchCandidate> pool,
+            List<NormalizedWorkbookFamily> normalizedFamilies,
+            Map<String, Map<String, PreferenceValue>> preferenceMap,
+            Map<String, Double> maxFamilyTrips
+    ) {
+        if (pool.isEmpty()) {
+            return pool;
+        }
+        List<Family> families = pool.getFirst().scheduleResult().families();
+        List<SearchCandidate> all = new ArrayList<>(pool);
+        Set<String> seenSignatures = new LinkedHashSet<>();
+        Map<String, SearchCandidate> byProfile = new LinkedHashMap<>();
+        for (SearchCandidate candidate : pool) {
+            seenSignatures.add(planningSignature(candidate.scheduleResult()));
+            byProfile.putIfAbsent(statProfileKey(candidate.planningScore()), candidate);
         }
 
-        List<SearchCandidate> sortedPool = candidatePool.stream()
+        List<SearchCandidate> frontier = pool.stream()
+                .sorted((left, right) -> compareScores(right.planningScore(), left.planningScore()))
+                .limit(PERTURB_SEED_LIMIT)
+                .toList();
+
+        for (int round = 0; round < PERTURB_ROUNDS && all.size() < PERTURB_CAP; round++) {
+            List<SearchCandidate> next = new ArrayList<>();
+            for (SearchCandidate seed : frontier) {
+                if (all.size() >= PERTURB_CAP) {
+                    break;
+                }
+                for (ScheduleResult neighbour : driverSwapNeighbours(seed.scheduleResult(), families, preferenceMap)) {
+                    if (all.size() >= PERTURB_CAP) {
+                        break;
+                    }
+                    if (!seenSignatures.add(planningSignature(neighbour))) {
+                        continue;
+                    }
+                    PlanningScore score = planningScorer.score(neighbour, normalizedFamilies);
+                    if (!score.complete() || !respectsFamilyTripCaps(neighbour, maxFamilyTrips)) {
+                        continue;
+                    }
+                    SearchCandidate candidate = new SearchCandidate(neighbour, score);
+                    all.add(candidate);
+                    // Only chase further perturbations from plannings that opened a new stat profile.
+                    if (byProfile.putIfAbsent(statProfileKey(score), candidate) == null) {
+                        next.add(candidate);
+                    }
+                }
+            }
+            frontier = next.stream()
+                    .sorted((left, right) -> compareScores(right.planningScore(), left.planningScore()))
+                    .limit(PERTURB_SEED_LIMIT)
+                    .toList();
+        }
+        return all;
+    }
+
+    private List<ScheduleResult> driverSwapNeighbours(
+            ScheduleResult schedule,
+            List<Family> families,
+            Map<String, Map<String, PreferenceValue>> preferenceMap
+    ) {
+        List<ScheduleResult> neighbours = new ArrayList<>();
+        for (WeekType weekType : WeekType.values()) {
+            Schedule weekSchedule = weekType == WeekType.EVEN ? schedule.even() : schedule.odd();
+            for (Trip trip : weekSchedule.trips()) {
+                String slotKey = weekType.name() + "|" + trip.weekDay().name() + "|" + trip.timeSlot().name();
+                List<String> presentDrivers = trip.cars().Assignments().stream()
+                        .map(assignment -> assignment.driverFamily().name)
+                        .toList();
+                for (Assignment assignment : trip.cars().Assignments()) {
+                    if (assignment.children().isEmpty()) {
+                        continue;
+                    }
+                    for (Family candidateDriver : families) {
+                        if (candidateDriver.name.equals(assignment.driverFamily().name)
+                                || presentDrivers.contains(candidateDriver.name)
+                                || candidateDriver.carCapacity < assignment.children().size()) {
+                            continue;
+                        }
+                        PreferenceValue pref = preferenceMap.getOrDefault(candidateDriver.name, Map.of())
+                                .getOrDefault(slotKey, PreferenceValue.OK);
+                        if (pref == PreferenceValue.IMPOSSIBLE) {
+                            continue;
+                        }
+                        neighbours.add(swapDriver(schedule, weekType, trip, assignment.driverFamily(), candidateDriver));
+                    }
+                }
+            }
+        }
+        return neighbours;
+    }
+
+    private static ScheduleResult swapDriver(ScheduleResult schedule, WeekType weekType, Trip target, Family oldDriver, Family newDriver) {
+        Schedule weekSchedule = weekType == WeekType.EVEN ? schedule.even() : schedule.odd();
+        List<Trip> rebuiltTrips = weekSchedule.trips().stream()
+                .map(trip -> trip == target ? replaceDriver(trip, oldDriver, newDriver) : trip)
+                .toList();
+        Schedule rebuilt = new Schedule(weekType, rebuiltTrips, schedule.families());
+        return weekType == WeekType.EVEN
+                ? new ScheduleResult(schedule.odd(), rebuilt, schedule.families())
+                : new ScheduleResult(rebuilt, schedule.even(), schedule.families());
+    }
+
+    private static Trip replaceDriver(Trip trip, Family oldDriver, Family newDriver) {
+        List<Assignment> rebuilt = trip.cars().Assignments().stream()
+                .map(assignment -> assignment.driverFamily().name.equals(oldDriver.name)
+                        ? new Assignment(newDriver, assignment.children())
+                        : assignment)
+                .toList();
+        return new Trip(trip.weekDay(), trip.timeSlot(), trip.weekType(), new Cars(rebuilt), trip.families());
+    }
+
+    // Selects plannings spread across the stat space (avoid, justice min/avg, preferred), keeping
+    // the best-scored planning at rank 1 and then maximising minimum stat-distance to those chosen.
+    private List<SearchCandidate> selectStatDiverseCandidates(List<SearchCandidate> pool, int topCount, double minDistance) {
+        if (pool.isEmpty()) {
+            return List.of();
+        }
+        List<SearchCandidate> sortedPool = pool.stream()
                 .sorted((left, right) -> compareScores(right.planningScore(), left.planningScore()))
                 .toList();
+        double[][] axisBounds = statAxisBounds(sortedPool);
+
         List<SearchCandidate> selected = new ArrayList<>();
+        // Rank 1 is always the best-scored planning so variety never degrades the top result.
         selected.add(sortedPool.getFirst());
 
         List<SearchCandidate> remaining = new ArrayList<>(sortedPool.subList(1, sortedPool.size()));
         while (selected.size() < topCount && !remaining.isEmpty()) {
-            SearchCandidate bestCandidate = remaining.stream()
-                    .max((left, right) -> compareDiversityAware(left, right, selected))
-                    .orElse(null);
-            if (bestCandidate == null) {
+            SearchCandidate bestCandidate = null;
+            double bestDistance = -1.0;
+            for (SearchCandidate candidate : remaining) {
+                double distance = minStatDistanceToSelected(candidate, selected, axisBounds);
+                if (distance > bestDistance) {
+                    bestDistance = distance;
+                    bestCandidate = candidate;
+                }
+            }
+            // Stop once nothing has a meaningfully different stat profile.
+            if (bestCandidate == null || bestDistance < minDistance) {
                 break;
             }
             selected.add(bestCandidate);
@@ -307,20 +496,55 @@ public class BruteForceSchedulePlanner {
         return List.copyOf(selected);
     }
 
-    private int compareDiversityAware(SearchCandidate left, SearchCandidate right, List<SearchCandidate> selected) {
-        double leftDistance = minDistanceToSelected(left, selected);
-        double rightDistance = minDistanceToSelected(right, selected);
-        if (Double.compare(leftDistance, rightDistance) != 0) {
-            return Double.compare(leftDistance, rightDistance);
+    private double minStatDistanceToSelected(SearchCandidate candidate, List<SearchCandidate> selected, double[][] axisBounds) {
+        double min = Double.POSITIVE_INFINITY;
+        for (SearchCandidate existing : selected) {
+            min = Math.min(min, statDistance(candidate.planningScore(), existing.planningScore(), axisBounds));
         }
-        return compareScores(left.planningScore(), right.planningScore());
+        return min;
     }
 
-    private double minDistanceToSelected(SearchCandidate candidate, List<SearchCandidate> selected) {
-        return selected.stream()
-                .mapToDouble(existing -> planningDistance(candidate.scheduleResult(), existing.scheduleResult()))
-                .min()
-                .orElse(1.0);
+    private double[][] statAxisBounds(List<SearchCandidate> pool) {
+        double[] mins = {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE};
+        double[] maxs = {-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE};
+        for (SearchCandidate candidate : pool) {
+            double[] profile = statProfile(candidate.planningScore());
+            for (int axis = 0; axis < profile.length; axis++) {
+                mins[axis] = Math.min(mins[axis], profile[axis]);
+                maxs[axis] = Math.max(maxs[axis], profile[axis]);
+            }
+        }
+        return new double[][]{mins, maxs};
+    }
+
+    private double statDistance(PlanningScore left, PlanningScore right, double[][] axisBounds) {
+        double[] leftProfile = statProfile(left);
+        double[] rightProfile = statProfile(right);
+        double[] mins = axisBounds[0];
+        double[] maxs = axisBounds[1];
+        double sum = 0.0;
+        for (int axis = 0; axis < leftProfile.length; axis++) {
+            double range = maxs[axis] - mins[axis];
+            sum += range <= 1.0e-9 ? 0.0 : Math.abs(leftProfile[axis] - rightProfile[axis]) / range;
+        }
+        return sum / leftProfile.length;
+    }
+
+    private static double[] statProfile(PlanningScore score) {
+        return new double[]{
+                score.avoidAssignments(),
+                score.justice().minimumJusticeScore(),
+                score.justice().averageJusticeScore(),
+                score.preferredAssignments()
+        };
+    }
+
+    private static String statProfileKey(PlanningScore score) {
+        return score.avoidAssignments()
+                + "|" + score.preferredAssignments()
+                + "|" + Math.round(score.justice().minimumJusticeScore() * 1000.0)
+                + "|" + Math.round(score.justice().averageJusticeScore() * 1000.0)
+                + "|" + score.redundantDrivers();
     }
 
     private boolean isBetter(PlanningScore candidate, PlanningScore incumbent) {
@@ -452,11 +676,16 @@ public class BruteForceSchedulePlanner {
         return true;
     }
 
+    private static double bucketedTripRatio(double ratio) {
+        return Math.round(ratio / RATIO_BUCKET) * RATIO_BUCKET;
+    }
+
     private boolean shouldPruneByOptimisticScore(
             ScheduleResult current,
             List<NormalizedWorkbookFamily> normalizedFamilies,
             int slotIndex,
-            PlanningScore incumbent
+            PlanningScore incumbent,
+            int scoreTolerance
     ) {
         PlanningScore currentScore = planningScorer.score(current, normalizedFamilies);
         if (!incumbent.complete() && currentScore.complete()) {
@@ -478,7 +707,7 @@ public class BruteForceSchedulePlanner {
             return false;
         }
         if (currentScore.assignedRequiredTransportSlots() == incumbent.assignedRequiredTransportSlots()
-                && optimisticTotalScore < incumbent.totalScore()) {
+                && optimisticTotalScore < incumbent.totalScore() - scoreTolerance) {
             return true;
         }
         return false;
@@ -587,6 +816,7 @@ public class BruteForceSchedulePlanner {
         private final boolean unlimitedTime;
         private final Map<String, Map<String, PreferenceValue>> preferenceMap;
         private final Map<String, Double> maxFamilyTrips;
+        private final int scoreTolerance;
         private final Random random;
         private final Map<String, Double> randomOrderCache = new HashMap<>();
         private final int restartNumber;
@@ -598,7 +828,7 @@ public class BruteForceSchedulePlanner {
         private PlanningScore bestScore;
         private long lastProgressNanos;
 
-        private SearchState(long maxExploredStates, int topCount, int candidatePoolSize, List<SlotRef> orderedSlots, double maxSeconds, Map<String, Map<String, PreferenceValue>> preferenceMap, Map<String, Double> maxFamilyTrips, long seed, int restartNumber, int totalRestarts) {
+        private SearchState(long maxExploredStates, int topCount, int candidatePoolSize, List<SlotRef> orderedSlots, double maxSeconds, Map<String, Map<String, PreferenceValue>> preferenceMap, Map<String, Double> maxFamilyTrips, long seed, int restartNumber, int totalRestarts, int scoreTolerance) {
             this.maxExploredStates = maxExploredStates;
             this.topCount = topCount;
             this.candidatePoolSize = candidatePoolSize;
@@ -607,6 +837,7 @@ public class BruteForceSchedulePlanner {
             this.deadlineNanos = unlimitedTime ? Long.MAX_VALUE : System.nanoTime() + (long) (maxSeconds * 1_000_000_000L);
             this.preferenceMap = preferenceMap;
             this.maxFamilyTrips = maxFamilyTrips;
+            this.scoreTolerance = scoreTolerance;
             this.random = new Random(seed);
             this.restartNumber = restartNumber;
             this.totalRestarts = totalRestarts;
