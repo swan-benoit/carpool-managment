@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "carpool-workbook": {
+      "command": "mise",
+      "args": ["exec", "--", "node", "mcp/workbook-server.mjs"]
+    }
+  }
+}

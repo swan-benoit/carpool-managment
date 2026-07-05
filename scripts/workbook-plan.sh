@@ -3,7 +3,7 @@
 set -eu
 
 if [ "$#" -lt 1 ]; then
-  printf '%s\n' "Usage: mise run back-workbook-plan -- <path-to-workbook.xlsx> [--planner greedy|brute-force] [--seed N] [--restarts N] [--max-states N|unlimited] [--max-seconds S|unlimited] [--top N] [--exhaustive] [--format json|text]" >&2
+  printf '%s\n' "Usage: mise run back-workbook-plan -- <path-to-workbook.xlsx> [--planner greedy|brute-force] [--seed N] [--restarts N] [--max-states N|unlimited] [--max-seconds S|unlimited] [--top N] [--exhaustive] [--format json|text|xlsx] [--output <path.xlsx>]" >&2
   exit 1
 fi
 
