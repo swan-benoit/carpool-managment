@@ -7,16 +7,20 @@ import com.carpool.family.WeekType;
 import com.carpool.schedule.FamilyPlanningStats;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataValidation;
+import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -182,6 +186,8 @@ public class WorkbookXlsxWriter {
         int hCap = hKey + 3;
         int hOver = hKey + 4;
         int hConcat = hKey + 5;
+        int hAvailFirst = hConcat + 1;
+        int hAvailLast = hAvailFirst + childCount - 1;
 
         List<String[]> seedRows = new ArrayList<>();
         if (candidate.planning() != null) {
@@ -209,6 +215,7 @@ public class WorkbookXlsxWriter {
         int slotLast = slotFirst + slotCount - 1;
         row = slotLast + 2;
         int compHeaderRow = row++;
+        int compKeysRow = row++;
         int compFirst = row;
         int compLast = compFirst + childCount - 1;
         row = compLast + 2;
@@ -222,9 +229,17 @@ public class WorkbookXlsxWriter {
         String concatRange = absRange(hConcat, listFirst, listLast);
         String prefixLit = "\"'" + familySheetPrefix + "\"";
 
+        int compColFam = 0;
+        int compColChild = 1;
+        int compColSlotFirst = 2;
+        int compColManq = compColSlotFirst + slotCount;
+        String compChildNames = absRange(compColChild, compFirst, compLast);
+        String compSlotMatrix = abs(compColSlotFirst, compFirst) + ":" + abs(compColSlotFirst + slotCount - 1, compLast);
+        String compKeysRange = abs(compColSlotFirst, compKeysRow) + ":" + abs(compColSlotFirst + slotCount - 1, compKeysRow);
+
         title(sheet, s, titleRow, "Planning #" + candidate.rank() + " — éditable", colChildLast);
         XSSFRow instr = sheet.createRow(instrRow);
-        cell(instr, 0, "Modifiez la liste (cellules jaunes). Stats, grille et complétude se recalculent. Préférences/capacités lues dans les feuilles familles.", s.note);
+        cell(instr, 0, "Modifiez la liste (cellules jaunes). Stats, grille et complétude se recalculent. Menus Enfant : enfants du créneau restant à transporter. Préférences/capacités lues dans les feuilles familles.", s.note);
         sheet.addMergedRegion(new CellRangeAddress(instrRow, instrRow, 0, colChildLast));
 
         // En-tête liste
@@ -236,7 +251,7 @@ public class WorkbookXlsxWriter {
         for (int k = 0; k < maxCapacity; k++) {
             cell(lh, colChildFirst + k, "Enfant " + (k + 1), s.tableHeaderLeft);
         }
-        for (int c = hKey; c <= hConcat; c++) {
+        for (int c = hKey; c <= hAvailLast; c++) {
             cell(lh, c, "·", s.tableHeader);
         }
 
@@ -265,17 +280,43 @@ public class WorkbookXlsxWriter {
             formula(dr, hCap, "IF(" + driver + "=\"\",0,IFERROR(INDIRECT(" + sheetRef + "&\"" + FAMILY_CAPACITY_EXCEL_CELL + "\"),0))", s.cellHelper);
             formula(dr, hOver, "IF(" + abs(hNb, r) + ">" + abs(hCap, r) + "," + abs(hNb, r) + "-" + abs(hCap, r) + ",0)", s.cellHelper);
             formula(dr, hConcat, "\",\"&_xlfn.TEXTJOIN(\",\",TRUE," + childCells + ")&\",\"", s.cellHelper);
+            for (int k = 0; k < childCount; k++) {
+                int c = hAvailFirst + k;
+                String avail = "IFERROR(INDEX(" + compChildNames
+                        + ",SMALL(IF(INDEX(" + compSlotMatrix + ",0,MATCH(" + abs(hKey, r) + "," + compKeysRange + ",0))=1"
+                        + ",ROW(" + compChildNames + ")-ROW(" + abs(compColChild, compFirst) + ")+1)," + (k + 1) + ")),\"\")";
+                sheet.setArrayFormula(avail, new CellRangeAddress(r, r, c, c));
+                XSSFCell availCell = dr.getCell(c);
+                if (availCell != null) {
+                    availCell.setCellStyle(s.cellHelper);
+                }
+            }
         }
-        for (int c = hKey; c <= hConcat; c++) {
+        for (int c = hKey; c <= hAvailLast; c++) {
             sheet.setColumnHidden(c, true);
+        }
+
+        // Menu déroulant enfants : par ligne, seuls les enfants du créneau encore non transportés
+        XSSFDataValidationHelper dvHelper = new XSSFDataValidationHelper(sheet);
+        for (int i = 0; i < listTotalRows; i++) {
+            int r = listFirst + i;
+            DataValidationConstraint childListConstraint = dvHelper.createFormulaListConstraint(
+                    abs(hAvailFirst, r) + ":" + abs(hAvailLast, r));
+            CellRangeAddressList childListRegions = new CellRangeAddressList(r, r, colChildFirst, colChildLast);
+            DataValidation childValidation = dvHelper.createValidation(childListConstraint, childListRegions);
+            childValidation.setEmptyCellAllowed(true);
+            childValidation.setSuppressDropDownArrow(true);
+            childValidation.setShowErrorBox(false);
+            sheet.addValidationData(childValidation);
         }
 
         // Complétude (présence = constante input ; transport = live)
         section(sheet, s, compHeaderRow, "Complétude (1 = enfant présent non transporté)", colChildLast);
-        int compColFam = 0;
-        int compColChild = 1;
-        int compColSlotFirst = 2;
-        int compColManq = compColSlotFirst + slotCount;
+        XSSFRow keysRow = sheet.createRow(compKeysRow);
+        for (int j = 0; j < slotCount; j++) {
+            cell(keysRow, compColSlotFirst + j, slots.get(j).key(), s.cellHelper);
+        }
+        keysRow.setZeroHeight(true);
         for (int i = 0; i < childCount; i++) {
             int r = compFirst + i;
             ChildRef child = children.get(i);
