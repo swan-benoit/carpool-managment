@@ -175,12 +175,17 @@ public class WorkbookXlsxWriter {
         int slotCount = slots.size();
 
         int colSemaine = 0;
-        int colJour = 1;
-        int colCreneau = 2;
-        int colDriver = 3;
-        int colChildFirst = 4;
+        int colJour = colSemaine + 1;
+        int colCreneau = colSemaine + 2;
+        int colDriver = colSemaine + 3;
+        int colChildFirst = colSemaine + 4;
         int colChildLast = colChildFirst + maxCapacity - 1;
-        int hKey = colChildLast + 1;
+        int gridColFirst = colChildLast + 2;
+        int compColFam = colSemaine;
+        int compColChild = compColFam + 1;
+        int compColSlotFirst = compColFam + 2;
+        int compColManq = compColSlotFirst + slotCount;
+        int hKey = compColManq + 2;
         int hNb = hKey + 1;
         int hPref = hKey + 2;
         int hCap = hKey + 3;
@@ -218,8 +223,6 @@ public class WorkbookXlsxWriter {
         int compKeysRow = row++;
         int compFirst = row;
         int compLast = compFirst + childCount - 1;
-        row = compLast + 2;
-        int grilleRow = row;
 
         String driverRange = absRange(colDriver, listFirst, listLast);
         String keyRange = absRange(hKey, listFirst, listLast);
@@ -229,10 +232,6 @@ public class WorkbookXlsxWriter {
         String concatRange = absRange(hConcat, listFirst, listLast);
         String prefixLit = "\"'" + familySheetPrefix + "\"";
 
-        int compColFam = 0;
-        int compColChild = 1;
-        int compColSlotFirst = 2;
-        int compColManq = compColSlotFirst + slotCount;
         String compChildNames = absRange(compColChild, compFirst, compLast);
         String compSlotMatrix = abs(compColSlotFirst, compFirst) + ":" + abs(compColSlotFirst + slotCount - 1, compLast);
         String compKeysRange = abs(compColSlotFirst, compKeysRow) + ":" + abs(compColSlotFirst + slotCount - 1, compKeysRow);
@@ -310,8 +309,18 @@ public class WorkbookXlsxWriter {
             sheet.addValidationData(childValidation);
         }
 
+        // Menu déroulant conducteurs (source : colonne Famille des stats)
+        DataValidationConstraint driverConstraint = dvHelper.createFormulaListConstraint(
+                absRange(colSemaine, statsFirst, statsLast));
+        CellRangeAddressList driverRegions = new CellRangeAddressList(listFirst, listLast, colDriver, colDriver);
+        DataValidation driverValidation = dvHelper.createValidation(driverConstraint, driverRegions);
+        driverValidation.setEmptyCellAllowed(true);
+        driverValidation.setSuppressDropDownArrow(true);
+        driverValidation.setShowErrorBox(true);
+        sheet.addValidationData(driverValidation);
+
         // Complétude (présence = constante input ; transport = live)
-        section(sheet, s, compHeaderRow, "Complétude (1 = enfant présent non transporté)", colChildLast);
+        section(sheet, s, compHeaderRow, "Complétude (1 = enfant présent non transporté)", compColFam, compColManq);
         XSSFRow keysRow = sheet.createRow(compKeysRow);
         for (int j = 0; j < slotCount; j++) {
             cell(keysRow, compColSlotFirst + j, slots.get(j).key(), s.cellHelper);
@@ -342,78 +351,82 @@ public class WorkbookXlsxWriter {
         String[] statHeaders = {"Famille", "Réel/sem", "Idéal/sem", "Écart", "Justice", "Éviter", "Préféré", "Impossible", "Manquants"};
         XSSFRow sth = sheet.createRow(statsHeaderRow);
         for (int c = 0; c < statHeaders.length; c++) {
-            cell(sth, c, statHeaders[c], c == 0 ? s.tableHeaderLeft : s.tableHeader);
+            cell(sth, colSemaine + c, statHeaders[c], c == 0 ? s.tableHeaderLeft : s.tableHeader);
         }
         for (int i = 0; i < famCount; i++) {
             int r = statsFirst + i;
             String name = familyNames.get(i);
             boolean stripe = i % 2 == 1;
             XSSFRow dr = sheet.createRow(r);
-            String fam = abs(0, r);
-            cell(dr, 0, name, stripe ? s.cellFamilyStripe : s.cellFamily);
-            formula(dr, 1, "COUNTIF(" + driverRange + "," + fam + ")/2", stripe ? s.cellNumStripe : s.cellNum);
-            cellNum(dr, 2, idealByFamily.getOrDefault(name, 0.0), stripe ? s.cellNumStripe : s.cellNum);
-            formula(dr, 3, "ABS(" + abs(1, r) + "-" + abs(2, r) + ")", stripe ? s.cellNumStripe : s.cellNum);
-            formula(dr, 5, "COUNTIFS(" + driverRange + "," + fam + "," + prefRange + ",\"EVITER\")", stripe ? s.cellIntStripe : s.cellInt);
-            formula(dr, 6, "COUNTIFS(" + driverRange + "," + fam + "," + prefRange + ",\"PREFERE\")", stripe ? s.cellIntStripe : s.cellInt);
-            formula(dr, 7, "COUNTIFS(" + driverRange + "," + fam + "," + prefRange + ",\"IMPOSSIBLE\")", stripe ? s.cellIntStripe : s.cellInt);
-            formula(dr, 8, "SUMIF(" + compFamRange + "," + fam + "," + compManqRange + ")", stripe ? s.cellIntStripe : s.cellInt);
-            String reel = abs(1, r);
-            String ideal = abs(2, r);
-            String ecart = abs(3, r);
-            String evit = abs(5, r);
-            String pref = abs(6, r);
-            String impos = abs(7, r);
-            String manq = abs(8, r);
+            String fam = abs(colSemaine, r);
+            cell(dr, colSemaine, name, stripe ? s.cellFamilyStripe : s.cellFamily);
+            formula(dr, colSemaine + 1, "COUNTIF(" + driverRange + "," + fam + ")/2", stripe ? s.cellNumStripe : s.cellNum);
+            cellNum(dr, colSemaine + 2, idealByFamily.getOrDefault(name, 0.0), stripe ? s.cellNumStripe : s.cellNum);
+            formula(dr, colSemaine + 3, "ABS(" + abs(colSemaine + 1, r) + "-" + abs(colSemaine + 2, r) + ")", stripe ? s.cellNumStripe : s.cellNum);
+            formula(dr, colSemaine + 5, "COUNTIFS(" + driverRange + "," + fam + "," + prefRange + ",\"EVITER\")", stripe ? s.cellIntStripe : s.cellInt);
+            formula(dr, colSemaine + 6, "COUNTIFS(" + driverRange + "," + fam + "," + prefRange + ",\"PREFERE\")", stripe ? s.cellIntStripe : s.cellInt);
+            formula(dr, colSemaine + 7, "COUNTIFS(" + driverRange + "," + fam + "," + prefRange + ",\"IMPOSSIBLE\")", stripe ? s.cellIntStripe : s.cellInt);
+            formula(dr, colSemaine + 8, "SUMIF(" + compFamRange + "," + fam + "," + compManqRange + ")", stripe ? s.cellIntStripe : s.cellInt);
+            String reel = abs(colSemaine + 1, r);
+            String ideal = abs(colSemaine + 2, r);
+            String ecart = abs(colSemaine + 3, r);
+            String evit = abs(colSemaine + 5, r);
+            String pref = abs(colSemaine + 6, r);
+            String impos = abs(colSemaine + 7, r);
+            String manq = abs(colSemaine + 8, r);
             String devPen = "MIN(1,IF(" + ideal + "<=0,IF(" + reel + "=0,0,1)," + ecart + "/" + ideal + "))*0.8";
             String avoidPen = "MIN(0.15," + evit + "*0.05)";
             String prefBonus = "IF(AND(" + pref + ">0," + evit + "=0),MIN(0.05," + pref + "*0.01),0)";
             String base = "1-(" + devPen + ")-(" + avoidPen + ")+(" + prefBonus + ")";
             String justice = "IF(OR(" + impos + ">0," + manq + ">0),0,MAX(0,MIN(1," + base + ")))";
-            formula(dr, 4, justice, stripe ? s.cellNumStripe : s.cellNum);
+            formula(dr, colSemaine + 4, justice, stripe ? s.cellNumStripe : s.cellNum);
         }
-        String justiceRange = absRange(4, statsFirst, statsLast);
-        String evitRange = absRange(5, statsFirst, statsLast);
-        String prefStatRange = absRange(6, statsFirst, statsLast);
-        String imposRange = absRange(7, statsFirst, statsLast);
-        String manqRange = absRange(8, statsFirst, statsLast);
+        String justiceRange = absRange(colSemaine + 4, statsFirst, statsLast);
+        String evitRange = absRange(colSemaine + 5, statsFirst, statsLast);
+        String prefStatRange = absRange(colSemaine + 6, statsFirst, statsLast);
+        String imposRange = absRange(colSemaine + 7, statsFirst, statsLast);
+        String manqRange = absRange(colSemaine + 8, statsFirst, statsLast);
 
         // Redondance par créneau
         XSSFRow slh = sheet.createRow(slotHeaderRow);
         String[] slotHeaders = {"Créneau", "Voitures", "Enfants", "Min voitures", "Redondants"};
         for (int c = 0; c < slotHeaders.length; c++) {
-            cell(slh, c, slotHeaders[c], c == 0 ? s.tableHeaderLeft : s.tableHeader);
+            cell(slh, colSemaine + c, slotHeaders[c], c == 0 ? s.tableHeaderLeft : s.tableHeader);
         }
         for (int j = 0; j < slotCount; j++) {
             int r = slotFirst + j;
             XSSFRow dr = sheet.createRow(r);
             String keyLit = "\"" + slots.get(j).key() + "\"";
-            cell(dr, 0, slots.get(j).key(), s.cellHelper);
-            formula(dr, 1, "COUNTIF(" + keyRange + "," + keyLit + ")", s.cellInt);
-            formula(dr, 2, "SUMIF(" + keyRange + "," + keyLit + "," + nbRange + ")", s.cellInt);
-            formula(dr, 3, "IF(" + abs(2, r) + "=0,0,ROUNDUP(" + abs(2, r) + "/" + maxCapacity + ",0))", s.cellInt);
-            formula(dr, 4, "MAX(0," + abs(1, r) + "-" + abs(3, r) + ")", s.cellInt);
+            cell(dr, colSemaine, slots.get(j).key(), s.cellHelper);
+            formula(dr, colSemaine + 1, "COUNTIF(" + keyRange + "," + keyLit + ")", s.cellInt);
+            formula(dr, colSemaine + 2, "SUMIF(" + keyRange + "," + keyLit + "," + nbRange + ")", s.cellInt);
+            formula(dr, colSemaine + 3, "IF(" + abs(colSemaine + 2, r) + "=0,0,ROUNDUP(" + abs(colSemaine + 2, r) + "/" + maxCapacity + ",0))", s.cellInt);
+            formula(dr, colSemaine + 4, "MAX(0," + abs(colSemaine + 1, r) + "-" + abs(colSemaine + 3, r) + ")", s.cellInt);
         }
-        String redundantRange = absRange(4, slotFirst, slotLast);
+        String redundantRange = absRange(colSemaine + 4, slotFirst, slotLast);
 
         // Résumé global
         int sr = summaryRow;
-        sr = kvFormula(sheet, s, sr, "Justice minimale", "MIN(" + justiceRange + ")");
-        sr = kvFormula(sheet, s, sr, "Justice moyenne", "AVERAGE(" + justiceRange + ")");
-        sr = kvFormula(sheet, s, sr, "Affectations à éviter", "SUM(" + evitRange + ")");
-        sr = kvFormula(sheet, s, sr, "Affectations préférées", "SUM(" + prefStatRange + ")");
-        sr = kvFormula(sheet, s, sr, "Affectations impossibles", "SUM(" + imposRange + ")");
-        sr = kvFormula(sheet, s, sr, "Transports manquants", "SUM(" + manqRange + ")");
-        sr = kvFormula(sheet, s, sr, "Planning complet", "IF(SUM(" + manqRange + ")=0,\"Oui\",\"Non\")");
-        sr = kvFormula(sheet, s, sr, "Dépassements de capacité", "COUNTIF(" + overRange + ",\">0\")");
-        kvFormula(sheet, s, sr, "Conducteurs redondants (approx.)", "SUM(" + redundantRange + ")");
+        sr = kvFormula(sheet, s, sr, colSemaine, "Justice minimale", "MIN(" + justiceRange + ")");
+        sr = kvFormula(sheet, s, sr, colSemaine, "Justice moyenne", "AVERAGE(" + justiceRange + ")");
+        sr = kvFormula(sheet, s, sr, colSemaine, "Affectations à éviter", "SUM(" + evitRange + ")");
+        sr = kvFormula(sheet, s, sr, colSemaine, "Affectations préférées", "SUM(" + prefStatRange + ")");
+        sr = kvFormula(sheet, s, sr, colSemaine, "Affectations impossibles", "SUM(" + imposRange + ")");
+        sr = kvFormula(sheet, s, sr, colSemaine, "Transports manquants", "SUM(" + manqRange + ")");
+        sr = kvFormula(sheet, s, sr, colSemaine, "Planning complet", "IF(SUM(" + manqRange + ")=0,\"Oui\",\"Non\")");
+        sr = kvFormula(sheet, s, sr, colSemaine, "Dépassements de capacité", "COUNTIF(" + overRange + ",\">0\")");
+        kvFormula(sheet, s, sr, colSemaine, "Conducteurs redondants (approx.)", "SUM(" + redundantRange + ")");
 
-        // Grille hebdo (lecture jour le jour)
-        grilleRow = buildGrid(sheet, s, grilleRow, "Semaine paire", "Paire", keyRange, driverRange, concatRange, colChildLast);
-        grilleRow++;
-        buildGrid(sheet, s, grilleRow, "Semaine impaire", "Impaire", keyRange, driverRange, concatRange, colChildLast);
+        // Grille hebdo à droite de la zone de saisie
+        int gridRow = buildGrid(sheet, s, listHeaderRow, gridColFirst, "Semaine paire", "Paire", keyRange, driverRange, concatRange);
+        buildGrid(sheet, s, gridRow + 1, gridColFirst, "Semaine impaire", "Impaire", keyRange, driverRange, concatRange);
 
-        sheet.setColumnWidth(colSemaine, 10 * 256);
+        sheet.setColumnWidth(gridColFirst - 1, 3 * 256);
+        sheet.setColumnWidth(gridColFirst, 9 * 256);
+        for (int d = 1; d <= DAYS.size(); d++) {
+            sheet.setColumnWidth(gridColFirst + d, 26 * 256);
+        }
+        sheet.setColumnWidth(colSemaine, 16 * 256);
         sheet.setColumnWidth(colJour, 10 * 256);
         sheet.setColumnWidth(colCreneau, 9 * 256);
         sheet.setColumnWidth(colDriver, 22 * 256);
@@ -424,26 +437,26 @@ public class WorkbookXlsxWriter {
     }
 
     private int buildGrid(
-            XSSFSheet sheet, Styles s, int startRow, String title, String weekLabel,
-            String keyRange, String driverRange, String concatRange, int lastCol
+            XSSFSheet sheet, Styles s, int startRow, int firstCol, String title, String weekLabel,
+            String keyRange, String driverRange, String concatRange
     ) {
-        section(sheet, s, startRow++, title, lastCol);
-        XSSFRow header = sheet.createRow(startRow++);
-        cell(header, 0, "", s.tableHeader);
+        section(sheet, s, startRow++, title, firstCol, firstCol + DAYS.size());
+        XSSFRow header = rowOf(sheet, startRow++);
+        cell(header, firstCol, "", s.tableHeader);
         for (int d = 0; d < DAYS.size(); d++) {
-            cell(header, d + 1, DAY_FR.get(DAYS.get(d)), s.tableHeader);
+            cell(header, firstCol + d + 1, DAY_FR.get(DAYS.get(d)), s.tableHeader);
         }
         for (int si = 0; si < SLOTS.size(); si++) {
             String slotFr = SLOT_FR.get(SLOTS.get(si));
-            XSSFRow r = sheet.createRow(startRow);
+            XSSFRow r = rowOf(sheet, startRow);
             r.setHeightInPoints(56);
-            cell(r, 0, slotFr, s.cellSlotLabel);
+            cell(r, firstCol, slotFr, s.cellSlotLabel);
             for (int d = 0; d < DAYS.size(); d++) {
                 String key = weekLabel + "|" + DAY_FR.get(DAYS.get(d)) + "|" + slotFr;
                 String keyLit = "\"" + key + "\"";
                 String driverText = driverRange + "&\" (\"&SUBSTITUTE(MID(" + concatRange + ",2,LEN(" + concatRange + ")-2),\",\",\", \")&\")\"";
                 String formula = "_xlfn.TEXTJOIN(CHAR(10),TRUE,IF(" + keyRange + "=" + keyLit + "," + driverText + ",\"\"))";
-                int colIdx = d + 1;
+                int colIdx = firstCol + d + 1;
                 sheet.setArrayFormula(formula, new CellRangeAddress(startRow, startRow, colIdx, colIdx));
                 XSSFCell c = r.getCell(colIdx);
                 if (c != null) {
@@ -453,6 +466,11 @@ public class WorkbookXlsxWriter {
             startRow++;
         }
         return startRow;
+    }
+
+    private XSSFRow rowOf(XSSFSheet sheet, int rowIndex) {
+        XSSFRow row = sheet.getRow(rowIndex);
+        return row != null ? row : sheet.createRow(rowIndex);
     }
 
     private void appendWeekRows(List<String[]> rows, String weekLabel, List<WorkbookTripView> trips, int maxCapacity) {
@@ -491,23 +509,23 @@ public class WorkbookXlsxWriter {
         return row + 1;
     }
 
-    private int section(XSSFSheet sheet, Styles s, int row, String text, int lastCol) {
+    private int section(XSSFSheet sheet, Styles s, int row, String text, int firstCol, int lastCol) {
         XSSFRow r = sheet.getRow(row) != null ? sheet.getRow(row) : sheet.createRow(row);
         r.setHeightInPoints(16);
-        XSSFCell c = r.createCell(0);
+        XSSFCell c = r.createCell(firstCol);
         c.setCellValue(text);
         c.setCellStyle(s.sectionHeader);
-        sheet.addMergedRegion(new CellRangeAddress(row, row, 0, lastCol));
+        sheet.addMergedRegion(new CellRangeAddress(row, row, firstCol, lastCol));
         return row + 1;
     }
 
-    private int kvFormula(XSSFSheet sheet, Styles s, int row, String key, String formula) {
+    private int kvFormula(XSSFSheet sheet, Styles s, int row, int firstCol, String key, String formula) {
         XSSFRow r = sheet.getRow(row) != null ? sheet.getRow(row) : sheet.createRow(row);
         r.setHeightInPoints(15);
-        XSSFCell kc = r.createCell(0);
+        XSSFCell kc = r.createCell(firstCol);
         kc.setCellValue(key);
         kc.setCellStyle(s.label);
-        XSSFCell vc = r.createCell(1);
+        XSSFCell vc = r.createCell(firstCol + 1);
         vc.setCellFormula(formula);
         vc.setCellStyle(s.cellResult);
         return row + 1;
@@ -562,15 +580,13 @@ public class WorkbookXlsxWriter {
 
             XSSFFont fBase = font(wb, false, false, 11, null);
             XSSFFont fBold = font(wb, true, false, 11, null);
-            XSSFFont fTitle = font(wb, true, false, 14, null);
+            XSSFFont fTitleWhite = font(wb, true, false, 14, COLOR_WHITE);
             XSSFFont fWhite = font(wb, true, false, 11, COLOR_WHITE);
             XSSFFont fGrey = font(wb, false, true, 10, new byte[]{(byte) 0x80, (byte) 0x80, (byte) 0x80});
 
-            title = style(wb, fTitle, COLOR_NAVY, (short) 0, false, HorizontalAlignment.LEFT, VerticalAlignment.CENTER, null);
-            title.getFont().setColor(xc(COLOR_WHITE));
+            title = style(wb, fTitleWhite, COLOR_NAVY, (short) 0, false, HorizontalAlignment.LEFT, VerticalAlignment.CENTER, null);
 
-            sectionHeader = style(wb, fBold, COLOR_BLUE, (short) 0, true, HorizontalAlignment.LEFT, VerticalAlignment.CENTER, COLOR_BORDER);
-            sectionHeader.getFont().setColor(xc(COLOR_WHITE));
+            sectionHeader = style(wb, fWhite, COLOR_BLUE, (short) 0, true, HorizontalAlignment.LEFT, VerticalAlignment.CENTER, COLOR_BORDER);
 
             note = style(wb, fGrey, null, (short) 0, false, HorizontalAlignment.LEFT, VerticalAlignment.CENTER, null);
             label = style(wb, fBold, COLOR_LGREY, (short) 0, true, HorizontalAlignment.LEFT, VerticalAlignment.CENTER, COLOR_BORDER);
