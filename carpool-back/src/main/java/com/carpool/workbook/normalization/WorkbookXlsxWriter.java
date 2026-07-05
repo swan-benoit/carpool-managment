@@ -178,7 +178,8 @@ public class WorkbookXlsxWriter {
         int colJour = colSemaine + 1;
         int colCreneau = colSemaine + 2;
         int colDriver = colSemaine + 3;
-        int colChildFirst = colSemaine + 4;
+        int colLieu = colSemaine + 4;
+        int colChildFirst = colSemaine + 5;
         int colChildLast = colChildFirst + maxCapacity - 1;
         int gridColFirst = colChildLast + 2;
         int compColFam = colSemaine;
@@ -225,6 +226,7 @@ public class WorkbookXlsxWriter {
         int compLast = compFirst + childCount - 1;
 
         String driverRange = absRange(colDriver, listFirst, listLast);
+        String lieuRange = absRange(colLieu, listFirst, listLast);
         String keyRange = absRange(hKey, listFirst, listLast);
         String nbRange = absRange(hNb, listFirst, listLast);
         String prefRange = absRange(hPref, listFirst, listLast);
@@ -247,6 +249,7 @@ public class WorkbookXlsxWriter {
         cell(lh, colJour, "Jour", s.tableHeader);
         cell(lh, colCreneau, "Créneau", s.tableHeader);
         cell(lh, colDriver, "Conducteur", s.tableHeaderLeft);
+        cell(lh, colLieu, "Lieu", s.tableHeaderLeft);
         for (int k = 0; k < maxCapacity; k++) {
             cell(lh, colChildFirst + k, "Enfant " + (k + 1), s.tableHeaderLeft);
         }
@@ -263,6 +266,7 @@ public class WorkbookXlsxWriter {
             cell(dr, colJour, seed != null ? seed[1] : "", s.cellInputC);
             cell(dr, colCreneau, seed != null ? seed[2] : "", s.cellInputC);
             cell(dr, colDriver, seed != null ? seed[3] : "", s.cellInput);
+            cell(dr, colLieu, "", s.cellInput);
             for (int k = 0; k < maxCapacity; k++) {
                 String childVal = seed != null && (4 + k) < seed.length ? seed[4 + k] : "";
                 cell(dr, colChildFirst + k, childVal, s.cellInput);
@@ -418,18 +422,19 @@ public class WorkbookXlsxWriter {
         kvFormula(sheet, s, sr, colSemaine, "Conducteurs redondants (approx.)", "SUM(" + redundantRange + ")");
 
         // Grille hebdo à droite de la zone de saisie
-        int gridRow = buildGrid(sheet, s, listHeaderRow, gridColFirst, "Semaine paire", "Paire", keyRange, driverRange, concatRange);
-        buildGrid(sheet, s, gridRow + 1, gridColFirst, "Semaine impaire", "Impaire", keyRange, driverRange, concatRange);
+        int gridRow = buildGrid(sheet, s, listHeaderRow, gridColFirst, "Semaine paire", "Paire", keyRange, driverRange, lieuRange, concatRange);
+        buildGrid(sheet, s, gridRow + 1, gridColFirst, "Semaine impaire", "Impaire", keyRange, driverRange, lieuRange, concatRange);
 
         sheet.setColumnWidth(gridColFirst - 1, 3 * 256);
         sheet.setColumnWidth(gridColFirst, 9 * 256);
         for (int d = 1; d <= DAYS.size(); d++) {
-            sheet.setColumnWidth(gridColFirst + d, 26 * 256);
+            sheet.setColumnWidth(gridColFirst + d, 40 * 256);
         }
         sheet.setColumnWidth(colSemaine, 16 * 256);
         sheet.setColumnWidth(colJour, 10 * 256);
         sheet.setColumnWidth(colCreneau, 9 * 256);
         sheet.setColumnWidth(colDriver, 22 * 256);
+        sheet.setColumnWidth(colLieu, 16 * 256);
         for (int k = 0; k < maxCapacity; k++) {
             sheet.setColumnWidth(colChildFirst + k, 14 * 256);
         }
@@ -438,7 +443,7 @@ public class WorkbookXlsxWriter {
 
     private int buildGrid(
             XSSFSheet sheet, Styles s, int startRow, int firstCol, String title, String weekLabel,
-            String keyRange, String driverRange, String concatRange
+            String keyRange, String driverRange, String lieuRange, String concatRange
     ) {
         section(sheet, s, startRow++, title, firstCol, firstCol + DAYS.size());
         XSSFRow header = rowOf(sheet, startRow++);
@@ -449,12 +454,13 @@ public class WorkbookXlsxWriter {
         for (int si = 0; si < SLOTS.size(); si++) {
             String slotFr = SLOT_FR.get(SLOTS.get(si));
             XSSFRow r = rowOf(sheet, startRow);
-            r.setHeightInPoints(56);
+            r.setHeightInPoints(90);
             cell(r, firstCol, slotFr, s.cellSlotLabel);
             for (int d = 0; d < DAYS.size(); d++) {
                 String key = weekLabel + "|" + DAY_FR.get(DAYS.get(d)) + "|" + slotFr;
                 String keyLit = "\"" + key + "\"";
-                String driverText = driverRange + "&\" (\"&SUBSTITUTE(MID(" + concatRange + ",2,LEN(" + concatRange + ")-2),\",\",\", \")&\")\"";
+                String driverText = driverRange + "&IF(" + lieuRange + "=\"\",\"\",\" @ \"&" + lieuRange + ")"
+                        + "&\" (\"&SUBSTITUTE(MID(" + concatRange + ",2,LEN(" + concatRange + ")-2),\",\",\", \")&\")\"";
                 String formula = "_xlfn.TEXTJOIN(CHAR(10),TRUE,IF(" + keyRange + "=" + keyLit + "," + driverText + ",\"\"))";
                 int colIdx = firstCol + d + 1;
                 sheet.setArrayFormula(formula, new CellRangeAddress(startRow, startRow, colIdx, colIdx));

@@ -201,3 +201,17 @@
 [INFO] 2026-07-05T14:41:27.781Z [session=baab1c9b-0126-4702-b070-8879f1675e83] Resolved stateDir: /home/swan/.a5c/state
 [INFO] 2026-07-05T14:41:27.781Z [session=baab1c9b-0126-4702-b070-8879f1675e83] Checking session file at: /home/swan/.a5c/state/baab1c9b-0126-4702-b070-8879f1675e83.md
 [INFO] 2026-07-05T14:41:27.782Z [session=baab1c9b-0126-4702-b070-8879f1675e83] No active loop found for session baab1c9b-0126-4702-b070-8879f1675e83 — allowing exit
+[INFO] 2026-07-05T14:48:04.116Z handleHookRunStop started
+[INFO] 2026-07-05T14:48:04.120Z Hook input received
+[INFO] 2026-07-05T14:48:04.120Z [session=baab1c9b-0126-4702-b070-8879f1675e83] Session ID: baab1c9b-0126-4702-b070-8879f1675e83
+[INFO] 2026-07-05T14:48:04.120Z [session=baab1c9b-0126-4702-b070-8879f1675e83] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-07-05T14:48:04.120Z [session=baab1c9b-0126-4702-b070-8879f1675e83] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-07-05T14:48:04.120Z [session=baab1c9b-0126-4702-b070-8879f1675e83] Checking session file at: /home/swan/.a5c/state/baab1c9b-0126-4702-b070-8879f1675e83.md
+[INFO] 2026-07-05T14:48:04.120Z [session=baab1c9b-0126-4702-b070-8879f1675e83] No active loop found for session baab1c9b-0126-4702-b070-8879f1675e83 — allowing exit
+[INFO] 2026-07-05T14:54:39.720Z handleHookRunStop started
+[INFO] 2026-07-05T14:54:39.723Z Hook input received
+[INFO] 2026-07-05T14:54:39.723Z [session=baab1c9b-0126-4702-b070-8879f1675e83] Session ID: baab1c9b-0126-4702-b070-8879f1675e83
+[INFO] 2026-07-05T14:54:39.723Z [session=baab1c9b-0126-4702-b070-8879f1675e83] Resolved pluginRoot: /home/swan/.claude/plugins/cache/a5c-ai/babysitter/4.0.157
+[INFO] 2026-07-05T14:54:39.723Z [session=baab1c9b-0126-4702-b070-8879f1675e83] Resolved stateDir: /home/swan/.a5c/state
+[INFO] 2026-07-05T14:54:39.723Z [session=baab1c9b-0126-4702-b070-8879f1675e83] Checking session file at: /home/swan/.a5c/state/baab1c9b-0126-4702-b070-8879f1675e83.md
+[INFO] 2026-07-05T14:54:39.724Z [session=baab1c9b-0126-4702-b070-8879f1675e83] No active loop found for session baab1c9b-0126-4702-b070-8879f1675e83 — allowing exit
