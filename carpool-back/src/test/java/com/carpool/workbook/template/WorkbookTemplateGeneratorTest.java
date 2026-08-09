@@ -26,7 +26,7 @@ class WorkbookTemplateGeneratorTest {
 
     @Test
     void generates_family_sheet_with_helpers_and_grids() throws Exception {
-        FamilyWorkbookTemplateData family = new FamilyWorkbookTemplateData("Anne / Swan", 4, List.of("Luce"));
+        FamilyWorkbookTemplateData family = new FamilyWorkbookTemplateData("Anne / Swan", 4, List.of("Luce"), null);
 
         try (XSSFWorkbook workbook = generator.createWorkbook(List.of(family))) {
             String familySheetName = workbook.getSheet("Index").getRow(1).getCell(1).getStringCellValue();
@@ -53,8 +53,8 @@ class WorkbookTemplateGeneratorTest {
     @Test
     void writes_index_rows_for_families() throws Exception {
         List<FamilyWorkbookTemplateData> families = List.of(
-                new FamilyWorkbookTemplateData("Anne / Swan", 4, List.of("Luce")),
-                new FamilyWorkbookTemplateData("Virginie et Romain", 6, List.of("Mael", "Matheo"))
+                new FamilyWorkbookTemplateData("Anne / Swan", 4, List.of("Luce"), null),
+                new FamilyWorkbookTemplateData("Virginie et Romain", 6, List.of("Mael", "Matheo"), null)
         );
 
         try (XSSFWorkbook workbook = generator.createWorkbook(families)) {

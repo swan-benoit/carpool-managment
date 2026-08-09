@@ -40,12 +40,36 @@ public final class FamilyPlanningStats {
             return 0.0;
         }
 
-        double familyAvailableSlots = family.children.stream()
+        // La cible d'équité est calculée une fois par foyer (obligation de transport des enfants
+        // du foyer, sans dépendre de la famille-driver à laquelle chaque enfant est rattaché),
+        // puis répartie entre les co-parents au prorata de leur disponibilité de conduite.
+        List<Family> household = householdMembers(family, families);
+        double householdAvailableSlots = household.stream()
+                .flatMap(currentFamily -> currentFamily.children.stream())
                 .mapToDouble(FamilyPlanningStats::availableSlots)
                 .sum();
 
         double totalRequiredTripsPerWeek = totalRequiredTripsPerWeek(families);
-        return totalRequiredTripsPerWeek * (familyAvailableSlots / totalAvailableSlots);
+        double householdTarget = totalRequiredTripsPerWeek * (householdAvailableSlots / totalAvailableSlots);
+
+        // Les co-parents d'un même foyer partagent l'obligation de transport de l'enfant à parts
+        // égales : chaque parent-driver reçoit la même cible d'équité, indépendamment de sa
+        // disponibilité ou de sa capacité (une famille solo = foyer d'une seule famille => cible entière).
+        return householdTarget / household.size();
+    }
+
+    /**
+     * Familles du foyer de {@code family}. Une famille sans identifiant de foyer constitue son
+     * propre foyer d'une seule famille (rétrocompatibilité : la répartition renvoie alors la cible
+     * entière du foyer, identique au calcul historique).
+     */
+    static List<Family> householdMembers(Family family, List<Family> families) {
+        if (family.householdId == null || family.householdId.isBlank()) {
+            return List.of(family);
+        }
+        return families.stream()
+                .filter(candidate -> family.householdId.equals(candidate.householdId))
+                .toList();
     }
 
     public static double totalRequiredTripsPerWeek(List<Family> families) {

@@ -78,7 +78,7 @@ class WorkbookStatsServiceTest {
     private Path createWorkbookWithSingleAbsentSlot() throws Exception {
         Path workbookPath = tempDir.resolve("requirements.xlsx");
         WorkbookTemplateGenerator generator = new WorkbookTemplateGenerator();
-        try (XSSFWorkbook workbook = generator.createWorkbook(List.of(new FamilyWorkbookTemplateData("Famille Test", 4, List.of("Nina"))));
+        try (XSSFWorkbook workbook = generator.createWorkbook(List.of(new FamilyWorkbookTemplateData("Famille Test", 4, List.of("Nina"), null)));
              OutputStream outputStream = Files.newOutputStream(workbookPath)) {
             String familySheetName = workbook.getSheet("Index").getRow(1).getCell(1).getStringCellValue();
             workbook.getSheet(familySheetName).getRow(9).getCell(1).setCellValue("PREFERE");

@@ -35,6 +35,7 @@ public class WorkbookFamilyReader {
     private static final int FIRST_CHILD_ROW = 15;
     private static final int FIRST_SLOT_COLUMN = 1;
     private static final int SLOT_COLUMN_COUNT = 16;
+    private static final int INDEX_HOUSEHOLD_COLUMN = 4;
     private static final String ABSENT_VALUE = "ABSENT";
     private static final String INFO_SECTION_LABEL = "Informations libres";
     private static final String GUARD_ARRANGEMENT_LABEL = "Garde alternee / contexte";
@@ -77,11 +78,17 @@ public class WorkbookFamilyReader {
                     continue;
                 }
 
+                String householdId = readString(row.getCell(INDEX_HOUSEHOLD_COLUMN));
                 Sheet familySheet = findSheet(workbook, sheetName);
                 if (familySheet != null) {
-                    families.add(readFamily(familySheet));
+                    NormalizedWorkbookFamily normalizedFamily = readFamily(familySheet);
+                    if (householdId != null && !householdId.isBlank()) {
+                        normalizedFamily.family().householdId = householdId.trim();
+                    }
+                    families.add(normalizedFamily);
                 }
             }
+            warnOnHouseholdInconsistencies(families);
             return families;
         }
     }
@@ -97,6 +104,41 @@ public class WorkbookFamilyReader {
                 readPreferences(sheet),
                 readNotes(sheet)
         );
+    }
+
+    private void warnOnHouseholdInconsistencies(List<NormalizedWorkbookFamily> families) {
+        Map<String, List<NormalizedWorkbookFamily>> byHousehold = new LinkedHashMap<>();
+        for (NormalizedWorkbookFamily family : families) {
+            String householdId = family.family().householdId;
+            if (householdId == null || householdId.isBlank()) {
+                continue;
+            }
+            byHousehold.computeIfAbsent(householdId, key -> new ArrayList<>()).add(family);
+        }
+
+        for (Map.Entry<String, List<NormalizedWorkbookFamily>> entry : byHousehold.entrySet()) {
+            List<NormalizedWorkbookFamily> members = entry.getValue();
+
+            Set<String> familyNames = new LinkedHashSet<>();
+            for (NormalizedWorkbookFamily member : members) {
+                if (!familyNames.add(member.family().name)) {
+                    System.err.printf(
+                            "[workbook] Foyer '%s' : nom de famille dupliqué '%s' (les co-parents doivent avoir des noms distincts).%n",
+                            entry.getKey(), member.family().name);
+                }
+            }
+
+            Set<String> childNames = new LinkedHashSet<>();
+            for (NormalizedWorkbookFamily member : members) {
+                for (Child child : member.family().children) {
+                    if (!childNames.add(child.name)) {
+                        System.err.printf(
+                                "[workbook] Foyer '%s' : enfant '%s' saisi sur plusieurs onglets co-parents (risque de double comptage).%n",
+                                entry.getKey(), child.name);
+                    }
+                }
+            }
+        }
     }
 
     private List<Child> readChildren(Sheet sheet) {

@@ -152,12 +152,18 @@ public class BruteForceSchedulePlanner {
                     + " finished=" + searchState.searchCompleted);
         }
 
+        // The exploration can lock in redundant cars; merge them away before diversification so
+        // the pool is seeded with car-minimal plannings.
+        List<SearchCandidate> repairedPool = repairAll(mergedCandidates, normalizedFamilies, maxFamilyTrips);
+
         // The search converges to score-optimal clones, so widen the pool by perturbing the
         // best plannings (swapping who drives each car, EVITER drivers included) to surface
         // plannings with genuinely different stat profiles (justice, avoid, preferred).
         List<SearchCandidate> diversePool = expandByPerturbation(
-                mergedCandidates, normalizedFamilies, buildPreferenceMap(normalizedFamilies), maxFamilyTrips);
-        List<SearchCandidate> selectedCandidates = selectStatDiverseCandidates(diversePool, Math.max(1, topCount), minDistance);
+                repairedPool, normalizedFamilies, buildPreferenceMap(normalizedFamilies), maxFamilyTrips);
+        List<SearchCandidate> selectedCandidates = repairAll(
+                selectStatDiverseCandidates(diversePool, Math.max(1, topCount), minDistance),
+                normalizedFamilies, maxFamilyTrips);
 
         return new SearchSummary(
                 List.copyOf(selectedCandidates),
@@ -345,9 +351,10 @@ public class BruteForceSchedulePlanner {
         return nearest;
     }
 
-    // Widens the candidate set by perturbing the best plannings: each move swaps the driver of
-    // one car to another eligible family (EVITER drivers allowed), which shifts trip balance and
-    // preference satisfaction, producing plannings with genuinely different stat profiles.
+    // Widens the candidate set by perturbing the best plannings with two moves: swapping the
+    // driver of one car to another eligible family (EVITER drivers allowed), and merging an
+    // under-filled car into the spare seats of the other cars on the same slot. Both shift trip
+    // balance and preference satisfaction, producing plannings with different stat profiles.
     private List<SearchCandidate> expandByPerturbation(
             List<SearchCandidate> pool,
             List<NormalizedWorkbookFamily> normalizedFamilies,
@@ -377,7 +384,9 @@ public class BruteForceSchedulePlanner {
                 if (all.size() >= PERTURB_CAP) {
                     break;
                 }
-                for (ScheduleResult neighbour : driverSwapNeighbours(seed.scheduleResult(), families, preferenceMap)) {
+                List<ScheduleResult> neighbours = new ArrayList<>(driverSwapNeighbours(seed.scheduleResult(), families, preferenceMap));
+                neighbours.addAll(carMergeNeighbours(seed.scheduleResult()));
+                for (ScheduleResult neighbour : neighbours) {
                     if (all.size() >= PERTURB_CAP) {
                         break;
                     }
@@ -402,6 +411,66 @@ public class BruteForceSchedulePlanner {
                     .toList();
         }
         return all;
+    }
+
+    // Removes one car from a trip when its children all fit into the spare seats of the other
+    // cars on the same slot. Remaining drivers keep their own children (seats are only added),
+    // children are placed first-fit over the other cars sorted by driver name for determinism.
+    static List<ScheduleResult> carMergeNeighbours(ScheduleResult schedule) {
+        List<ScheduleResult> neighbours = new ArrayList<>();
+        for (WeekType weekType : WeekType.values()) {
+            Schedule weekSchedule = weekType == WeekType.EVEN ? schedule.even() : schedule.odd();
+            for (Trip trip : weekSchedule.trips()) {
+                List<Assignment> assignments = trip.cars().Assignments().stream()
+                        .filter(assignment -> !assignment.children().isEmpty())
+                        .toList();
+                if (assignments.size() <= 1) {
+                    continue;
+                }
+                for (Assignment removable : assignments) {
+                    List<Assignment> others = assignments.stream()
+                            .filter(assignment -> assignment != removable)
+                            .sorted(Comparator.comparing(assignment -> assignment.driverFamily().name))
+                            .toList();
+                    int spareSeats = others.stream()
+                            .mapToInt(assignment -> assignment.driverFamily().carCapacity - assignment.children().size())
+                            .sum();
+                    if (removable.children().size() > spareSeats) {
+                        continue;
+                    }
+
+                    List<com.carpool.family.Child> toPlace = new ArrayList<>(removable.children());
+                    List<Assignment> rebuilt = new ArrayList<>();
+                    for (Assignment other : others) {
+                        int spare = other.driverFamily().carCapacity - other.children().size();
+                        if (spare <= 0 || toPlace.isEmpty()) {
+                            rebuilt.add(other);
+                            continue;
+                        }
+                        int take = Math.min(spare, toPlace.size());
+                        List<com.carpool.family.Child> children = new ArrayList<>(other.children());
+                        children.addAll(toPlace.subList(0, take));
+                        toPlace = new ArrayList<>(toPlace.subList(take, toPlace.size()));
+                        rebuilt.add(new Assignment(other.driverFamily(), List.copyOf(children)));
+                    }
+                    neighbours.add(replaceTripCars(schedule, weekType, trip, rebuilt));
+                }
+            }
+        }
+        return neighbours;
+    }
+
+    private static ScheduleResult replaceTripCars(ScheduleResult schedule, WeekType weekType, Trip target, List<Assignment> rebuiltAssignments) {
+        Schedule weekSchedule = weekType == WeekType.EVEN ? schedule.even() : schedule.odd();
+        List<Trip> rebuiltTrips = weekSchedule.trips().stream()
+                .map(trip -> trip == target
+                        ? new Trip(trip.weekDay(), trip.timeSlot(), trip.weekType(), new Cars(rebuiltAssignments), trip.families())
+                        : trip)
+                .toList();
+        Schedule rebuilt = new Schedule(weekType, rebuiltTrips, schedule.families());
+        return weekType == WeekType.EVEN
+                ? new ScheduleResult(schedule.odd(), rebuilt, schedule.families())
+                : new ScheduleResult(rebuilt, schedule.even(), schedule.families());
     }
 
     private List<ScheduleResult> driverSwapNeighbours(
@@ -462,13 +531,24 @@ public class BruteForceSchedulePlanner {
 
     // Selects plannings spread across the stat space (avoid, justice min/avg, preferred), keeping
     // the best-scored planning at rank 1 and then maximising minimum stat-distance to those chosen.
-    private List<SearchCandidate> selectStatDiverseCandidates(List<SearchCandidate> pool, int topCount, double minDistance) {
+    // Plannings that are just another planning of the pool plus redundant car(s) are excluded:
+    // their car-minimal equivalent already represents them.
+    List<SearchCandidate> selectStatDiverseCandidates(List<SearchCandidate> pool, int topCount, double minDistance) {
         if (pool.isEmpty()) {
             return List.of();
         }
+        Set<String> poolSignatures = pool.stream()
+                .map(candidate -> planningSignature(candidate.scheduleResult()))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
         List<SearchCandidate> sortedPool = pool.stream()
+                .filter(candidate -> !isRedundantVariant(candidate, poolSignatures))
                 .sorted((left, right) -> compareScores(right.planningScore(), left.planningScore()))
                 .toList();
+        if (sortedPool.isEmpty()) {
+            sortedPool = pool.stream()
+                    .sorted((left, right) -> compareScores(right.planningScore(), left.planningScore()))
+                    .toList();
+        }
         double[][] axisBounds = statAxisBounds(sortedPool);
 
         List<SearchCandidate> selected = new ArrayList<>();
@@ -494,6 +574,57 @@ public class BruteForceSchedulePlanner {
             remaining.remove(bestCandidate);
         }
         return List.copyOf(selected);
+    }
+
+    // Repairs each candidate by cascading car merges until no merge improves the score, then
+    // deduplicates by planning signature (two candidates can converge to the same repair).
+    private List<SearchCandidate> repairAll(
+            List<SearchCandidate> candidates,
+            List<NormalizedWorkbookFamily> normalizedFamilies,
+            Map<String, Double> maxFamilyTrips
+    ) {
+        Map<String, SearchCandidate> bySignature = new LinkedHashMap<>();
+        for (SearchCandidate candidate : candidates) {
+            SearchCandidate repaired = repairRedundantCars(candidate, normalizedFamilies, maxFamilyTrips);
+            bySignature.putIfAbsent(planningSignature(repaired.scheduleResult()), repaired);
+        }
+        return new ArrayList<>(bySignature.values());
+    }
+
+    // One carMergeNeighbours pass removes a single car; cascade until the score stops improving
+    // so plannings with several redundant cars converge to a car-minimal equivalent.
+    private SearchCandidate repairRedundantCars(
+            SearchCandidate candidate,
+            List<NormalizedWorkbookFamily> normalizedFamilies,
+            Map<String, Double> maxFamilyTrips
+    ) {
+        SearchCandidate current = candidate;
+        boolean improved = true;
+        while (improved && current.planningScore().redundantDrivers() > 0) {
+            improved = false;
+            for (ScheduleResult neighbour : carMergeNeighbours(current.scheduleResult())) {
+                PlanningScore score = planningScorer.score(neighbour, normalizedFamilies);
+                if (!score.complete() || !respectsFamilyTripCaps(neighbour, maxFamilyTrips)) {
+                    continue;
+                }
+                if (compareScores(score, current.planningScore()) > 0) {
+                    current = new SearchCandidate(neighbour, score);
+                    improved = true;
+                    break;
+                }
+            }
+        }
+        return current;
+    }
+
+    // A candidate is a redundant variant when removing one of its redundant cars yields a
+    // planning already present in the pool: the merged planning supersedes it.
+    private static boolean isRedundantVariant(SearchCandidate candidate, Set<String> poolSignatures) {
+        if (candidate.planningScore().redundantDrivers() == 0) {
+            return false;
+        }
+        return carMergeNeighbours(candidate.scheduleResult()).stream()
+                .anyMatch(neighbour -> poolSignatures.contains(planningSignature(neighbour)));
     }
 
     private double minStatDistanceToSelected(SearchCandidate candidate, List<SearchCandidate> selected, double[][] axisBounds) {
@@ -551,21 +682,21 @@ public class BruteForceSchedulePlanner {
         return compareScores(candidate, incumbent) > 0;
     }
 
-    private int compareScores(PlanningScore candidate, PlanningScore incumbent) {
+    int compareScores(PlanningScore candidate, PlanningScore incumbent) {
         if (candidate.complete() != incumbent.complete()) {
             return candidate.complete() ? 1 : -1;
         }
         if (candidate.assignedRequiredTransportSlots() != incumbent.assignedRequiredTransportSlots()) {
             return Integer.compare(candidate.assignedRequiredTransportSlots(), incumbent.assignedRequiredTransportSlots());
         }
+        if (candidate.redundantDrivers() != incumbent.redundantDrivers()) {
+            return Integer.compare(incumbent.redundantDrivers(), candidate.redundantDrivers());
+        }
         if (Double.compare(candidate.justice().minimumJusticeScore(), incumbent.justice().minimumJusticeScore()) != 0) {
             return Double.compare(candidate.justice().minimumJusticeScore(), incumbent.justice().minimumJusticeScore());
         }
         if (Double.compare(candidate.justice().averageJusticeScore(), incumbent.justice().averageJusticeScore()) != 0) {
             return Double.compare(candidate.justice().averageJusticeScore(), incumbent.justice().averageJusticeScore());
-        }
-        if (candidate.redundantDrivers() != incumbent.redundantDrivers()) {
-            return Integer.compare(incumbent.redundantDrivers(), candidate.redundantDrivers());
         }
         if (candidate.totalScore() != incumbent.totalScore()) {
             return Integer.compare(candidate.totalScore(), incumbent.totalScore());
@@ -700,10 +831,10 @@ public class BruteForceSchedulePlanner {
         if (currentScore.assignedRequiredTransportSlots() > incumbent.assignedRequiredTransportSlots()) {
             return false;
         }
-        if (Double.compare(currentScore.justice().minimumJusticeScore(), incumbent.justice().minimumJusticeScore()) > 0) {
+        if (currentScore.redundantDrivers() < incumbent.redundantDrivers()) {
             return false;
         }
-        if (currentScore.redundantDrivers() < incumbent.redundantDrivers()) {
+        if (Double.compare(currentScore.justice().minimumJusticeScore(), incumbent.justice().minimumJusticeScore()) > 0) {
             return false;
         }
         if (currentScore.assignedRequiredTransportSlots() == incumbent.assignedRequiredTransportSlots()

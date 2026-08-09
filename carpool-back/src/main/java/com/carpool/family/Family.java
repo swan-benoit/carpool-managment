@@ -23,6 +23,12 @@ public class Family extends PanacheEntityBase {
 
     public int carCapacity;
 
+    /**
+     * Identifiant de foyer co-parent. Les familles-driver partageant la même valeur non vide
+     * forment un seul foyer (parents séparés d'un même enfant). {@code null} ou vide = foyer solo.
+     */
+    public String householdId;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     public List<Child> children ;
 

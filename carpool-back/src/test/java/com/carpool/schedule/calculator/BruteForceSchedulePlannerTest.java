@@ -209,6 +209,176 @@ class BruteForceSchedulePlannerTest {
         assertThat(signatures(summary).stream().distinct().count()).isEqualTo(summary.candidates().size());
     }
 
+    @Test
+    void fewer_redundant_drivers_beats_better_justice() {
+        BruteForceSchedulePlanner planner = new BruteForceSchedulePlanner(new PlanningScorer());
+        PlanningScore tight = score(true, 10, 0, 0.5, 0.6);
+        PlanningScore redundant = score(true, 10, 1, 0.9, 0.95);
+
+        assertThat(planner.compareScores(tight, redundant)).isPositive();
+        assertThat(planner.compareScores(redundant, tight)).isNegative();
+    }
+
+    @Test
+    void justice_breaks_tie_at_equal_redundant_drivers() {
+        BruteForceSchedulePlanner planner = new BruteForceSchedulePlanner(new PlanningScorer());
+        PlanningScore fair = score(true, 10, 1, 0.9, 0.95);
+        PlanningScore unfair = score(true, 10, 1, 0.5, 0.6);
+
+        assertThat(planner.compareScores(fair, unfair)).isPositive();
+    }
+
+    @Test
+    void complete_with_redundant_drivers_beats_incomplete() {
+        BruteForceSchedulePlanner planner = new BruteForceSchedulePlanner(new PlanningScorer());
+        PlanningScore completeRedundant = score(true, 10, 2, 0.5, 0.6);
+        PlanningScore incompleteTight = score(false, 8, 0, 1.0, 1.0);
+
+        assertThat(planner.compareScores(completeRedundant, incompleteTight)).isPositive();
+    }
+
+    @Test
+    void car_merge_removes_underfilled_car_when_spare_seats_exist() {
+        // Loads 3/4/2/3 with capacities 4/4/4/4: the 2-child car fits into the spare seats.
+        Family familyA = familyWithChildren("Famille A", 4, "A1", "A2", "A3");
+        Family familyB = familyWithChildren("Famille B", 4, "B1", "B2", "B3", "B4");
+        Family familyC = familyWithChildren("Famille C", 4, "C1", "C2");
+        Family familyD = familyWithChildren("Famille D", 4, "D1", "D2", "D3");
+        List<Family> families = List.of(familyA, familyB, familyC, familyD);
+
+        ScheduleResult schedule = singleTripSchedule(families, List.of(
+                new Assignment(familyA, familyA.children),
+                new Assignment(familyB, familyB.children),
+                new Assignment(familyC, familyC.children),
+                new Assignment(familyD, familyD.children)
+        ));
+
+        List<ScheduleResult> neighbours = BruteForceSchedulePlanner.carMergeNeighbours(schedule);
+
+        assertThat(neighbours).isNotEmpty();
+        ScheduleResult merged = neighbours.stream()
+                .filter(neighbour -> tripAssignments(neighbour).stream()
+                        .noneMatch(assignment -> assignment.driverFamily().name.equals("Famille C")))
+                .findFirst()
+                .orElseThrow();
+        List<Assignment> assignments = tripAssignments(merged);
+        assertThat(assignments).hasSize(3);
+        assertThat(assignments.stream().mapToInt(assignment -> assignment.children().size()).sum()).isEqualTo(12);
+        assertThat(assignments).allSatisfy(assignment ->
+                assertThat(assignment.children().size()).isLessThanOrEqualTo(assignment.driverFamily().carCapacity));
+    }
+
+    @Test
+    void car_merge_produces_nothing_without_spare_seats_and_keeps_own_children() {
+        // Capacities equal loads: no spare seat anywhere, no merge possible.
+        Family familyA = familyWithChildren("Famille A", 3, "A1", "A2", "A3");
+        Family familyB = familyWithChildren("Famille B", 4, "B1", "B2", "B3", "B4");
+        Family familyC = familyWithChildren("Famille C", 2, "C1", "C2");
+        List<Family> tightFamilies = List.of(familyA, familyB, familyC);
+
+        ScheduleResult tight = singleTripSchedule(tightFamilies, List.of(
+                new Assignment(familyA, familyA.children),
+                new Assignment(familyB, familyB.children),
+                new Assignment(familyC, familyC.children)
+        ));
+        assertThat(BruteForceSchedulePlanner.carMergeNeighbours(tight)).isEmpty();
+
+        // With spare seats, every remaining driver keeps its own children.
+        Family looseA = familyWithChildren("Famille A", 4, "A1", "A2");
+        Family looseB = familyWithChildren("Famille B", 4, "B1", "B2");
+        ScheduleResult loose = singleTripSchedule(List.of(looseA, looseB), List.of(
+                new Assignment(looseA, looseA.children),
+                new Assignment(looseB, looseB.children)
+        ));
+        List<ScheduleResult> neighbours = BruteForceSchedulePlanner.carMergeNeighbours(loose);
+        assertThat(neighbours).hasSize(2);
+        assertThat(neighbours).allSatisfy(neighbour -> {
+            List<Assignment> assignments = tripAssignments(neighbour);
+            assertThat(assignments.stream().mapToInt(assignment -> assignment.children().size()).sum()).isEqualTo(4);
+            assertThat(assignments).allSatisfy(assignment -> {
+                assertThat(assignment.children()).containsAll(assignment.driverFamily().children);
+                assertThat(assignment.children().size()).isLessThanOrEqualTo(assignment.driverFamily().carCapacity);
+            });
+        });
+    }
+
+    @Test
+    void redundant_variant_filtered_from_top_results() {
+        Family familyA = familyWithChildren("Famille A", 4, "A1", "A2");
+        Family familyB = familyWithChildren("Famille B", 4, "B1", "B2");
+        List<Family> families = List.of(familyA, familyB);
+        List<NormalizedWorkbookFamily> normalized = families.stream()
+                .map(family -> new NormalizedWorkbookFamily(family, List.of(), NormalizedWorkbookFamily.FamilyNotes.empty()))
+                .toList();
+        PlanningScorer scorer = new PlanningScorer();
+
+        // A: one car carries all four children. B: same planning plus a redundant second car.
+        List<Child> allChildren = new ArrayList<>(familyA.children);
+        allChildren.addAll(familyB.children);
+        ScheduleResult merged = singleTripSchedule(families, List.of(new Assignment(familyA, allChildren)));
+        ScheduleResult redundant = singleTripSchedule(families, List.of(
+                new Assignment(familyA, familyA.children),
+                new Assignment(familyB, familyB.children)
+        ));
+
+        BruteForceSchedulePlanner planner = new BruteForceSchedulePlanner(scorer);
+        List<BruteForceSchedulePlanner.SearchCandidate> pool = List.of(
+                new BruteForceSchedulePlanner.SearchCandidate(redundant, scorer.score(redundant, normalized)),
+                new BruteForceSchedulePlanner.SearchCandidate(merged, scorer.score(merged, normalized))
+        );
+
+        List<BruteForceSchedulePlanner.SearchCandidate> selected = planner.selectStatDiverseCandidates(pool, 2, 0.0);
+
+        assertThat(selected).hasSize(1);
+        assertThat(BruteForceSchedulePlanner.planningSignature(selected.getFirst().scheduleResult()))
+                .isEqualTo(BruteForceSchedulePlanner.planningSignature(merged));
+    }
+
+    private static List<Assignment> tripAssignments(ScheduleResult schedule) {
+        return schedule.even().trips().getFirst().cars().Assignments().stream()
+                .filter(assignment -> !assignment.children().isEmpty())
+                .toList();
+    }
+
+    private static ScheduleResult singleTripSchedule(List<Family> families, List<Assignment> assignments) {
+        Trip trip = new Trip(WeekDay.MONDAY, TimeSlot.MORNING, WeekType.EVEN, new Cars(assignments), families);
+        return new ScheduleResult(
+                new Schedule(WeekType.ODD, List.of(), families),
+                new Schedule(WeekType.EVEN, List.of(trip), families),
+                families
+        );
+    }
+
+    private static Family familyWithChildren(String familyName, int carCapacity, String... childNames) {
+        List<Child> children = new ArrayList<>();
+        for (String childName : childNames) {
+            Child child = new Child();
+            child.id = (long) (familyName + childName).hashCode();
+            child.name = childName;
+            children.add(child);
+        }
+        Family family = new Family();
+        family.id = (long) familyName.hashCode();
+        family.name = familyName;
+        family.carCapacity = carCapacity;
+        family.children = children;
+        return family;
+    }
+
+    private static PlanningScore score(boolean complete, int assignedSlots, int redundantDrivers, double minJustice, double avgJustice) {
+        return new PlanningScore(
+                0, 0, 0, 0, 0,
+                complete,
+                10,
+                assignedSlots,
+                10 - assignedSlots,
+                assignedSlots / 10.0,
+                new com.carpool.schedule.PlanningJusticeScore(false, avgJustice, minJustice, List.of()),
+                List.of(),
+                redundantDrivers
+        );
+    }
+
     private static List<String> signatures(BruteForceSchedulePlanner.SearchSummary summary) {
         return summary.candidates().stream()
                 .map(candidate -> BruteForceSchedulePlanner.planningSignature(candidate.scheduleResult()))

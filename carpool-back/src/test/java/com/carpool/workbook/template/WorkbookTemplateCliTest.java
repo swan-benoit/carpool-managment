@@ -21,7 +21,7 @@ class WorkbookTemplateCliTest {
         Path output = tempDir.resolve("requirements-template.xlsx");
         WorkbookTemplateCli cli = new WorkbookTemplateCli(new WorkbookTemplateGenerator());
 
-        cli.generate(output, List.of(new FamilyWorkbookTemplateData("Demo", 4, List.of("Alice", "Bob"))));
+        cli.generate(output, List.of(new FamilyWorkbookTemplateData("Demo", 4, List.of("Alice", "Bob"), null)));
 
         assertThat(output).exists();
         assertThat(Files.size(output)).isGreaterThan(0);

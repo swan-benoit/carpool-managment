@@ -46,7 +46,7 @@ public class WorkbookTemplateCli {
     }
 
     private static List<FamilyWorkbookTemplateData> defaultFamilies() {
-        return List.of(new FamilyWorkbookTemplateData("Exemple", 4, List.of("Enfant 1")));
+        return List.of(new FamilyWorkbookTemplateData("Exemple", 4, List.of("Enfant 1"), null));
     }
 
     private static List<FamilyWorkbookTemplateData> readFamilies(Path path) throws IOException {

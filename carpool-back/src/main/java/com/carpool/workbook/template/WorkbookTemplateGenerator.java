@@ -64,7 +64,8 @@ public class WorkbookTemplateGenerator {
         createCell(sheet.createRow(rowIndex++), 0, "Template de saisie covoiturage", styles.title());
         rowIndex++;
         createCell(sheet.createRow(rowIndex++), 0, "Ce fichier est un support de saisie. Les formules metier restent calculees en Java.", styles.wrap());
-        createCell(sheet.createRow(rowIndex++), 0, "Un onglet famille represente un groupe d'enfants. Les parents separes ne creent pas plusieurs familles.", styles.wrap());
+        createCell(sheet.createRow(rowIndex++), 0, "Un onglet famille represente un groupe d'enfants.", styles.wrap());
+        createCell(sheet.createRow(rowIndex++), 0, "Parents separes co-conducteurs d'un meme enfant: creer un onglet par parent (capacite et preferences propres), rattacher l'enfant a UN seul onglet, et renseigner la meme valeur dans la colonne 'Foyer' de l'Index pour les relier. La cible d'equite est alors calculee au niveau du foyer puis repartie entre les parents.", styles.wrap());
         createCell(sheet.createRow(rowIndex++), 0, "Les grilles de saisie sont la source de verite pour la normalisation et le calcul.", styles.wrap());
         createCell(sheet.createRow(rowIndex++), 0, "Preferences famille: IMPOSSIBLE, EVITER, OK, PREFERE.", styles.wrap());
         createCell(sheet.createRow(rowIndex++), 0, "Absences enfants: PRESENT, ABSENT.", styles.wrap());
@@ -80,6 +81,7 @@ public class WorkbookTemplateGenerator {
         createCell(header, 1, "Nom onglet", styles.header());
         createCell(header, 2, "Capacite voiture", styles.header());
         createCell(header, 3, "Nombre d'enfants", styles.header());
+        createCell(header, 4, "Foyer", styles.header());
 
         Set<String> usedSheetNames = new LinkedHashSet<>(List.of(README_SHEET_NAME, INDEX_SHEET_NAME));
         int rowIndex = 1;
@@ -94,9 +96,10 @@ public class WorkbookTemplateGenerator {
             row.getCell(2).setCellStyle(styles.body());
             row.createCell(3).setCellValue(family.childNames().size());
             row.getCell(3).setCellStyle(styles.body());
+            createCell(row, 4, family.householdId() == null ? "" : family.householdId(), styles.body());
         }
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
             sheet.autoSizeColumn(i);
         }
     }
